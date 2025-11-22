@@ -1,6 +1,6 @@
 allprojects {
     repositories {
-        // 移除Google服务仓库，仅保留本地可用仓库
+        google()
         jcenter()
         mavenCentral()
     }
