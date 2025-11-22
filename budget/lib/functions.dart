@@ -70,6 +70,10 @@ extension DateUtils on DateTime {
   DateTime firstDayOfMonth() {
     return DateTime(this.year, this.month, 1);
   }
+
+  DateTime lastDayOfMonth() {
+    return DateTime(this.year, this.month + 1, 0);
+  }
 }
 
 String convertToPercent(double amount,
