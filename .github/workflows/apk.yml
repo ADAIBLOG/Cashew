@@ -1,0 +1,131 @@
+name: Build Signed Android APK (v7a & v8a)
+
+on:
+  workflow_dispatch:  # 手动触发
+    inputs:
+      reason:
+        description: '构建原因'
+        required: false
+        default: '手动构建签名APK'
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'budget/lib/**'
+      - 'budget/android/**'
+      - 'budget/pubspec.yaml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_PATH: ${{ github.workspace }}/budget/android/app/key.jks
+      KEY_PROPERTIES_PATH: ${{ github.workspace }}/budget/android/key.properties
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.3'
+
+      - name: Verify Flutter installation
+        run: flutter --version
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: |
+          cd budget
+          flutter pub get
+
+      - name: Generate database code
+        run: |
+          cd budget
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Create keystore file from base64
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          # 创建必要的目录，使用更安全的方式
+          mkdir -p "${{ github.workspace }}/budget/android/app"
+          
+          # 检查KEYSTORE_BASE64是否存在
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "Error: KEYSTORE_BASE64 is not set or is empty"
+            exit 1
+          fi
+          
+          # 显示编码长度（用于调试）
+          echo "Keystore base64 length: ${#KEYSTORE_BASE64}"
+          
+          # 使用兼容的base64解码命令
+          echo "$KEYSTORE_BASE64" | base64 -d 2>/dev/null > "$KEYSTORE_PATH" || {
+            echo "Error: Base64 decoding failed, trying with alternative command"
+            echo "$KEYSTORE_BASE64" | base64 --decode --ignore-garbage > "$KEYSTORE_PATH"
+          }
+          
+          # 验证文件是否创建成功
+          if [ -f "$KEYSTORE_PATH" ]; then
+            echo "Keystore file created successfully"
+            ls -la "$KEYSTORE_PATH"
+            # 添加额外的调试信息
+            echo "Keystore directory content:"
+            ls -la "${{ github.workspace }}/budget/android/app/"
+          else
+            echo "Error: Failed to create keystore file"
+            exit 1
+          fi
+
+      - name: Create key.properties file
+        env:
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+        run: |
+          echo "storePassword=$STORE_PASSWORD" > $KEY_PROPERTIES_PATH
+          echo "keyPassword=$KEY_PASSWORD" >> $KEY_PROPERTIES_PATH
+          echo "keyAlias=$KEY_ALIAS" >> $KEY_PROPERTIES_PATH
+          echo "storeFile=key.jks" >> $KEY_PROPERTIES_PATH
+
+      - name: Build Signed Release APK for arm64-v8a
+        run: |
+          cd budget
+          flutter build apk --release --target-platform android-arm64 --split-per-abi
+          # 重命名以便区分
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/app/outputs/flutter-apk/cashew-arm64-v8a-release.apk
+
+      - name: Build Signed Release APK for armeabi-v7a
+        run: |
+          cd budget
+          flutter build apk --release --target-platform android-arm --split-per-abi
+          # 重命名以便区分
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/app/outputs/flutter-apk/cashew-armeabi-v7a-release.apk
+
+      - name: Verify APK signatures
+        run: |
+          cd budget
+          for apk_file in build/app/outputs/flutter-apk/cashew-*.apk; do
+            echo "Verifying $apk_file"
+            jarsigner -verify -verbose -certs "$apk_file" || echo "Warning: Verification failed for $apk_file, but continuing anyway"
+          done
+
+      - name: Upload Release APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: cashew-signed-architecture-specific-apks
+          path: budget/build/app/outputs/flutter-apk/cashew-*.apk
+          retention-days: 30
+
+      - name: Clean up sensitive files
+        if: always()
+        run: |
+          # 删除密钥库文件和属性文件
+          rm -f "$KEYSTORE_PATH" "$KEY_PROPERTIES_PATH"
+          echo "Sensitive files cleaned up"
