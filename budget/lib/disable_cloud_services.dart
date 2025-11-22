@@ -38,6 +38,11 @@ void applyCloudServicesDisableSettings(Map<String, dynamic> settings) {
    
     // 禁用云交易功能
     settings["cloudTransactions"] = false;
+    
+    // 禁用汇率相关功能
+    settings["cachedCurrencyExchange"] = {};
+    settings["customCurrencies"] = [];
+    settings["customCurrencyAmounts"] = {};
   }
 }
 
