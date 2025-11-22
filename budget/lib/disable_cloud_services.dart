@@ -43,15 +43,6 @@ void applyCloudServicesDisableSettings(Map<String, dynamic> settings) {
     settings["cachedCurrencyExchange"] = {};
     settings["customCurrencies"] = [];
     settings["customCurrencyAmounts"] = {};
-    
-    // 完全禁用所有可能的网络功能
-    settings["enableNetworkFeatures"] = false;
-    settings["enableCloudSync"] = false;
-    settings["enableRemoteData"] = false;
-    settings["hasCheckedCloudStatus"] = true; // 避免启动时检查云状态
-    settings["lastCloudSync"] = 0;
-    settings["hasSyncedBefore"] = false;
-    settings["cloudSyncEnabled"] = false;
   }
 }
 
