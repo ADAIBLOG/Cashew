@@ -36,17 +36,32 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'firebase_options.dart';
 import 'package:easy_localization/easy_localization.dart';
 
+// 导入云服务禁用配置
+import '../disable_cloud_services.dart';
+
 // Requires hot restart when changed
 bool enableDevicePreview = false && kDebugMode;
 bool allowDebugFlags = true || kIsWeb;
-bool allowDangerousDebugFlags = kDebugMode;
+bool allowDangerousDebugFlags = true;
 
 void main() async {
   captureLogs(() async {
     WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    
+    // Initialize Firebase
+    if (!disableAllCloudServices) {
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      } catch (e) {
+        // Firebase initialization failed, but we'll continue with local mode
+      }
+    }
+    
+    // 总是应用云服务禁用设置
+    applyCloudServicesDisableSettings(appStateSettings);
+    
     await EasyLocalization.ensureInitialized();
     sharedPreferences = await SharedPreferences.getInstance();
     database = await constructDb('db');
@@ -55,6 +70,17 @@ void main() async {
     await loadCurrencyJSON();
     await loadLanguageNamesJSON();
     await initializeSettings();
+    
+    // Ensure Chinese is set as default language if system is Chinese
+    String? userSettings = sharedPreferences.getString('userSettings');
+    if (userSettings == null) {
+      // First time launch, check if system is Chinese
+      final systemLocale = WidgetsBinding.instance.platformDispatcher.locale;
+      if (systemLocale.languageCode == 'zh') {
+        await updateSettings("locale", "zh", updateGlobalState: false);
+      }
+    }
+    
     tz.initializeTimeZones();
     final String? locationName = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(locationName ?? "America/New_York"));
@@ -133,7 +159,8 @@ class App extends StatelessWidget {
                 )),
               ],
             ),
-            EnableSignInWithGoogleFlyIn(),
+            // 仅在不禁用Google登录时包含此组件
+            if (!disableAllCloudServices) EnableSignInWithGoogleFlyIn(),
             GlobalLoadingIndeterminate(key: loadingIndeterminateKey),
             GlobalLoadingProgress(key: loadingProgressKey),
           ],
