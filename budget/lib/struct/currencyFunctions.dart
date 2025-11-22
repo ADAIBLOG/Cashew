@@ -12,16 +12,30 @@ loadCurrencyJSON() async {
 }
 
 Future<bool> getExchangeRates() async {
-  // 移除网络请求，保留现有缓存
-  Map<dynamic, dynamic> cachedCurrencyExchange = 
-      appStateSettings["cachedCurrencyExchange"] ?? {};
-  
-  // 确保缓存不为空，如果为空则初始化一个空对象
-  if (cachedCurrencyExchange.isEmpty) {
-    cachedCurrencyExchange = {};
+  print("Getting exchange rates for current wallets");
+  // List<String?> uniqueCurrencies =
+  //     await database.getUniqueCurrenciesFromWallets();
+  Map<dynamic, dynamic> cachedCurrencyExchange =
+      appStateSettings["cachedCurrencyExchange"];
+  try {
+    Uri url = Uri.parse(
+        "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.min.json");
+    dynamic response = await http.get(url);
+    if (response.statusCode == 200) {
+      cachedCurrencyExchange = json.decode(response.body)?["usd"];
+    }
+  } catch (e) {
+    print("Error getting currency rates: " + e.toString());
+    return false;
   }
-  
-  return false; // 返回false表示没有获取新数据
+  // print(cachedCurrencyExchange);
+  updateSettings(
+    "cachedCurrencyExchange",
+    cachedCurrencyExchange,
+    updateGlobalState:
+        appStateSettings["cachedCurrencyExchange"].keys.length <= 0,
+  );
+  return true;
 }
 
 double amountRatioToPrimaryCurrencyGivenPk(
