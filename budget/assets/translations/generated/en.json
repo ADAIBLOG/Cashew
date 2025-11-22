@@ -48,6 +48,15 @@
   "titles-details": "Titles Details",
   "edit-accounts": "Edit Accounts",
   "edit-budgets": "Edit Budgets",
+  "notification-transactions": "Notification Transactions",
+  "auto-transactions-title": "Auto Transactions",
+  "transactions-created-based-notifications": "Transactions can be created automatically based on your notifications.",
+  "notification-configuration-missing": "Notification Configuration Missing",
+  "please-add-configuration": "Please add a configuration.",
+  "parsing-failed": "Parsing failed.",
+  "template-not-found": "Template Not found.",
+  "title-not-found": "Title: Not found.",
+  "amount-not-found": "Amount: Not found / invalid number.",
   "edit-categories": "Edit Categories",
   "edit-titles": "Edit Titles",
   "edit-title": "Edit Title",
@@ -1180,5 +1189,8 @@
   "import-warning": "Import Warning",
   "import-warning-description": "Import may fail! Please make sure you have selected a valid Cashew [.sqlite] or [.sql] backup file",
   "duplicate-budget-question": "Duplicate Budget?",
-  "duplicate-budget": "Duplicate Budget"
+  "duplicate-budget": "Duplicate Budget",
+  "monthly-expense": "Monthly Expense"
 }
+
+
