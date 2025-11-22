@@ -283,9 +283,8 @@ class TransactionEntry extends StatelessWidget {
         ?.currency;
     // is the currency a customCurrency or does it actually exist in our table
     // and a custom exchange rate has not been set
-    bool showOtherCurrency =
-        transaction.walletFk != appStateSettings["selectedWalletPk"] &&
-            ((walletCurrency) != transactionCurrency);
+    // 由于禁用了所有云服务，始终隐藏汇率转换相关UI元素
+    bool showOtherCurrency = false;
     bool unsetCustomCurrency = (currenciesJSON[transactionCurrency] == null ||
             currenciesJSON[walletCurrency] == null) &&
         (appStateSettings["customCurrencyAmounts"][walletCurrency] == null ||
