@@ -3994,10 +3994,7 @@ class SelectCategoryWithIncomeExpenseSelector extends StatefulWidget {
 
 class _SelectCategoryWithIncomeExpenseSelectorState
     extends State<SelectCategoryWithIncomeExpenseSelector> {
-  late bool? selectedIncome =
-      appStateSettings["showAllCategoriesWhenSelecting"] == true
-          ? null
-          : widget.selectedIncomeInitial;
+  late bool? selectedIncome = widget.selectedIncomeInitial; // 始终根据当前交易类型筛选类别
 
   void setSelectedIncome(bool? value) {
     if (widget.setSelectedIncome != null) widget.setSelectedIncome!(value);
