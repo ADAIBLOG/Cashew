@@ -296,54 +296,54 @@ class RenderHomePageWidgetsState extends State<RenderHomePageWidgets> {
                 return const SizedBox.shrink();
               },
             ),
-          ),
-          // Monthly income widget data update
-          StreamBuilder<TotalWithCount?>(
-            stream: database.watchTotalWithCountOfWallet(
-              isIncome: true, // Filter for income only
-              allWallets: Provider.of<AllWallets>(context),
-              startDate: DateTime.now().firstDayOfMonth(),
-              forcedDateTimeRange: DateTimeRange(
-                start: DateTime.now().firstDayOfMonth(),
-                end: DateTime.now().lastDayOfMonth(),
+            // Monthly income widget data update
+            StreamBuilder<TotalWithCount?>(
+              stream: database.watchTotalWithCountOfWallet(
+                isIncome: true, // Filter for income only
+                allWallets: Provider.of<AllWallets>(context),
+                startDate: DateTime.now().firstDayOfMonth(),
+                forcedDateTimeRange: DateTimeRange(
+                  start: DateTime.now().firstDayOfMonth(),
+                  end: DateTime.now().lastDayOfMonth(),
+                ),
+                followCustomPeriodCycle: false,
+                searchFilters: SearchFilters(expenseIncome: [ExpenseIncome.income]),
               ),
-              followCustomPeriodCycle: false,
-              searchFilters: SearchFilters(expenseIncome: [ExpenseIncome.income]),
-            ),
-            builder: (context, snapshotIncome) {
-              Future.delayed(Duration.zero, () async {
-                int totalCount = snapshotIncome.data?.count ?? 0;
-                String monthlyIncomeTransactionsNumber = totalCount.toString() +
-                    " " +
-                    (totalCount == 1
-                        ? "transaction".tr().toLowerCase()
-                        : "transactions".tr().toLowerCase());
-                double totalIncome = snapshotIncome.data?.total ?? 0;
-                // Ensure it shows as positive amount for display
-                double displayIncome = totalIncome.abs();
-                String monthlyIncomeAmount = convertToMoney(
-                  Provider.of<AllWallets>(context, listen: false),
-                  displayIncome,
-                );
-                
-                await HomeWidget.saveWidgetData<String>(
-                  'monthlyIncomeAmount',
-                  monthlyIncomeAmount,
-                );
-                await HomeWidget.saveWidgetData<String>(
-                  'monthlyIncomeTransactionsNumber',
-                  monthlyIncomeTransactionsNumber,
-                );
-                await HomeWidget.updateWidget(
-                  name: 'MonthlyIncomeWidgetProvider',
-                );
-              });
+              builder: (context, snapshotIncome) {
+                Future.delayed(Duration.zero, () async {
+                  int totalCount = snapshotIncome.data?.count ?? 0;
+                  String monthlyIncomeTransactionsNumber = totalCount.toString() +
+                      " " +
+                      (totalCount == 1
+                          ? "transaction".tr().toLowerCase()
+                          : "transactions".tr().toLowerCase());
+                  double totalIncome = snapshotIncome.data?.total ?? 0;
+                  // Ensure it shows as positive amount for display
+                  double displayIncome = totalIncome.abs();
+                  String monthlyIncomeAmount = convertToMoney(
+                    Provider.of<AllWallets>(context, listen: false),
+                    displayIncome,
+                  );
+                  
+                  await HomeWidget.saveWidgetData<String>(
+                    'monthlyIncomeAmount',
+                    monthlyIncomeAmount,
+                  );
+                  await HomeWidget.saveWidgetData<String>(
+                    'monthlyIncomeTransactionsNumber',
+                    monthlyIncomeTransactionsNumber,
+                  );
+                  await HomeWidget.updateWidget(
+                    name: 'MonthlyIncomeWidgetProvider',
+                  );
+                });
 
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
-      ),
+                return const SizedBox.shrink();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
