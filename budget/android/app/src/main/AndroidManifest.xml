@@ -129,6 +129,14 @@
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/monthly_expense_widget" />
         </receiver>
+        <receiver android:name="MonthlyIncomeWidgetProvider"
+            android:exported="true" android:label="Monthly Income">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/monthly_income_widget" />
+        </receiver>
         <receiver android:name="MinusWidgetProvider"
             android:exported="true" android:label="Transaction Minus">
             <intent-filter>
