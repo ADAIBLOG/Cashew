@@ -19,13 +19,12 @@ class MonthlyExpenseWidgetProvider : HomeWidgetProvider() {
 
             val views = RemoteViews(context.packageName, R.layout.monthly_expense_widget_layout).apply {
                 try {
-                  // 获取当前月份的中文名称
+                  // 获取当前月份的阿拉伯数字
                   val calendar = Calendar.getInstance()
-                  val monthNames = arrayOf("一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月")
-                  val currentMonth = monthNames[calendar.get(Calendar.MONTH)]
+                  val currentMonth = (calendar.get(Calendar.MONTH) + 1).toString() // +1 因为月份从0开始
                   
                   // 直接设置正确的标题，不依赖任何可能失败的数据
-                  setTextViewText(R.id.monthly_expense_title, "${currentMonth}支出")
+                  setTextViewText(R.id.monthly_expense_title, "${currentMonth}月支出")
 
                   setTextViewText(R.id.monthly_expense_amount, widgetData.getString("monthlyExpenseAmount", null)
                   ?: "0.00")
