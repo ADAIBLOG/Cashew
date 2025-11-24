@@ -505,10 +505,6 @@ class ScannerTemplates extends Table {
       text().references(Wallets, #walletPk).withDefault(const Constant("0"))();
   // TODO: if it contains certain keyword ignore these emails
   BoolColumn get ignore => boolean().withDefault(const Constant(false))();
-  
-  // 新增字段：标记交易是收入还是支出
-  // true表示收入，false表示支出
-  BoolColumn get isIncome => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {scannerTemplatePk};
