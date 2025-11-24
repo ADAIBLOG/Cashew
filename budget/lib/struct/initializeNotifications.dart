@@ -113,9 +113,6 @@ Future<bool> runNotificationPayLoads(context) async {
           }
         }
         
-        // 从payload中提取isIncome字段
-        bool? isIncome = payloadData["isIncome"];
-        
         // 添加延迟让键盘能够正确聚焦
         await Future.delayed(Duration(milliseconds: 50), () async {
           pushRoute(
@@ -129,7 +126,6 @@ Future<bool> runNotificationPayLoads(context) async {
               selectedDate: date,
               startInitialAddTransactionSequence: false,
               templatePk: templatePk, // 传递模板PK以便在页面中使用
-              useCategorySelectedIncome: isIncome ?? false, // 根据模板设置默认收支类型
             ),
           );
         });
