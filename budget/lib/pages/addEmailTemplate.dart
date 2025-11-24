@@ -207,7 +207,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
                   [
                     Expanded(
                       child:
-                      Tappable(
+                      Button(
                         borderRadius: 12,
                         backgroundColor: selectedIncome
                             ? Theme.of(context).colorScheme.primary
@@ -224,28 +224,20 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
                           });
                         },
                         padding: EdgeInsets.all(15),
-                        child: Center(
-                          child:
-                          Text(
-                            "收入",
-                            style:
-                            TextStyle(
-                              fontWeight: selectedIncome
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              color: selectedIncome
-                                  ? Colors.white
-                                  : Theme.of(context).colorScheme.onSurface,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
+                        label: "收入",
+                        textColor: selectedIncome
+                            ? Colors.white
+                            : Theme.of(context).colorScheme.onSurface,
+                        fontWeight: selectedIncome
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        fontSize: 16,
+                      )
                     ),
                     SizedBox(width: 15),
                     Expanded(
                       child:
-                      Tappable(
+                      Button(
                         borderRadius: 12,
                         backgroundColor: !selectedIncome
                             ? Theme.of(context).colorScheme.primary
@@ -262,23 +254,15 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
                           });
                         },
                         padding: EdgeInsets.all(15),
-                        child: Center(
-                          child:
-                          Text(
-                            "支出",
-                            style:
-                            TextStyle(
-                              fontWeight: !selectedIncome
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              color: !selectedIncome
-                                  ? Colors.white
-                                  : Theme.of(context).colorScheme.onSurface,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
+                        label: "支出",
+                        textColor: !selectedIncome
+                            ? Colors.white
+                            : Theme.of(context).colorScheme.onSurface,
+                        fontWeight: !selectedIncome
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        fontSize: 16,
+                      )
                     ),
                   ],
                 ),
@@ -288,7 +272,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
           SizedBox(height: 20),
           
           // 账户选择
-          SelectChips(,
+          SelectChips(
             wrapped: false,
             extraWidgetBeforeSticky: true,
             allowMultipleSelected: false,
