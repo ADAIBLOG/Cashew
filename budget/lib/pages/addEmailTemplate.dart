@@ -79,10 +79,9 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
   Future addTemplate() async {
     print("Added template");
     await database.createOrUpdateScannerTemplate(
-      insert: widget.scannerTemplate == null,
       createTemplate(),
+      insert: widget.scannerTemplate == null,
     );
-    // 移除未定义的方法调用
     popRoute(context);
   }
 
