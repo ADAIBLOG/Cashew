@@ -159,19 +159,18 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
       }
       
       pushRoute(
-          null,
-          AddTransactionPage(
-            useCategorySelectedIncome: false, // 现在直接使用模板设置的income
-            routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-            selectedAmount: amountDouble,
-            selectedTitle: title,
-            selectedCategory: category,
-            selectedIncome: templateFound.income, // 从模板获取收入/支出设置
-            startInitialAddTransactionSequence: false,
-            selectedWallet: wallet,
-            selectedDate: dateTime,
-          ),
-        );
+        null,
+        AddTransactionPage(
+          useCategorySelectedIncome: true,
+          routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+          selectedAmount: amountDouble,
+          selectedTitle: title,
+          selectedCategory: category,
+          startInitialAddTransactionSequence: false,
+          selectedWallet: wallet,
+          selectedDate: dateTime,
+        ),
+      );
     }
     return;
   }
@@ -211,8 +210,7 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
           "amount": amountDouble.toString(),
           "templatePk": templateFound.scannerTemplatePk,
           "title": title,
-          "date": dateTime?.toString(),
-          "income": templateFound.income.toString() // 添加收入/支出设置到通知payload
+          "date": dateTime?.toString()
         }),
       );
     }
