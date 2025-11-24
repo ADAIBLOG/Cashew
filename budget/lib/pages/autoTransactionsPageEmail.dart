@@ -161,7 +161,7 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
       pushRoute(
         null,
         AddTransactionPage(
-          useCategorySelectedIncome: templateFound.isIncome == true,
+          useCategorySelectedIncome: true,
           routesToPopAfterDelete: RoutesToPopAfterDelete.None,
           selectedAmount: amountDouble,
           selectedTitle: title,
@@ -210,8 +210,7 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
           "amount": amountDouble.toString(),
           "templatePk": templateFound.scannerTemplatePk,
           "title": title,
-          "date": dateTime?.toString(),
-          "isIncome": templateFound.isIncome
+          "date": dateTime?.toString()
         }),
       );
     }
@@ -957,6 +956,10 @@ class ScannerTemplateEntry extends StatelessWidget {
                 children: [
                   Row(
                     children: [
+                      CategoryIcon(
+                          categoryPk: scannerTemplate.defaultCategoryFk,
+                          size: 25),
+                      SizedBox(width: 7),
                       TextFont(
                         text: scannerTemplate.templateName,
                         fontWeight: FontWeight.bold,
