@@ -33,6 +33,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
   String? selectedWalletPk;
   String? selectedName;
   String? selectedSubject;
+  bool? isIncome = false;
 
   @override
   void initState() {
@@ -43,6 +44,8 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
           : widget.scannerTemplate!.walletFk;
       selectedName = widget.scannerTemplate!.templateName;
       selectedSubject = widget.scannerTemplate!.contains;
+      // 加载现有的收入/支出设置
+      isIncome = widget.scannerTemplate!.isIncome ?? false;
     }
     determineBottomButton();
   }
@@ -103,6 +106,8 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
       titleTransactionBefore: "",
       walletFk: selectedWalletPk ?? "-1",
       ignore: false,
+      // 保存收入/支出设置
+      isIncome: isIncome ?? false,
     );
   }
 
@@ -178,6 +183,22 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
               padding: EdgeInsetsDirectional.only(start: 7, end: 7),
               fontSize: 18,
 
+            ),
+          ),
+          SizedBox(height: 20),
+          
+          // 收入/支出选择
+          Padding(
+            padding: const EdgeInsetsDirectional.symmetric(horizontal: 20),
+            child: SettingsContainerSwitch(
+              onSwitched: (value) {
+                setState(() {
+                  isIncome = value;
+                });
+              },
+              title: "交易类型",
+              description: isIncome == true ? "收入" : "支出",
+              initialValue: isIncome ?? false,
             ),
           ),
           SizedBox(height: 20),
