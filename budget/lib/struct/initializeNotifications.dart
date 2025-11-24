@@ -129,7 +129,7 @@ Future<bool> runNotificationPayLoads(context) async {
               selectedDate: date,
               startInitialAddTransactionSequence: false,
               templatePk: templatePk, // 传递模板PK以便在页面中使用
-              useCategorySelectedIncome: isIncome == true, // 根据模板设置默认收支类型
+              useCategorySelectedIncome: isIncome ?? false, // 根据模板设置默认收支类型
             ),
           );
         });
