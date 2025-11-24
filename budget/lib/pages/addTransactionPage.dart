@@ -820,7 +820,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
     }
     if (widget.selectedAmount != null) {
       selectedAmount = (widget.selectedAmount ?? 0).abs();
-      selectedIncome = (widget.selectedAmount ?? -1).isNegative == false;
+      // 移除自动设置selectedIncome的代码，让selectedIncome保持默认值false，或由category或显式参数决定
     }
     if (widget.selectedCategory != null) {
       selectedCategory = widget.selectedCategory;
