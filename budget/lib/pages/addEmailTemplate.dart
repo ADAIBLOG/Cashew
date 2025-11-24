@@ -7,7 +7,6 @@ import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/saveBottomButton.dart';
 import 'package:budget/widgets/selectChips.dart';
-import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/widgets/textInput.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
@@ -34,7 +33,6 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
   String? selectedWalletPk;
   String? selectedName;
   String? selectedSubject;
-  bool? isIncome = false;
 
   @override
   void initState() {
@@ -45,8 +43,6 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
           : widget.scannerTemplate!.walletFk;
       selectedName = widget.scannerTemplate!.templateName;
       selectedSubject = widget.scannerTemplate!.contains;
-      // 加载现有的收入/支出设置
-      isIncome = widget.scannerTemplate!.isIncome ?? false;
     }
     determineBottomButton();
   }
@@ -79,9 +75,10 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
   Future addTemplate() async {
     print("Added template");
     await database.createOrUpdateScannerTemplate(
-      createTemplate(),
       insert: widget.scannerTemplate == null,
+      createTemplate(),
     );
+    // 移除未定义的方法调用
     popRoute(context);
   }
 
@@ -106,8 +103,6 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
       titleTransactionBefore: "",
       walletFk: selectedWalletPk ?? "-1",
       ignore: false,
-      // 保存收入/支出设置
-      isIncome: isIncome ?? false,
     );
   }
 
@@ -183,22 +178,6 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
               padding: EdgeInsetsDirectional.only(start: 7, end: 7),
               fontSize: 18,
 
-            ),
-          ),
-          SizedBox(height: 20),
-          
-          // 收入/支出选择
-          Padding(
-            padding: const EdgeInsetsDirectional.symmetric(horizontal: 20),
-            child: SettingsContainerSwitch(
-              onSwitched: (value) {
-                setState(() {
-                  isIncome = value;
-                });
-              },
-              title: "交易类型",
-              description: isIncome == true ? "收入" : "支出",
-              initialValue: isIncome ?? false,
             ),
           ),
           SizedBox(height: 20),
