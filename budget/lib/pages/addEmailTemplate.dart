@@ -209,7 +209,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
                       child:
                       Button(
                         borderRadius: 12,
-                        backgroundColor: selectedIncome
+                        color: selectedIncome
                             ? Theme.of(context).colorScheme.primary
                             : Colors.transparent,
                         border: Border.all(
@@ -239,7 +239,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
                       child:
                       Button(
                         borderRadius: 12,
-                        backgroundColor: !selectedIncome
+                        color: !selectedIncome
                             ? Theme.of(context).colorScheme.primary
                             : Colors.transparent,
                         border: Border.all(
