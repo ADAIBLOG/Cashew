@@ -78,8 +78,6 @@ Future<bool> runNotificationPayLoads(context) async {
         String? templatePk = payloadData["templatePk"];
         String? title = payloadData["title"];
         DateTime? date;
-        bool? selectedIncome = payloadData.containsKey("income") ? (payloadData["income"] == "true") : null;
-        
         if (payloadData["date"] != null) {
           try {
             date = DateTime.parse(payloadData["date"]);
@@ -103,11 +101,6 @@ Future<bool> runNotificationPayLoads(context) async {
             
             // 获取默认类别
             selectedCategory = await database.getCategoryInstanceOrNull(template.defaultCategoryFk);
-            
-            // 从模板获取收入/支出设置，如果payload中没有指定
-            if (selectedIncome == null) {
-              selectedIncome = template.income;
-            }
           }
         }
         
@@ -131,10 +124,8 @@ Future<bool> runNotificationPayLoads(context) async {
               selectedCategory: selectedCategory,
               selectedWallet: selectedWallet,
               selectedDate: date,
-              selectedIncome: selectedIncome, // 传递收入/支出设置
               startInitialAddTransactionSequence: false,
               templatePk: templatePk, // 传递模板PK以便在页面中使用
-              useCategorySelectedIncome: selectedIncome == null, // 只有在没有指定income时才使用类别的设置
             ),
           );
         });
