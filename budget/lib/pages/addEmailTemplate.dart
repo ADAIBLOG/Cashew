@@ -182,8 +182,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
               },
               padding: EdgeInsetsDirectional.only(start: 7, end: 7),
               fontSize: 18,
-
-            ),
+            )
           ),
           SizedBox(height: 20),
           
@@ -233,7 +232,6 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
                             : FontWeight.normal,
                         fontSize: 16,
                       )
-                    ),
                     SizedBox(width: 15),
                     Expanded(
                       child:
@@ -263,7 +261,6 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
                             : FontWeight.normal,
                         fontSize: 16,
                       )
-                    ),
                   ],
                 ),
               ],
