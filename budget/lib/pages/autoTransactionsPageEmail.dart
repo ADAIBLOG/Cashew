@@ -161,7 +161,7 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
       pushRoute(
         null,
         AddTransactionPage(
-          useCategorySelectedIncome: true,
+          useCategorySelectedIncome: templateFound.isIncome == true,
           routesToPopAfterDelete: RoutesToPopAfterDelete.None,
           selectedAmount: amountDouble,
           selectedTitle: title,
@@ -210,7 +210,8 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
           "amount": amountDouble.toString(),
           "templatePk": templateFound.scannerTemplatePk,
           "title": title,
-          "date": dateTime?.toString()
+          "date": dateTime?.toString(),
+          "isIncome": templateFound.isIncome
         }),
       );
     }
