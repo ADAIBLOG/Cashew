@@ -503,6 +503,8 @@ class ScannerTemplates extends Table {
       text().references(Categories, #categoryPk)();
   TextColumn get walletFk =>
       text().references(Wallets, #walletPk).withDefault(const Constant("0"))();
+  // 交易类型：收入或支出
+  BoolColumn get income => boolean().withDefault(const Constant(false))();
   // TODO: if it contains certain keyword ignore these emails
   BoolColumn get ignore => boolean().withDefault(const Constant(false))();
 
