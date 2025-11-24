@@ -956,10 +956,6 @@ class ScannerTemplateEntry extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      CategoryIcon(
-                          categoryPk: scannerTemplate.defaultCategoryFk,
-                          size: 25),
-                      SizedBox(width: 7),
                       TextFont(
                         text: scannerTemplate.templateName,
                         fontWeight: FontWeight.bold,
