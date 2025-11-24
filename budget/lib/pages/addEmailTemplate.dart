@@ -33,7 +33,6 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
   String? selectedWalletPk;
   String? selectedName;
   String? selectedSubject;
-  bool selectedIncome = false; // 默认支出
 
   @override
   void initState() {
@@ -44,8 +43,6 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
           : widget.scannerTemplate!.walletFk;
       selectedName = widget.scannerTemplate!.templateName;
       selectedSubject = widget.scannerTemplate!.contains;
-      // 从现有模板加载收入/支出设置
-      selectedIncome = widget.scannerTemplate!.income;
     }
     determineBottomButton();
   }
@@ -105,8 +102,6 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
       titleTransactionAfter: "",
       titleTransactionBefore: "",
       walletFk: selectedWalletPk ?? "-1",
-      // 添加收入/支出设置
-      income: selectedIncome,
       ignore: false,
     );
   }
@@ -182,88 +177,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
               },
               padding: EdgeInsetsDirectional.only(start: 7, end: 7),
               fontSize: 18,
-            )
-          ),
-          SizedBox(height: 20),
-          
-          // 交易类型选择：收入/支出
-          Padding(
-            padding: const EdgeInsetsDirectional.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children:
-              [
-                Text(
-                  "交易类型",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                SizedBox(height: 10),
-                Row(
-                  children:
-                  [
-                    Expanded(
-                      child:
-                      Button(
-                        borderRadius: 12,
-                        color: selectedIncome
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: selectedIncome
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.outline,
-                          width: 1.5,
-                        ),
-                        onTap: () {
-                          setState(() {
-                            selectedIncome = true;
-                          });
-                        },
-                        padding: EdgeInsets.all(15),
-                        label: "收入",
-                        textColor: selectedIncome
-                            ? Colors.white
-                            : Theme.of(context).colorScheme.onSurface,
-                        fontWeight: selectedIncome
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        fontSize: 16,
-                      )
-                    SizedBox(width: 15),
-                    Expanded(
-                      child:
-                      Button(
-                        borderRadius: 12,
-                        color: !selectedIncome
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: !selectedIncome
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.outline,
-                          width: 1.5,
-                        ),
-                        onTap: () {
-                          setState(() {
-                            selectedIncome = false;
-                          });
-                        },
-                        padding: EdgeInsets.all(15),
-                        label: "支出",
-                        textColor: !selectedIncome
-                            ? Colors.white
-                            : Theme.of(context).colorScheme.onSurface,
-                        fontWeight: !selectedIncome
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        fontSize: 16,
-                      )
-                  ],
-                ),
-              ],
+
             ),
           ),
           SizedBox(height: 20),
@@ -329,9 +243,8 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
                 Text("使用说明:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 Text("1. 输入模板名称便于识别", style: TextStyle(fontSize: 14)),
                 Text("2. 输入主题文本（关键词）用于识别交易消息", style: TextStyle(fontSize: 14)),
-                Text("3. 选择交易类型：收入或支出", style: TextStyle(fontSize: 14)),
-                Text("4. 选择交易将自动分配到的账户", style: TextStyle(fontSize: 14)),
-                Text("5. 金额将从消息中自动识别（支持¥\$€£等货币符号）", style: TextStyle(fontSize: 14)),
+                Text("3. 选择交易将自动分配到的账户", style: TextStyle(fontSize: 14)),
+                Text("4. 金额将从消息中自动识别（支持¥\$€£等货币符号）", style: TextStyle(fontSize: 14)),
               ],
             ),
           ),
