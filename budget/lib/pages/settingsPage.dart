@@ -336,8 +336,9 @@ class MorePages extends StatelessWidget {
           if (hasSideNavigation) SettingsPageContent(),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class EnterName extends StatelessWidget {
@@ -613,21 +614,28 @@ class MoreOptionsPagePreferences extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PageFramework(
-      title: "more".tr(),
-      dragDownToDismiss: true,
-      horizontalPaddingConstrained: true,
-      trailingWidget: IconButton(
-        icon: Icon(Icons.info_outline_rounded),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AboutCashewPage()),
-          );
-        },
-        tooltip: "关于 Cashew",
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("more".tr()),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.info_outline_rounded),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AboutCashewPage()),
+              );
+            },
+            tooltip: "关于 Cashew",
+          ),
+        ],
       ),
-      listWidgets: [
+      body: SingleChildScrollView(
+        child: Container(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            children: [
         SettingsHeader(title: "style".tr()),
         HeaderHeightSetting(),
         OutlinedIconsSetting(),
