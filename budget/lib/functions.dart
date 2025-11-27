@@ -74,13 +74,13 @@ extension DateUtils on DateTime {
   DateTime lastDayOfMonth() {
     return DateTime(this.year, this.month + 1, 0);
   }
-
+  
   DateTime startOfDay() {
-    return DateTime(this.year, this.month, this.day, 0, 0, 0);
+    return DateTime(this.year, this.month, this.day, 0, 0, 0, 0, 0);
   }
-
+  
   DateTime endOfDay() {
-    return DateTime(this.year, this.month, this.day, 23, 59, 59);
+    return DateTime(this.year, this.month, this.day, 23, 59, 59, 999, 999);
   }
 }
 
