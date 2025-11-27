@@ -123,14 +123,20 @@ void showAboutDialog(BuildContext context) {
 }
 
 class MoreActionsPageState extends State<MoreActionsPage> {
+  ScrollController _scrollController = ScrollController();
+  
   void refreshState() {
     print("refresh settings");
     setState(() {});
   }
 
-  // 重新添加scrollToTop方法以兼容底部导航栏的调用
+  // 恢复scrollToTop方法以支持滚动功能
   void scrollToTop() {
-    // 由于不再使用滚动视图，此方法保持空实现
+    _scrollController.animateTo(
+      0,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -157,16 +163,20 @@ class MoreActionsPageState extends State<MoreActionsPage> {
           ],
         ),
         body: SafeArea(
-          child: Container(
-            // 占据整个屏幕
-            width: double.infinity,
-            height: double.infinity,
-            alignment: Alignment.center,
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            padding: EdgeInsets.all(16),
             child: MorePages(),
           ),
         ),
       );
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 }
 
@@ -178,14 +188,10 @@ class MorePages extends StatelessWidget {
     bool hasSideNavigation = getIsFullScreen(context);
 
     return Container(
-      // 确保内容完全居中且无滑动
-      alignment: Alignment.center,
-      padding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 16),
       // 限制最大宽度，使内容在宽屏上也能居中良好显示
       constraints: BoxConstraints(maxWidth: 600),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           if (hasSideNavigation == false)
             Row(
