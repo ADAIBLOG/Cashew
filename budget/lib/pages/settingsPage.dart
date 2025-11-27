@@ -4,6 +4,7 @@ import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/billSplitter.dart';
 import 'package:budget/pages/budgetsListPage.dart';
 import 'package:budget/pages/creditDebtTransactionsPage.dart';
+import 'package:budget/pages/aboutPage.dart';
 import 'package:budget/pages/editHomePage.dart';
 import 'package:budget/pages/editObjectivesPage.dart';
 import 'package:budget/pages/homePage/homePageNetWorth.dart';
@@ -45,6 +46,7 @@ import 'package:budget/widgets/sliderSelector.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/util/checkWidgetLaunch.dart';
+import 'package:budget/functions.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/main.dart';
@@ -119,6 +121,22 @@ class MorePages extends StatelessWidget {
                   child: SettingsContainerOpenPage(
                     openPage: SettingsPageFramework(
                       key: settingsPageFrameworkStateKey,
+                      actions: hasSideNavigation == false
+                          ? [
+                              IconButton(
+                                onPressed: () {
+                                  pushRoute(context, AboutPage());
+                                },
+                                icon: Icon(
+                                  appStateSettings["outlinedIcons"] 
+                                      ? Icons.info_outline_rounded
+                                      : Icons.info_rounded,
+                                  size: 24,
+                                ),
+                                tooltip: "about-cashew".tr(),
+                              ),
+                            ]
+                          : null,
                     ),
                     title: navBarIconsData["settings"]!.labelLong.tr(),
                     icon: navBarIconsData["settings"]!.iconData,
@@ -149,12 +167,6 @@ class MorePages extends StatelessWidget {
                 ),
               ],
             ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // "关于Cashew"按钮和反馈按钮已删除
-            ],
-          ),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -375,7 +387,12 @@ Future<String> enterNameBottomSheet(context,
 }
 
 class SettingsPageFramework extends StatefulWidget {
-  const SettingsPageFramework({super.key});
+  const SettingsPageFramework({
+    super.key,
+    this.actions,
+  });
+
+  final List<Widget>? actions;
 
   @override
   State<SettingsPageFramework> createState() => SettingsPageFrameworkState();
@@ -392,6 +409,7 @@ class SettingsPageFrameworkState extends State<SettingsPageFramework> {
     return PageFramework(
       title: "settings".tr(),
       dragDownToDismiss: true,
+      actions: widget.actions,
       listWidgets: [SettingsPageContent()],
     );
   }
