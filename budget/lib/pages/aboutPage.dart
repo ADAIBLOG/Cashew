@@ -63,19 +63,10 @@ class _AboutPageState extends State<AboutPage> {
                 await launchUrl(url);
               }
             },
-            showBorder: true,
+
           ),
         ),
-        SliverToBoxAdapter(
-          child: SettingsContainer(
-            title: "about-description".tr(),
-            description: "a-budget-and-financial-tracking-application".tr(),
-            icon: appStateSettings["outlinedIcons"]
-                ? Icons.info_outlined
-                : Icons.info_rounded,
-            showBorder: true,
-          ),
-        ),
+
         SliverToBoxAdapter(child: SizedBox(height: 55)),
       ],
     );
