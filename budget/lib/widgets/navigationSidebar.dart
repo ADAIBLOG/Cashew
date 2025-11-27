@@ -305,10 +305,6 @@ class NavigationSidebarState extends State<NavigationSidebar> {
                                 navBarIconDataKey: "settings",
                                 currentPageIndex: selectedIndex,
                               ),
-                              NavigationSidebarButtonWithNavBarIconData(
-                                navBarIconDataKey: "about",
-                                currentPageIndex: selectedIndex,
-                              ),
                               SyncButton(),
                               SizedBox(height: 10),
                               SizedBox(
