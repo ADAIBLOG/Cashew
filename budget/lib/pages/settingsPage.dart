@@ -133,7 +133,7 @@ void showAboutDialog(BuildContext context) {
                 ? Icons.code_outlined
                 : Icons.code_rounded,
             onTap: () {
-              launchURL("https://github.com/ADAIBLOG/Cashew");
+              openUrl("https://github.com/ADAIBLOG/Cashew");
             },
             enableBorderRadius: true,
           ),
@@ -152,7 +152,7 @@ void showAboutDialog(BuildContext context) {
                 ? Icons.link_outlined
                 : Icons.link_rounded,
             onTap: () {
-              launchURL("https://github.com/jameskokoska/Cashew");
+              openUrl("https://github.com/jameskokoska/Cashew");
             },
             enableBorderRadius: true,
           ),
@@ -461,12 +461,12 @@ class SettingsPageFrameworkState extends State<SettingsPageFramework> {
       title: "settings".tr(),
       dragDownToDismiss: true,
       listWidgets: [SettingsPageContent()],
-      headerRightWidgets: [
+      actions: [
         Tappable(
           onTap: () {
             showAboutDialog(context);
           },
-          icon: Text("!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          child: Text("!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           padding: EdgeInsets.all(8),
           borderRadius: 100,
         ),
