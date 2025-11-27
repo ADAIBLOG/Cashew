@@ -16,6 +16,17 @@ import 'package:provider/provider.dart';
 import 'package:budget/pages/addWalletPage.dart';
 import "package:budget/struct/throttler.dart";
 
+// 扩展DateTime类，添加startOfDay和endOfDay方法
+extension DateTimeExtensions on DateTime {
+  DateTime startOfDay() {
+    return DateTime(year, month, day, 0, 0, 0, 0, 0);
+  }
+  
+  DateTime endOfDay() {
+    return DateTime(year, month, day, 23, 59, 59, 999, 999);
+  }
+}
+
 class AndroidOnly extends StatelessWidget {
   const AndroidOnly({required this.child, super.key});
   final Widget child;
