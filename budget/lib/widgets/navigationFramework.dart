@@ -25,6 +25,7 @@ import 'package:budget/pages/transactionsListPage.dart';
 import 'package:budget/pages/upcomingOverdueTransactionsPage.dart';
 import 'package:budget/pages/walletDetailsPage.dart';
 import 'package:budget/pages/creditDebtTransactionsPage.dart';
+import 'package:budget/pages/aboutPage.dart';
 import 'package:budget/struct/currencyFunctions.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/defaultPreferences.dart';
@@ -362,7 +363,7 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
     EditBudgetPage(), //10
     EditCategoriesPage(), //11
     EditAssociatedTitlesPage(), //12
-    // Removed AboutPage navigation item
+    AboutPage(), //13
     ObjectivesListPage(key: objectivesListPageStateKey, backButton: false), //14
     EditObjectivesPage(objectiveType: ObjectiveType.goal), //15
     UpcomingOverdueTransactions(
