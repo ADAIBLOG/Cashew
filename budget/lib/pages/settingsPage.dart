@@ -22,6 +22,7 @@ import 'package:budget/widgets/exportCSV.dart';
 import 'package:budget/pages/autoTransactionsPageEmail.dart';
 import 'package:budget/pages/activityPage.dart';
 import 'package:budget/pages/editAssociatedTitlesPage.dart';
+import 'package:budget/widgets/util/appLinks.dart';
 import 'package:budget/pages/editBudgetPage.dart';
 import 'package:budget/pages/editCategoriesPage.dart';
 import 'package:budget/pages/editWalletsPage.dart';
@@ -71,6 +72,61 @@ class MoreActionsPage extends StatefulWidget {
   State<MoreActionsPage> createState() => MoreActionsPageState();
 }
 
+// 显示关于应用的对话框
+void showAboutDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text('关于Cashew'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('软件版本信息: 1.0.0'),
+              SizedBox(height: 10),
+              Text('作者名称: 阿呆'),
+              SizedBox(height: 10),
+              Text('源代码地址:'),
+              InkWell(
+                onTap: () {
+                  launchURL('https://github.com/ADAIBLOG/Cashew');
+                },
+                child: Text(
+                  'https://github.com/ADAIBLOG/Cashew',
+                  style: TextStyle(color: Colors.blue),
+                ),
+              ),
+              SizedBox(height: 10),
+              Text('原作者: James'),
+              SizedBox(height: 10),
+              Text('原仓库地址:'),
+              InkWell(
+                onTap: () {
+                  launchURL('https://github.com/jameskokoska/Cashew');
+                },
+                child: Text(
+                  'https://github.com/jameskokoska/Cashew',
+                  style: TextStyle(color: Colors.blue),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('确定'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 class MoreActionsPageState extends State<MoreActionsPage> {
   void refreshState() {
     print("refresh settings");
@@ -86,8 +142,24 @@ class MoreActionsPageState extends State<MoreActionsPage> {
   Widget build(BuildContext context) {
     return OrientationBuilder(builder: (context, _) {
       return Scaffold(
-        // 直接使用Scaffold而不是PageFramework，避免任何可能的滚动功能
-        appBar: null, // 完全移除appBar
+        // 添加AppBar并设置actions
+        appBar: AppBar(
+          title: Text(''), // 空标题
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          actions: [
+            IconButton(
+              icon: Text(
+                '！',
+                style: TextStyle(fontSize: 24),
+              ),
+              onPressed: () {
+                showAboutDialog(context);
+              },
+              tooltip: '关于',
+            ),
+          ],
+        ),
         body: SafeArea(
           child: Container(
             // 占据整个屏幕
@@ -100,66 +172,6 @@ class MoreActionsPageState extends State<MoreActionsPage> {
       );
     });
   }
-}
-
-void showAboutDialog(BuildContext context) {
-  openBottomSheet(
-    context,
-    PopupFramework(
-      title: "关于软件",
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SettingsContainer(
-            title: "软件版本",
-            description: appStateSettings["appVersion"] ?? "未知版本",
-            icon: appStateSettings["outlinedIcons"]
-                ? Icons.info_outlined
-                : Icons.info_rounded,
-            enableBorderRadius: true,
-          ),
-          SettingsContainer(
-            title: "作者名称",
-            description: "阿呆",
-            icon: appStateSettings["outlinedIcons"]
-                ? Icons.person_outlined
-                : Icons.person_rounded,
-            enableBorderRadius: true,
-          ),
-          SettingsContainer(
-            title: "源代码地址",
-            description: "https://github.com/ADAIBLOG/Cashew",
-            icon: appStateSettings["outlinedIcons"]
-                ? Icons.code_outlined
-                : Icons.code_rounded,
-            onTap: () {
-              openUrl("https://github.com/ADAIBLOG/Cashew");
-            },
-            enableBorderRadius: true,
-          ),
-          SettingsContainer(
-            title: "原作者",
-            description: "James",
-            icon: appStateSettings["outlinedIcons"]
-                ? Icons.person_outline_outlined
-                : Icons.person_rounded,
-            enableBorderRadius: true,
-          ),
-          SettingsContainer(
-            title: "原仓库地址",
-            description: "https://github.com/jameskokoska/Cashew",
-            icon: appStateSettings["outlinedIcons"]
-                ? Icons.link_outlined
-                : Icons.link_rounded,
-            onTap: () {
-              openUrl("https://github.com/jameskokoska/Cashew");
-            },
-            enableBorderRadius: true,
-          ),
-        ],
-      ),
-    ),
-  );
 }
 
 class MorePages extends StatelessWidget {
@@ -461,18 +473,6 @@ class SettingsPageFrameworkState extends State<SettingsPageFramework> {
       title: "settings".tr(),
       dragDownToDismiss: true,
       listWidgets: [SettingsPageContent()],
-      actions: [
-        Tappable(
-            onTap: () {
-              showAboutDialog(context);
-            },
-            child: Padding(
-              padding: EdgeInsets.all(8),
-              child: Text("!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            ),
-            borderRadius: 100,
-          ),
-      ],
     );
   }
 }
