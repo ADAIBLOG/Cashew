@@ -85,7 +85,7 @@ void showAboutDialog(BuildContext context) {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('软件版本信息: ${packageInfoGlobal?.version ?? '未知版本'}'),
+              Text('软件版本: ${packageInfoGlobal?.version ?? '未知版本'}'),
               SizedBox(height: 10),
               Text('作者: 阿呆'),
               SizedBox(height: 10),
