@@ -4,6 +4,8 @@ import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/functions.dart';
+import 'package:budget/struct/languageMap.dart';
+import 'package:budget/widgets/showChangelog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutCashewPage extends StatefulWidget {
