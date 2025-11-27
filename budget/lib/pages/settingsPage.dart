@@ -12,8 +12,10 @@ import 'package:budget/pages/transactionsListPage.dart';
 import 'package:budget/pages/upcomingOverdueTransactionsPage.dart';
 import 'package:budget/struct/currencyFunctions.dart';
 import 'package:budget/struct/defaultPreferences.dart';
+import 'package:budget/struct/languageMap.dart';
 import 'package:budget/struct/navBarIconsData.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
+import 'package:budget/widgets/dropdownSelect.dart';
 import 'package:budget/widgets/exportDB.dart';
 import 'package:budget/widgets/importCSV.dart';
 import 'package:budget/widgets/exportCSV.dart';
@@ -25,6 +27,7 @@ import 'package:budget/pages/editCategoriesPage.dart';
 import 'package:budget/pages/editWalletsPage.dart';
 import 'package:budget/pages/notificationsPage.dart';
 import 'package:budget/pages/subscriptionsPage.dart';
+import 'package:budget/widgets/accountAndBackup.dart';
 import 'package:budget/widgets/importDB.dart';
 import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/notificationsSettings.dart';
@@ -53,12 +56,15 @@ import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:budget/widgets/outlinedButtonStacked.dart';
-import 'package:budget/pages/aboutCashewPage.dart';
 
 //To get SHA1 Key run
 // ./gradlew signingReport
 //in budget\Android
 //Generate new OAuth and put JSON in budget\android\app folder
+
+import 'package:budget/pages/aboutCashewPage.dart';
+import 'package:budget/struct/settings.dart';
+import 'package:flutter/material.dart';
 
 class MoreActionsPage extends StatefulWidget {
   const MoreActionsPage({
@@ -84,28 +90,25 @@ class MoreActionsPageState extends State<MoreActionsPage> {
   Widget build(BuildContext context) {
     return OrientationBuilder(builder: (context, _) {
       return Scaffold(
-        // 直接使用Scaffold而不是PageFramework，避免任何可能的滚动功能
+        // 添加AppBar
         appBar: AppBar(
-          automaticallyImplyLeading: false,
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          title: Text(""),
+          title: Text("更多"),
           actions: [
+            // 在右上角添加！按钮
             IconButton(
-              icon: Icon(
-                appStateSettings["outlinedIcons"]
-                    ? Icons.info_outline
-                    : Icons.info_rounded,
-                size: 25,
-              ),
+              tooltip: "关于",
               onPressed: () {
-                pushRoute(
+                Navigator.push(
                   context,
-                  AboutCashewPage(),
+                  MaterialPageRoute(builder: (context) => AboutCashewPage()),
                 );
               },
+              icon: Icon(
+                appStateSettings["outlinedIcons"]
+                    ? Icons.info_outline_rounded
+                    : Icons.info_rounded,
+              ),
             ),
-            SizedBox(width: 8),
           ],
         ),
         body: SafeArea(
