@@ -181,6 +181,12 @@ Future updateWidgetColorsAndText(BuildContext context) async {
     await HomeWidget.updateWidget(
       name: 'MonthlyIncomeWidgetProvider',
     );
+    await HomeWidget.updateWidget(
+      name: 'DailyExpenseWidgetProvider',
+    );
+    await HomeWidget.updateWidget(
+      name: 'DailyIncomeWidgetProvider',
+    );
   });
 
   return;
@@ -335,6 +341,96 @@ class RenderHomePageWidgetsState extends State<RenderHomePageWidgets> {
                   );
                   await HomeWidget.updateWidget(
                     name: 'MonthlyIncomeWidgetProvider',
+                  );
+                });
+
+                return const SizedBox.shrink();
+              },
+            ),
+            // Daily expense widget data update
+            StreamBuilder<TotalWithCount?>(
+              stream: database.watchTotalWithCountOfWallet(
+                isIncome: false, // Filter for expenses only
+                allWallets: Provider.of<AllWallets>(context),
+                startDate: DateTime.now().startOfDay(),
+                forcedDateTimeRange: DateTimeRange(
+                  start: DateTime.now().startOfDay(),
+                  end: DateTime.now().endOfDay(),
+                ),
+                followCustomPeriodCycle: false,
+                searchFilters: SearchFilters(expenseIncome: [ExpenseIncome.expense]),
+              ),
+              builder: (context, snapshotDailyExpense) {
+                Future.delayed(Duration.zero, () async {
+                  int totalCount = snapshotDailyExpense.data?.count ?? 0;
+                  String dailyExpenseTransactionsNumber = totalCount.toString() +
+                      " " +
+                      (totalCount == 1
+                          ? "transaction".tr().toLowerCase()
+                          : "transactions".tr().toLowerCase());
+                  double totalExpense = snapshotDailyExpense.data?.total ?? 0;
+                  // Ensure it shows as positive amount for display
+                  double displayExpense = totalExpense.abs();
+                  String dailyExpenseAmount = convertToMoney(
+                    Provider.of<AllWallets>(context, listen: false),
+                    displayExpense,
+                  );
+                  
+                  await HomeWidget.saveWidgetData<String>(
+                    'daily_expense_amount',
+                    dailyExpenseAmount,
+                  );
+                  await HomeWidget.saveWidgetData<int>(
+                    'daily_expense_transactions',
+                    totalCount,
+                  );
+                  await HomeWidget.updateWidget(
+                    name: 'DailyExpenseWidgetProvider',
+                  );
+                });
+
+                return const SizedBox.shrink();
+              },
+            ),
+            // Daily income widget data update
+            StreamBuilder<TotalWithCount?>(
+              stream: database.watchTotalWithCountOfWallet(
+                isIncome: true, // Filter for income only
+                allWallets: Provider.of<AllWallets>(context),
+                startDate: DateTime.now().startOfDay(),
+                forcedDateTimeRange: DateTimeRange(
+                  start: DateTime.now().startOfDay(),
+                  end: DateTime.now().endOfDay(),
+                ),
+                followCustomPeriodCycle: false,
+                searchFilters: SearchFilters(expenseIncome: [ExpenseIncome.income]),
+              ),
+              builder: (context, snapshotDailyIncome) {
+                Future.delayed(Duration.zero, () async {
+                  int totalCount = snapshotDailyIncome.data?.count ?? 0;
+                  String dailyIncomeTransactionsNumber = totalCount.toString() +
+                      " " +
+                      (totalCount == 1
+                          ? "transaction".tr().toLowerCase()
+                          : "transactions".tr().toLowerCase());
+                  double totalIncome = snapshotDailyIncome.data?.total ?? 0;
+                  // Ensure it shows as positive amount for display
+                  double displayIncome = totalIncome.abs();
+                  String dailyIncomeAmount = convertToMoney(
+                    Provider.of<AllWallets>(context, listen: false),
+                    displayIncome,
+                  );
+                  
+                  await HomeWidget.saveWidgetData<String>(
+                    'daily_income_amount',
+                    dailyIncomeAmount,
+                  );
+                  await HomeWidget.saveWidgetData<int>(
+                    'daily_income_transactions',
+                    totalCount,
+                  );
+                  await HomeWidget.updateWidget(
+                    name: 'DailyIncomeWidgetProvider',
                   );
                 });
 
