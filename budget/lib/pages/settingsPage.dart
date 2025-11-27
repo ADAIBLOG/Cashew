@@ -24,6 +24,7 @@ import 'package:budget/pages/activityPage.dart';
 import 'package:budget/pages/editAssociatedTitlesPage.dart';
 import 'package:budget/widgets/util/appLinks.dart';
 import 'package:budget/functions.dart';
+import 'package:budget/widgets/button.dart';
 import 'package:budget/pages/editBudgetPage.dart';
 import 'package:budget/pages/editCategoriesPage.dart';
 import 'package:budget/pages/editWalletsPage.dart';
@@ -77,6 +78,7 @@ class MoreActionsPage extends StatefulWidget {
 void showAboutDialog(BuildContext context) {
   showDialog(
     context: context,
+    barrierDismissible: true, // 允许点击外部区域关闭对话框
     builder: (context) {
       return AlertDialog(
         title: Text('关于Cashew'),
@@ -85,9 +87,9 @@ void showAboutDialog(BuildContext context) {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('软件版本: ${packageInfoGlobal?.version ?? '未知版本'}'),
+              Text('软件版本信息: 1.0.0'),
               SizedBox(height: 10),
-              Text('作者: 阿呆'),
+              Text('作者名称: 阿呆'),
               SizedBox(height: 10),
               Text('源代码地址:'),
               InkWell(
@@ -141,15 +143,16 @@ class MoreActionsPageState extends State<MoreActionsPage> {
           elevation: 0,
           backgroundColor: Colors.transparent,
           actions: [
-            IconButton(
-              icon: Text(
-                '！',
-                style: TextStyle(fontSize: 24),
-              ),
-              onPressed: () {
+            ButtonIcon(
+              onTap: () {
                 showAboutDialog(context);
               },
-              tooltip: '关于',
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.info_outlined
+                  : Icons.info_rounded,
+              size: 40,
+              iconPadding: 16,
+              color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7),
             ),
           ],
         ),
