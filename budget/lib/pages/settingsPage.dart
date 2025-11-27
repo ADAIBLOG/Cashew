@@ -40,6 +40,7 @@ import 'package:budget/widgets/selectAmount.dart';
 import 'package:budget/widgets/selectColor.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/pages/walletDetailsPage.dart';
+import 'package:budget/pages/aboutCashewPage.dart';
 import 'package:budget/struct/initializeBiometrics.dart';
 import 'package:budget/widgets/sliderSelector.dart';
 import 'package:budget/widgets/tappable.dart';
@@ -616,6 +617,16 @@ class MoreOptionsPagePreferences extends StatelessWidget {
       title: "more".tr(),
       dragDownToDismiss: true,
       horizontalPaddingConstrained: true,
+      trailingWidget: IconButton(
+        icon: Icon(Icons.info_outline_rounded),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AboutCashewPage()),
+          );
+        },
+        tooltip: "关于 Cashew",
+      ),
       listWidgets: [
         SettingsHeader(title: "style".tr()),
         HeaderHeightSetting(),
