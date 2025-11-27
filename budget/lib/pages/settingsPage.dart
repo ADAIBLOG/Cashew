@@ -339,7 +339,7 @@ class MorePages extends StatelessWidget {
     ),
   );
 }
-}
+
 
 class EnterName extends StatelessWidget {
   const EnterName({
