@@ -90,7 +90,7 @@
             </intent-filter>
         </service>
         <receiver android:name="PlusWidgetProvider"
-            android:exported="true" android:label="Transaction Shortcut">
+            android:exported="true" android:label="添加收入">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -98,7 +98,7 @@
                 android:resource="@xml/plus_widget" />
         </receiver>
         <receiver android:name="TransferWidgetProvider"
-            android:exported="true" android:label="Transfer Shortcut">
+            android:exported="true" android:label="转账">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -106,7 +106,7 @@
                 android:resource="@xml/transfer_widget" />
         </receiver>
         <receiver android:name="NetWorthPlusWidgetProvider"
-            android:exported="true" android:label="Net Total Wide">
+            android:exported="true" android:label="净资产（宽版）">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -114,7 +114,7 @@
                 android:resource="@xml/net_worth_plus_widget" />
         </receiver>
         <receiver android:name="NetWorthWidgetProvider"
-            android:exported="true" android:label="Net Total">
+            android:exported="true" android:label="净资产">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -122,7 +122,7 @@
                 android:resource="@xml/net_worth_widget" />
         </receiver>
         <receiver android:name="MonthlyExpenseWidgetProvider"
-            android:exported="true" android:label="Monthly Expense">
+            android:exported="true" android:label="当月支出">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -138,7 +138,7 @@
                 android:resource="@xml/daily_expense_widget" />
         </receiver>
         <receiver android:name="com.budget.tracker_app.MonthlyIncomeWidgetProvider"
-            android:exported="true" android:label="Monthly Income Widget">
+            android:exported="true" android:label="当月收入">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -146,7 +146,7 @@
                 android:resource="@xml/monthly_income_widget" />
         </receiver>
         <receiver android:name="com.budget.tracker_app.DailyIncomeWidgetProvider"
-            android:exported="true" android:label="Daily Income Widget">
+            android:exported="true" android:label="当日收入">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -154,7 +154,7 @@
                 android:resource="@xml/daily_income_widget" />
         </receiver>
         <receiver android:name="MinusWidgetProvider"
-            android:exported="true" android:label="Transaction Minus">
+            android:exported="true" android:label="添加支出">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
