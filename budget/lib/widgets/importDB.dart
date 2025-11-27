@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:budget/database/initializeDefaultDatabase.dart';
 
 Future<String?> importDBFileFromDevice(BuildContext context) async {
   // Avoid using a file filter: PlatformException(FilePicker, Unsupported filter....
@@ -91,14 +92,30 @@ Future importDB(BuildContext context, {ignoreOverwriteWarning = false}) async {
         return await importDBFileFromDevice(context);
       },
       onSuccess: (result) {
-        if (result != null)
-          restartAppPopup(
-            context,
-            description: kIsWeb
-                ? "refresh-required-to-load-backup".tr()
-                : "restart-required-to-load-backup".tr(),
-            // codeBlock: result.toString(),
-          );
+        if (result != null) {
+          // 直接刷新应用状态而不提示重启
+          lockAppWaitForRestart = false;
+          appStateKey.currentState?.refreshAppState();
+          
+          // 刷新所有页面以加载新数据
+          if (globalNavigationKey.currentContext != null) {
+            popAllRoutes(globalNavigationKey.currentContext!);
+            Future.delayed(Duration(milliseconds: 100), () {
+              PageNavigationFramework.changePage(
+                  globalNavigationKey.currentContext!, 0, 
+                  switchNavbar: true, refreshAllPages: true);
+            });
+          }
+          
+          // 显示成功消息
+          openSnackbar(SnackbarMessage(
+            title: "数据已成功导入",
+            description: "数据已刷新",
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.check_circle_outline
+                : Icons.check_circle_rounded,
+          ));
+        }
       },
     );
   }
