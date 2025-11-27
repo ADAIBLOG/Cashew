@@ -116,9 +116,11 @@ class MorePages extends StatelessWidget {
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 16),
       // 限制最大宽度，使内容在宽屏上也能居中良好显示
       constraints: BoxConstraints(maxWidth: 600),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (hasSideNavigation == false)
             Row(
@@ -337,8 +339,8 @@ class MorePages extends StatelessWidget {
         ],
       ),
     );
+  }
 }
-
 
 class EnterName extends StatelessWidget {
   const EnterName({
@@ -613,58 +615,38 @@ class MoreOptionsPagePreferences extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("more".tr()),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.info_outline_rounded),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AboutCashewPage()),
-              );
-            },
-            tooltip: "关于 Cashew",
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Container(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            children: [
-              SettingsHeader(title: "style".tr()),
-              HeaderHeightSetting(),
-              OutlinedIconsSetting(),
-              FontPickerSetting(),
-              AppAnimationSetting(),
-              CountingNumberAnimationSetting(),
-              IncreaseTextContrastSetting(),
-              SettingsHeader(title: "transactions".tr()),
-              TransactionsSettings(),
-              SettingsHeader(title: "accounts".tr()),
-              WalletsSettings(),
-              PrimaryCurrencySetting(),
-              SettingsHeader(title: "budgets".tr()),
-              BudgetSettings(),
-              SettingsHeader(title: "goals".tr()),
-              ObjectiveSettings(),
-              SettingsHeader(title: "titles".tr()),
-              TitlesSettings(),
-              SettingsHeader(title: "widgets".tr()),
-              WidgetSettings(),
-              SettingsHeader(title: "formatting".tr()),
-              NumberFormattingSetting(),
-              PercentagePrecisionSetting(),
-              Time24HourFormatSetting(),
-              FirstDayOfWeekSetting(updateHomePage: true),
-              NumberPadFormatSetting(),
-            ],
-          ),
-        ),
-      ),
+    return PageFramework(
+      title: "more".tr(),
+      dragDownToDismiss: true,
+      horizontalPaddingConstrained: true,
+      listWidgets: [
+        SettingsHeader(title: "style".tr()),
+        HeaderHeightSetting(),
+        OutlinedIconsSetting(),
+        FontPickerSetting(),
+        AppAnimationSetting(),
+        CountingNumberAnimationSetting(),
+        IncreaseTextContrastSetting(),
+        SettingsHeader(title: "transactions".tr()),
+        TransactionsSettings(),
+        SettingsHeader(title: "accounts".tr()),
+        WalletsSettings(),
+        PrimaryCurrencySetting(),
+        SettingsHeader(title: "budgets".tr()),
+        BudgetSettings(),
+        SettingsHeader(title: "goals".tr()),
+        ObjectiveSettings(),
+        SettingsHeader(title: "titles".tr()),
+        TitlesSettings(),
+        SettingsHeader(title: "widgets".tr()),
+        WidgetSettings(),
+        SettingsHeader(title: "formatting".tr()),
+        NumberFormattingSetting(),
+        PercentagePrecisionSetting(),
+        Time24HourFormatSetting(),
+        FirstDayOfWeekSetting(updateHomePage: true),
+        NumberPadFormatSetting(),
+      ],
     );
   }
 }
@@ -1458,6 +1440,32 @@ class _CustomNumberFormatPopupState extends State<CustomNumberFormatPopup> {
               ),
             )
           ],
+        ),
+        // 右上角！按钮
+        Positioned(
+          top: 10,
+          right: 10,
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AboutCashewPage()),
+              );
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.question_mark,
+                size: 24,
+                color: Colors.white,
+              ),
+            ),
+          ),
         ),
       ],
     );
