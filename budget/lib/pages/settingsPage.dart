@@ -23,6 +23,7 @@ import 'package:budget/pages/autoTransactionsPageEmail.dart';
 import 'package:budget/pages/activityPage.dart';
 import 'package:budget/pages/editAssociatedTitlesPage.dart';
 import 'package:budget/widgets/util/appLinks.dart';
+import 'package:budget/functions.dart';
 import 'package:budget/pages/editBudgetPage.dart';
 import 'package:budget/pages/editCategoriesPage.dart';
 import 'package:budget/pages/editWalletsPage.dart';
@@ -91,7 +92,7 @@ void showAboutDialog(BuildContext context) {
               Text('源代码地址:'),
               InkWell(
                 onTap: () {
-                  launchURL('https://github.com/ADAIBLOG/Cashew');
+                  openUrl('https://github.com/ADAIBLOG/Cashew');
                 },
                 child: Text(
                   'https://github.com/ADAIBLOG/Cashew',
@@ -104,7 +105,7 @@ void showAboutDialog(BuildContext context) {
               Text('原仓库地址:'),
               InkWell(
                 onTap: () {
-                  launchURL('https://github.com/jameskokoska/Cashew');
+                  openUrl('https://github.com/jameskokoska/Cashew');
                 },
                 child: Text(
                   'https://github.com/jameskokoska/Cashew',
