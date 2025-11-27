@@ -152,7 +152,7 @@ class MoreActionsPageState extends State<MoreActionsPage> {
                   : Icons.info_rounded,
               size: 40,
               iconPadding: 16,
-              color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7),
+              color: Colors.transparent,
             ),
           ],
         ),
