@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
-import 'package:budget/widgets/dropdownSelect.dart';
-import 'package:budget/widgets/animatedExpanded.dart';
+import 'package:budget/appState/appState.dart';
+import 'package:budget/utilities/deviceOrientations.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({Key? key}) : super(key: key);
