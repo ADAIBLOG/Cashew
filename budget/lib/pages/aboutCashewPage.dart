@@ -1,4 +1,7 @@
+import 'package:budget/colors.dart';
+import 'package:budget/main.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class AboutCashewPage extends StatefulWidget {
@@ -24,7 +27,7 @@ class AboutCashewPageState extends State<AboutCashewPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 保持页面简洁，不添加对不存在方法的引用
+              // 暂时不设置内容，保持页面简洁
             ],
           ),
         ),
