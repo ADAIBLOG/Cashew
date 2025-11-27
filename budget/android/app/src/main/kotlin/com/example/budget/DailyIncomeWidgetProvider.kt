@@ -57,5 +57,4 @@ class DailyIncomeWidgetProvider : HomeWidgetProvider() {
             appWidgetManager.updateAppWidget(widgetId, views)
         }
     }
-    }
 }
