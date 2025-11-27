@@ -77,7 +77,6 @@ class MoreActionsPage extends StatefulWidget {
 void showAboutDialog(BuildContext context) {
   showDialog(
     context: context,
-    barrierDismissible: true, // 允许点击外部区域关闭对话框
     builder: (context) {
       return AlertDialog(
         title: Text('关于Cashew'),
@@ -86,9 +85,9 @@ void showAboutDialog(BuildContext context) {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('软件版本信息: 1.0.0'),
+              Text('软件版本信息: v1.0.4'),
               SizedBox(height: 10),
-              Text('作者名称: 阿呆'),
+              Text('作者: 阿呆'),
               SizedBox(height: 10),
               Text('源代码地址:'),
               InkWell(
