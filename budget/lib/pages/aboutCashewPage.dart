@@ -135,6 +135,35 @@ class AboutCashewPage extends StatelessWidget {
                   ),
                 ),
               ),
+              Card(
+                margin: EdgeInsets.all(10),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFont(
+                        text: "许可证信息",
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      SizedBox(height: 10),
+                      TextFont(
+                        text: "本项目基于 GNU General Public License v3.0 (GPL-3.0) 开源许可发布。\n\n" +
+                            "根据GPL-3.0许可证，您可以：\n" +
+                            "• 自由运行、研究、分享和修改软件\n" +
+                            "• 分发软件的副本（包括修改后的版本）\n" +
+                            "• 在满足以下条件时：\n" +
+                            "  1. 必须提供源代码\n" +
+                            "  2. 必须保留版权和许可证声明\n" +
+                            "  3. 分发的修改版本必须也采用GPL-3.0许可",
+                        fontSize: 14,
+                        maxLines: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               SizedBox(height: 30),
               TextFont(
                 text: "© 2024 Cashew 个人修改版",
