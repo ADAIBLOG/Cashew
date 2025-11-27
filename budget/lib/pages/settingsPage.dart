@@ -102,6 +102,66 @@ class MoreActionsPageState extends State<MoreActionsPage> {
   }
 }
 
+void showAboutDialog(BuildContext context) {
+  openBottomSheet(
+    context,
+    PopupFramework(
+      title: "关于软件",
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SettingsContainer(
+            title: "软件版本",
+            description: appStateSettings["appVersion"] ?? "未知版本",
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.info_outlined
+                : Icons.info_rounded,
+            enableBorderRadius: true,
+          ),
+          SettingsContainer(
+            title: "作者名称",
+            description: "阿呆",
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.person_outlined
+                : Icons.person_rounded,
+            enableBorderRadius: true,
+          ),
+          SettingsContainer(
+            title: "源代码地址",
+            description: "https://github.com/ADAIBLOG/Cashew",
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.code_outlined
+                : Icons.code_rounded,
+            onTap: () {
+              launchURL("https://github.com/ADAIBLOG/Cashew");
+            },
+            enableBorderRadius: true,
+          ),
+          SettingsContainer(
+            title: "原作者",
+            description: "James",
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.person_outline_outlined
+                : Icons.person_rounded,
+            enableBorderRadius: true,
+          ),
+          SettingsContainer(
+            title: "原仓库地址",
+            description: "https://github.com/jameskokoska/Cashew",
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.link_outlined
+                : Icons.link_rounded,
+            onTap: () {
+              launchURL("https://github.com/jameskokoska/Cashew");
+            },
+            enableBorderRadius: true,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class MorePages extends StatelessWidget {
   const MorePages({super.key});
 
@@ -401,6 +461,16 @@ class SettingsPageFrameworkState extends State<SettingsPageFramework> {
       title: "settings".tr(),
       dragDownToDismiss: true,
       listWidgets: [SettingsPageContent()],
+      headerRightWidgets: [
+        Tappable(
+          onTap: () {
+            showAboutDialog(context);
+          },
+          icon: Text("!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          padding: EdgeInsets.all(8),
+          borderRadius: 100,
+        ),
+      ],
     );
   }
 }
