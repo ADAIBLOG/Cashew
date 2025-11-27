@@ -137,13 +137,21 @@
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/daily_expense_widget" />
         </receiver>
-        <receiver android:name="MonthlyIncomeWidgetProvider"
-            android:exported="true" android:label="Monthly Income">
+        <receiver android:name="com.budget.tracker_app.MonthlyIncomeWidgetProvider"
+            android:exported="true" android:label="Monthly Income Widget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/monthly_income_widget" />
+        </receiver>
+        <receiver android:name="com.budget.tracker_app.DailyIncomeWidgetProvider"
+            android:exported="true" android:label="Daily Income Widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/daily_income_widget" />
         </receiver>
         <receiver android:name="MinusWidgetProvider"
             android:exported="true" android:label="Transaction Minus">
