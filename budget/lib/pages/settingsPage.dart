@@ -557,7 +557,15 @@ class SettingsPageContent extends StatelessWidget {
             ? SettingsContainerOpenPage(
                 openPage: AutoTransactionsPageNotifications(),
                 title: "notification-transactions".tr(),
-                icon: navBarIconsData["notification-transactions"]!,
+                icon: NavBarIconData(
+                  iconData: appStateSettings["outlinedIcons"]
+                      ? Icons.notifications_outlined
+                      : Icons.notifications_rounded,
+                  label: "notification-transactions",
+                  navigationIndexedStackIndex: 6,
+                  labelLong: "",
+                  iconScale: 1,
+                ),
               )
             : SizedBox.shrink(),
 
