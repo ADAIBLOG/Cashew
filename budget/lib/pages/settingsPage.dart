@@ -88,14 +88,15 @@ class MoreActionsPageState extends State<MoreActionsPage> {
       context,
       title: "",
       description: "",
-      content: Column(
+      // 将content参数改为child
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Cashew图标和版本号
           Wrap(
             alignment: WrapAlignment.center,
             runAlignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             spacing: 10,
             runSpacing: 10,
             children: [
@@ -128,7 +129,8 @@ class MoreActionsPageState extends State<MoreActionsPage> {
           // Source Code按钮
           OutlinedButtonStacked(
             text: "Source Code",
-            color: getColor(context, "lightDarkAccent"),
+            iconData: Icons.code,
+            // 移除color参数
             onTap: () {
               openUrl("https://github.com/ADAIBLOG/Cashew");
             },
