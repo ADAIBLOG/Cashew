@@ -145,7 +145,7 @@ class MoreActionsPageState extends State<MoreActionsPage> {
       return Scaffold(
         // 添加AppBar并设置actions
         appBar: AppBar(
-          title: Text(''), // 空标题
+          title: Text('更多'),
           elevation: 0,
           backgroundColor: Colors.transparent,
           actions: [
