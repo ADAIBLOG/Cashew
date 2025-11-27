@@ -62,10 +62,6 @@ import 'package:budget/widgets/outlinedButtonStacked.dart';
 //in budget\Android
 //Generate new OAuth and put JSON in budget\android\app folder
 
-import 'package:budget/pages/aboutCashewPage.dart';
-import 'package:budget/struct/settings.dart';
-import 'package:flutter/material.dart';
-
 class MoreActionsPage extends StatefulWidget {
   const MoreActionsPage({
     Key? key,
@@ -90,27 +86,8 @@ class MoreActionsPageState extends State<MoreActionsPage> {
   Widget build(BuildContext context) {
     return OrientationBuilder(builder: (context, _) {
       return Scaffold(
-        // 添加AppBar
-        appBar: AppBar(
-          title: Text("更多"),
-          actions: [
-            // 在右上角添加！按钮
-            IconButton(
-              tooltip: "关于",
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AboutCashewPage()),
-                );
-              },
-              icon: Icon(
-                appStateSettings["outlinedIcons"]
-                    ? Icons.info_outline_rounded
-                    : Icons.info_rounded,
-              ),
-            ),
-          ],
-        ),
+        // 直接使用Scaffold而不是PageFramework，避免任何可能的滚动功能
+        appBar: null, // 完全移除appBar
         body: SafeArea(
           child: Container(
             // 占据整个屏幕
