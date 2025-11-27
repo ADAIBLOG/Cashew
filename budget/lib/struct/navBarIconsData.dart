@@ -69,12 +69,12 @@ Map<String, NavBarIconData> getNavBarIconsData() {
     "scheduled": NavBarIconData(
       iconData: getTransactionTypeIcon(TransactionSpecialType.upcoming),
       label: "scheduled",
-      navigationIndexedStackIndex: 15,
+      navigationIndexedStackIndex: 16,
     ),
     "loans": NavBarIconData(
       iconData: getTransactionTypeIcon(TransactionSpecialType.credit),
       label: "loans",
-      navigationIndexedStackIndex: 16,
+      navigationIndexedStackIndex: 17,
     ),
     "notifications": NavBarIconData(
       iconData: appStateSettings["outlinedIcons"]
@@ -156,7 +156,7 @@ Map<String, NavBarIconData> getNavBarIconsData() {
           : Icons.savings_rounded,
       label: "goals",
       labelLong: "goals-details",
-      navigationIndexedStackIndex: 15,
+      navigationIndexedStackIndex: 18,
     ),
   };
 }
