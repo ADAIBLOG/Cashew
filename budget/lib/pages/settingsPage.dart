@@ -463,13 +463,15 @@ class SettingsPageFrameworkState extends State<SettingsPageFramework> {
       listWidgets: [SettingsPageContent()],
       actions: [
         Tappable(
-          onTap: () {
-            showAboutDialog(context);
-          },
-          child: Text("!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          padding: EdgeInsets.all(8),
-          borderRadius: 100,
-        ),
+            onTap: () {
+              showAboutDialog(context);
+            },
+            child: Padding(
+              padding: EdgeInsets.all(8),
+              child: Text("!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            ),
+            borderRadius: 100,
+          ),
       ],
     );
   }
