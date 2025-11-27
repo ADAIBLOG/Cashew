@@ -22,9 +22,6 @@ import 'package:budget/widgets/exportCSV.dart';
 import 'package:budget/pages/autoTransactionsPageEmail.dart';
 import 'package:budget/pages/activityPage.dart';
 import 'package:budget/pages/editAssociatedTitlesPage.dart';
-import 'package:budget/widgets/util/appLinks.dart';
-import 'package:budget/functions.dart';
-import 'package:budget/widgets/button.dart';
 import 'package:budget/pages/editBudgetPage.dart';
 import 'package:budget/pages/editCategoriesPage.dart';
 import 'package:budget/pages/editWalletsPage.dart';
@@ -74,109 +71,103 @@ class MoreActionsPage extends StatefulWidget {
   State<MoreActionsPage> createState() => MoreActionsPageState();
 }
 
-// 显示关于应用的对话框
-void showAboutDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    barrierDismissible: true, // 允许点击外部区域关闭对话框
-    builder: (context) {
-      return AlertDialog(
-        title: Text('关于Cashew'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('软件版本信息: 1.0.0'),
-              SizedBox(height: 10),
-              Text('作者名称: 阿呆'),
-              SizedBox(height: 10),
-              Text('源代码地址:'),
-              InkWell(
-                onTap: () {
-                  openUrl('https://github.com/ADAIBLOG/Cashew');
-                },
-                child: Text(
-                  'https://github.com/ADAIBLOG/Cashew',
-                  style: TextStyle(color: Colors.blue),
-                ),
-              ),
-              SizedBox(height: 10),
-              Text('原作者: James'),
-              SizedBox(height: 10),
-              Text('原仓库地址:'),
-              InkWell(
-                onTap: () {
-                  openUrl('https://github.com/jameskokoska/Cashew');
-                },
-                child: Text(
-                  'https://github.com/jameskokoska/Cashew',
-                  style: TextStyle(color: Colors.blue),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-
 class MoreActionsPageState extends State<MoreActionsPage> {
-  ScrollController _scrollController = ScrollController();
-  
+  GlobalKey<PageFrameworkState> pageState = GlobalKey();
+
   void refreshState() {
     print("refresh settings");
     setState(() {});
   }
 
-  // 恢复scrollToTop方法以支持滚动功能
   void scrollToTop() {
-    _scrollController.animateTo(
-      0,
-      duration: Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+    pageState.currentState?.scrollToTop();
+  }
+
+  void _showAboutPopup(BuildContext context) {
+    openPopup(
+      context,
+      title: "",
+      description: "",
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Cashew图标和版本号
+          Wrap(
+            alignment: WrapAlignment.center,
+            runAlignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              Image(
+                image: AssetImage("assets/icon/icon-small.png"),
+                height: 70,
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  TextFont(
+                    text: globalAppName,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 25,
+                    textAlign: TextAlign.center,
+                    maxLines: 5,
+                  ),
+                  TextFont(
+                    text: getVersionString(),
+                    fontSize: 14,
+                    textAlign: TextAlign.center,
+                    maxLines: 5,
+                  ),
+                ],
+              )
+            ],
+          ),
+          SizedBox(height: 20),
+          // Source Code按钮
+          OutlinedButtonStacked(
+            text: "Source Code",
+            color: getColor(context, "lightDarkAccent"),
+            onTap: () {
+              openUrl("https://github.com/ADAIBLOG/Cashew");
+            },
+          ),
+        ],
+      ),
+      onCancel: () {
+        popRoute(context);
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return OrientationBuilder(builder: (context, _) {
-      return Scaffold(
-        // 添加AppBar并设置actions
-        appBar: AppBar(
-          title: Text('更多'),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          actions: [
-            ButtonIcon(
-              onTap: () {
-                showAboutDialog(context);
-              },
-              icon: appStateSettings["outlinedIcons"]
+      return PageFramework(
+        key: pageState,
+        title: "more-actions".tr(),
+        backButton: false,
+        horizontalPaddingConstrained: true,
+        actions: [
+          IconButton(
+            padding: EdgeInsetsDirectional.all(15),
+            tooltip: "about".tr(),
+            onPressed: () {
+              _showAboutPopup(context);
+            },
+            icon: Icon(
+              appStateSettings["outlinedIcons"]
                   ? Icons.info_outlined
-                  : Icons.info_rounded,
-              size: 40,
-              iconPadding: 16,
-              color: Colors.transparent,
+                  : Icons.info_outline_rounded,
             ),
-          ],
-        ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            padding: EdgeInsets.all(16),
-            child: MorePages(),
           ),
-        ),
+        ],
+        listWidgets: [
+          MorePages()
+        ],
       );
     });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 }
 
@@ -187,11 +178,9 @@ class MorePages extends StatelessWidget {
   Widget build(BuildContext context) {
     bool hasSideNavigation = getIsFullScreen(context);
 
-    return Container(
-      // 限制最大宽度，使内容在宽屏上也能居中良好显示
-      constraints: BoxConstraints(maxWidth: 600),
+    return Padding(
+      padding: const EdgeInsetsDirectional.symmetric(horizontal: 4),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           if (hasSideNavigation == false)
             Row(
