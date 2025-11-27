@@ -241,30 +241,10 @@ class MorePages extends StatelessWidget {
                         isOutlined: true,
                       ),
                     )
-                  : notificationsGlobalEnabled
-                      ? Expanded(
-                          child: SettingsContainerOpenPage(
-                            openPage: NotificationsPage(),
-                            title: navBarIconsData["notifications"]!.label.tr(),
-                            icon: navBarIconsData["notifications"]!.iconData,
-                            isOutlined: true,
-                          ),
-                        )
-                      : SizedBox.shrink(),
-              // 交通交易按钮
-              notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
-                  getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
-                  ? Expanded(
-                      child: SettingsContainerOpenPage(
-                        openPage: AutoTransactionsPageNotifications(),
-                        title: "notification-transactions".tr(),
-                        icon: appStateSettings["outlinedIcons"]
-                            ? Icons.edit_notifications_outlined
-                            : Icons.edit_notifications_rounded,
-                        isOutlined: true,
-                      ),
-                    )
-                  : SizedBox.shrink(),
+                  : // 移除通知按钮，现在只在设置页面显示
+                    SizedBox.shrink(),
+              // 移除交通交易按钮，现在只在设置页面显示
+              SizedBox.shrink(),
             ],
           ),
           if (hasSideNavigation == false)
@@ -563,9 +543,24 @@ class SettingsPageContent extends StatelessWidget {
               : Icons.home_rounded,
         ),
 
+        // 添加通知和通知交易按钮
+        appStateSettings["notificationsGlobalEnabled"]
+            ? SettingsContainerOpenPage(
+                openPage: NotificationsPage(),
+                title: "notifications".tr(),
+                icon: navBarIconsData["notifications"]!,
+              )
+            : SizedBox.shrink(),
+        appStateSettings["autoTransactionsEnabled"] && appStateSettings["notificationsGlobalEnabled"]
+            ? SettingsContainerOpenPage(
+                openPage: AutoTransactionsPageNotifications(),
+                title: "notification-transactions".tr(),
+                icon: navBarIconsData["notification-transactions"]!,
+              )
+            : SizedBox.shrink(),
+
         // Notification button removed as requested
         SizedBox.shrink(),
-
         BiometricsSettingToggle(),
 
         SettingsContainer(
