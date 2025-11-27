@@ -1,445 +1,171 @@
-import 'dart:async';
-import 'package:budget/colors.dart';
-import 'package:budget/database/tables.dart';
-import 'package:budget/functions.dart';
-import 'package:budget/pages/addTransactionPage.dart';
-import 'package:budget/pages/transactionFilters.dart';
-import 'package:budget/pages/walletDetailsPage.dart';
-import 'package:budget/struct/databaseGlobal.dart';
-import 'package:budget/struct/settings.dart';
-import 'package:budget/widgets/openBottomSheet.dart';
-import 'package:budget/widgets/openPopup.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/material.dart';
-import 'package:home_widget/home_widget.dart';
-import 'package:provider/provider.dart';
-import 'package:budget/pages/addWalletPage.dart';
-import "package:budget/struct/throttler.dart";
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.budget.tracker_app">
+  <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+  <queries>
+    <!-- If your app opens https URLs -->
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <data android:scheme="https" />
+    </intent>
+    <!-- If your app makes calls -->
+    <intent>
+      <action android:name="android.intent.action.DIAL" />
+      <data android:scheme="tel" />
+    </intent>
+    <!-- If your sends SMS messages -->
+    <intent>
+      <action android:name="android.intent.action.SENDTO" />
+      <data android:scheme="smsto" />
+    </intent>
+    <!-- If your app sends emails -->
+    <intent>
+      <action android:name="android.intent.action.SEND" />
+      <data android:mimeType="*/*" />
+    </intent>
+  </queries>
+    <application
+        android:requestLegacyExternalStorage="true"
+        android:label="Cashew"
+        android:icon="@mipmap/ic_launcher">
+        <!-- Use the new rendering engine Impeller (experimental) -->
+        <!-- <meta-data
+        android:name="io.flutter.embedding.android.EnableImpeller"
+        android:value="true" /> -->
+        <activity
+            android:exported="true" 
+            android:name=".MainActivity"
+            android:launchMode="singleInstance"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
 
-class AndroidOnly extends StatelessWidget {
-  const AndroidOnly({required this.child, super.key});
-  final Widget child;
-  @override
-  Widget build(BuildContext context) {
-    if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid)
-      return SizedBox.shrink();
-    return child;
-  }
-}
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="cashewapp.web.app" android:pathPrefix="/addTransaction"/>
+                <data android:scheme="https" android:host="cashewapp.web.app" android:pathPrefix="/addTransactionRoute"/>
+            </intent-filter>
 
-class CheckWidgetLaunch extends StatefulWidget {
-  const CheckWidgetLaunch({super.key});
-
-  @override
-  State<CheckWidgetLaunch> createState() => _CheckWidgetLaunchState();
-}
-
-Throttler widgetActionThrottler =
-    Throttler(duration: Duration(milliseconds: 350));
-
-class _CheckWidgetLaunchState extends State<CheckWidgetLaunch> {
-  @override
-  void initState() {
-    super.initState();
-    HomeWidget.setAppGroupId('WIDGET_GROUP_ID');
-    Future.delayed(Duration(milliseconds: 50), () {
-      _checkForWidgetLaunch();
-    });
-    HomeWidget.widgetClicked.listen(_launchedFromWidget);
-  }
-
-  void _checkForWidgetLaunch() {
-    HomeWidget.initiallyLaunchedFromHomeWidget().then(_launchedFromWidget);
-  }
-
-  // For some reason, older Android versions open an entirely new app instance... weird!
-  // has this been fixed with: android:launchMode="singleInstance" ?
-  void _launchedFromWidget(Uri? uri) async {
-    // Only perform one widget action per launch/continue of the app
-    if (!widgetActionThrottler.canProceed()) return;
-
-    String widgetPayload = (uri ?? "").toString();
-    if (widgetPayload == "addTransactionWidget") {
-      // Add a delay so the keyboard can focus
-      Future.delayed(Duration(milliseconds: 50), () {
-        pushRoute(
-          context,
-          AddTransactionPage(
-            routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-          ),
-        );
-      });
-    } else if (widgetPayload == "addTransactionIncomeWidget") {
-      // Add a delay so the keyboard can focus
-      Future.delayed(Duration(milliseconds: 50), () {
-        pushRoute(
-          context,
-          AddTransactionPage(
-            routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-            selectedIncome: true,
-          ),
-        );
-      });
-    } else if (widgetPayload == "transferTransactionWidget") {
-      // This fixes an issue on older versions of Android where the route would popup twice
-      // We can detect when this is going to happen if the Provider is not yet loaded, so just pop
-      // the route when this is called so the first time routing does not persist (i.e. we end with one route)
-      if (Provider.of<AllWallets>(context, listen: false)
-              .indexedByPk[appStateSettings["selectedWalletPk"]] ==
-          null) popAllRoutes(context);
-
-      openBottomSheet(
-        context,
-        fullSnap: true,
-        TransferBalancePopup(
-          allowEditWallet: true,
-          wallet: Provider.of<AllWallets>(context, listen: false)
-              .indexedByPk[appStateSettings["selectedWalletPk"]],
-          showAllEditDetails: true,
-        ),
-      );
-    } else if (widgetPayload == "netWorthLaunchWidget") {
-      pushRoute(
-        context,
-        WalletDetailsPage(
-          wallet: null,
-        ),
-      );
-    } else if (widgetPayload == "monthlyExpenseLaunchWidget") {
-      pushRoute(
-        context,
-        WalletDetailsPage(
-          wallet: null,
-        ),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox.shrink();
-  }
-}
-
-class RenderHomePageWidgets extends StatefulWidget {
-  const RenderHomePageWidgets({super.key});
-
-  @override
-  State<RenderHomePageWidgets> createState() => RenderHomePageWidgetsState();
-}
-
-Future updateWidgetColorsAndText(BuildContext context) async {
-  if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return;
-  await Future.delayed(Duration(milliseconds: 500), () async {
-    double widgetBackgroundOpacity =
-        (double.tryParse((appStateSettings["widgetOpacity"] ?? 1).toString()) ??
-                1)
-            .clamp(0, 1);
-    ThemeData widgetTheme = appStateSettings["widgetTheme"] == "light"
-        ? getLightTheme()
-        : appStateSettings["widgetTheme"] == "dark"
-            ? getDarkTheme()
-            : Theme.of(context);
-
-    await HomeWidget.saveWidgetData<String>('netWorthTitle', "net-worth".tr());
-    await HomeWidget.saveWidgetData<String>('monthlyExpenseTitle', "monthly-expense".tr());
-    await HomeWidget.saveWidgetData<String>('monthlyIncomeTitle', "monthly-income".tr());
-    await HomeWidget.saveWidgetData<String>(
-      'widgetColorBackground',
-      colorToHex(widgetTheme.colorScheme.secondaryContainer),
-    );
-    await HomeWidget.saveWidgetData<String>(
-      'widgetAlpha',
-      widgetTheme.colorScheme.secondaryContainer
-          .withOpacity(widgetBackgroundOpacity)
-          .alpha
-          .toString(),
-    );
-    await HomeWidget.saveWidgetData<String>(
-      'widgetColorPrimary',
-      colorToHex(widgetTheme.colorScheme.primary),
-    );
-    await HomeWidget.saveWidgetData<String>(
-      'widgetColorText',
-      colorToHex(widgetTheme.colorScheme.onSecondaryContainer),
-    );
-    await HomeWidget.updateWidget(
-      name: 'NetWorthWidgetProvider',
-    );
-    await HomeWidget.updateWidget(
-      name: 'NetWorthPlusWidgetProvider',
-    );
-    await HomeWidget.updateWidget(
-      name: 'PlusWidgetProvider',
-    );
-    await HomeWidget.updateWidget(
-      name: 'TransferWidgetProvider',
-    );
-    await HomeWidget.updateWidget(
-      name: 'MonthlyExpenseWidgetProvider',
-    );
-    await HomeWidget.updateWidget(
-      name: 'MonthlyIncomeWidgetProvider',
-    );
-    await HomeWidget.updateWidget(
-      name: 'DailyExpenseWidgetProvider',
-    );
-    await HomeWidget.updateWidget(
-      name: 'DailyIncomeWidgetProvider',
-    );
-  });
-
-  return;
-}
-
-class RenderHomePageWidgetsState extends State<RenderHomePageWidgets> {
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(Duration.zero, () async {
-      updateWidgetColorsAndText(context);
-    });
-  }
-
-  void refreshState() {
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<List<TransactionWallet>>(
-      stream: database.getAllPinnedWallets(HomePageWidgetDisplay.NetWorth).$1,
-      builder: (context, snapshot) {
-        List<String>? walletPks =
-            (snapshot.data ?? []).map((item) => item.walletPk).toList();
-        if (walletPks.length <= 0 ||
-            appStateSettings["netWorthAllWallets"] == true) walletPks = null;
-        return Column(
-          children: [
-            // Net worth widget data update
-            StreamBuilder<TotalWithCount?>(
-              stream: database.watchTotalWithCountOfWallet(
-                isIncome: null,
-                allWallets: Provider.of<AllWallets>(context),
-                followCustomPeriodCycle: true,
-                cycleSettingsExtension: "NetWorth",
-                searchFilters: SearchFilters(walletPks: walletPks ?? []),
-              ),
-              builder: (context, snapshot) {
-                Future.delayed(Duration.zero, () async {
-                  int totalCount = snapshot.data?.count ?? 0;
-                  String netWorthTransactionsNumber = totalCount.toString() +
-                      " " +
-                      (totalCount == 1
-                          ? "transaction".tr().toLowerCase()
-                          : "transactions".tr().toLowerCase());
-                  double totalSpent = snapshot.data?.total ?? 0;
-                  String netWorthAmount = convertToMoney(
-                    Provider.of<AllWallets>(context, listen: false),
-                    totalSpent,
-                  );
-                  await HomeWidget.saveWidgetData<String>(
-                    'netWorthAmount',
-                    netWorthAmount,
-                  );
-                  await HomeWidget.saveWidgetData<String>(
-                    'netWorthTransactionsNumber',
-                    netWorthTransactionsNumber,
-                  );
-                  await HomeWidget.updateWidget(
-                    name: 'NetWorthWidgetProvider',
-                  );
-                  await HomeWidget.updateWidget(
-                    name: 'NetWorthPlusWidgetProvider',
-                  );
-                });
-
-                return const SizedBox.shrink();
-              },
-            ),
-            // Monthly expense widget data update
-            StreamBuilder<TotalWithCount?>(
-              stream: database.watchTotalWithCountOfWallet(
-                isIncome: false, // Filter for expenses only
-                allWallets: Provider.of<AllWallets>(context),
-                startDate: DateTime.now().firstDayOfMonth(),
-                forcedDateTimeRange: DateTimeRange(
-                  start: DateTime.now().firstDayOfMonth(),
-                  end: DateTime.now().lastDayOfMonth(),
-                ),
-                followCustomPeriodCycle: false,
-                searchFilters: SearchFilters(expenseIncome: [ExpenseIncome.expense]),
-              ),
-              builder: (context, snapshotExpense) {
-                Future.delayed(Duration.zero, () async {
-                  int totalCount = snapshotExpense.data?.count ?? 0;
-                  String monthlyExpenseTransactionsNumber = totalCount.toString() +
-                      " " +
-                      (totalCount == 1
-                          ? "transaction".tr().toLowerCase()
-                          : "transactions".tr().toLowerCase());
-                  double totalExpense = snapshotExpense.data?.total ?? 0;
-                  // Ensure it shows as positive amount for display
-                  double displayExpense = totalExpense.abs();
-                  String monthlyExpenseAmount = convertToMoney(
-                    Provider.of<AllWallets>(context, listen: false),
-                    displayExpense,
-                  );
-                  
-                  await HomeWidget.saveWidgetData<String>(
-                    'monthlyExpenseAmount',
-                    monthlyExpenseAmount,
-                  );
-                  await HomeWidget.saveWidgetData<String>(
-                    'monthlyExpenseTransactionsNumber',
-                    monthlyExpenseTransactionsNumber,
-                  );
-                  await HomeWidget.updateWidget(
-                    name: 'MonthlyExpenseWidgetProvider',
-                  );
-                });
-
-                return const SizedBox.shrink();
-              },
-            ),
-            // Monthly income widget data update
-            StreamBuilder<TotalWithCount?>(
-              stream: database.watchTotalWithCountOfWallet(
-                isIncome: true, // Filter for income only
-                allWallets: Provider.of<AllWallets>(context),
-                startDate: DateTime.now().firstDayOfMonth(),
-                forcedDateTimeRange: DateTimeRange(
-                  start: DateTime.now().firstDayOfMonth(),
-                  end: DateTime.now().lastDayOfMonth(),
-                ),
-                followCustomPeriodCycle: false,
-                searchFilters: SearchFilters(expenseIncome: [ExpenseIncome.income]),
-              ),
-              builder: (context, snapshotIncome) {
-                Future.delayed(Duration.zero, () async {
-                  int totalCount = snapshotIncome.data?.count ?? 0;
-                  String monthlyIncomeTransactionsNumber = totalCount.toString() +
-                      " " +
-                      (totalCount == 1
-                          ? "transaction".tr().toLowerCase()
-                          : "transactions".tr().toLowerCase());
-                  double totalIncome = snapshotIncome.data?.total ?? 0;
-                  // Ensure it shows as positive amount for display
-                  double displayIncome = totalIncome.abs();
-                  String monthlyIncomeAmount = convertToMoney(
-                    Provider.of<AllWallets>(context, listen: false),
-                    displayIncome,
-                  );
-                  
-                  await HomeWidget.saveWidgetData<String>(
-                    'monthlyIncomeAmount',
-                    monthlyIncomeAmount,
-                  );
-                  await HomeWidget.saveWidgetData<String>(
-                    'monthlyIncomeTransactionsNumber',
-                    monthlyIncomeTransactionsNumber,
-                  );
-                  await HomeWidget.updateWidget(
-                    name: 'MonthlyIncomeWidgetProvider',
-                  );
-                });
-
-                return const SizedBox.shrink();
-              },
-            ),
-            // Daily expense widget data update
-            StreamBuilder<TotalWithCount?>(
-              stream: database.watchTotalWithCountOfWallet(
-                isIncome: false, // Filter for expenses only
-                allWallets: Provider.of<AllWallets>(context),
-                startDate: DateTime.now().startOfDay(),
-                forcedDateTimeRange: DateTimeRange(
-                  start: DateTime.now().startOfDay(),
-                  end: DateTime.now().endOfDay(),
-                ),
-                followCustomPeriodCycle: false,
-                searchFilters: SearchFilters(expenseIncome: [ExpenseIncome.expense]),
-              ),
-              builder: (context, snapshotDailyExpense) {
-                Future.delayed(Duration.zero, () async {
-                  int totalCount = snapshotDailyExpense.data?.count ?? 0;
-                  String dailyExpenseTransactionsNumber = totalCount.toString() +
-                      " " +
-                      (totalCount == 1
-                          ? "transaction".tr().toLowerCase()
-                          : "transactions".tr().toLowerCase());
-                  double totalExpense = snapshotDailyExpense.data?.total ?? 0;
-                  // Ensure it shows as positive amount for display
-                  double displayExpense = totalExpense.abs();
-                  String dailyExpenseAmount = convertToMoney(
-                    Provider.of<AllWallets>(context, listen: false),
-                    displayExpense,
-                  );
-                  
-                  await HomeWidget.saveWidgetData<String>(
-                    'daily_expense_amount',
-                    dailyExpenseAmount,
-                  );
-                  await HomeWidget.saveWidgetData<int>(
-                    'daily_expense_transactions',
-                    totalCount,
-                  );
-                  await HomeWidget.updateWidget(
-                    name: 'DailyExpenseWidgetProvider',
-                  );
-                });
-
-                return const SizedBox.shrink();
-              },
-            ),
-            // Daily income widget data update
-            StreamBuilder<TotalWithCount?>(
-              stream: database.watchTotalWithCountOfWallet(
-                isIncome: true, // Filter for income only
-                allWallets: Provider.of<AllWallets>(context),
-                startDate: DateTime.now().startOfDay(),
-                forcedDateTimeRange: DateTimeRange(
-                  start: DateTime.now().startOfDay(),
-                  end: DateTime.now().endOfDay(),
-                ),
-                followCustomPeriodCycle: false,
-                searchFilters: SearchFilters(expenseIncome: [ExpenseIncome.income]),
-              ),
-              builder: (context, snapshotDailyIncome) {
-                Future.delayed(Duration.zero, () async {
-                  int totalCount = snapshotDailyIncome.data?.count ?? 0;
-                  String dailyIncomeTransactionsNumber = totalCount.toString() +
-                      " " +
-                      (totalCount == 1
-                          ? "transaction".tr().toLowerCase()
-                          : "transactions".tr().toLowerCase());
-                  double totalIncome = snapshotDailyIncome.data?.total ?? 0;
-                  // Ensure it shows as positive amount for display
-                  double displayIncome = totalIncome.abs();
-                  String dailyIncomeAmount = convertToMoney(
-                    Provider.of<AllWallets>(context, listen: false),
-                    displayIncome,
-                  );
-                  
-                  await HomeWidget.saveWidgetData<String>(
-                    'daily_income_amount',
-                    dailyIncomeAmount,
-                  );
-                  await HomeWidget.saveWidgetData<int>(
-                    'daily_income_transactions',
-                    totalCount,
-                  );
-                  await HomeWidget.updateWidget(
-                    name: 'DailyIncomeWidgetProvider',
-                  );
-                });
-
-                return const SizedBox.shrink();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
+            <!-- Specifies an Android theme to apply to this Activity as soon as
+                 the Android process has started. This theme is visible to the user
+                 while the Flutter UI initializes. After that, this theme continues
+                 to determine the Window background behind the Flutter UI. -->
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <!-- Displays an Android View that continues showing the launch screen
+                 Drawable until Flutter paints its first frame, then this splash
+                 screen fades out. A splash screen is useful to avoid any visual
+                 gap between the end of Android's launch screen and the painting of
+                 Flutter's first frame. -->
+            <meta-data
+              android:name="io.flutter.embedding.android.SplashScreenDrawable"
+              android:resource="@drawable/launch_background"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+        <service android:label="notifications" android:name="notification.listener.service.NotificationListener"
+          android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+        <receiver android:name="PlusWidgetProvider"
+            android:exported="true" android:label="Transaction Shortcut">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/plus_widget" />
+        </receiver>
+        <receiver android:name="TransferWidgetProvider"
+            android:exported="true" android:label="Transfer Shortcut">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/transfer_widget" />
+        </receiver>
+        <receiver android:name="NetWorthPlusWidgetProvider"
+            android:exported="true" android:label="Net Total Wide">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/net_worth_plus_widget" />
+        </receiver>
+        <receiver android:name="NetWorthWidgetProvider"
+            android:exported="true" android:label="Net Total">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/net_worth_widget" />
+        </receiver>
+        <receiver android:name="MonthlyExpenseWidgetProvider"
+            android:exported="true" android:label="Monthly Expense">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/monthly_expense_widget" />
+        </receiver>
+        <receiver android:name="MonthlyIncomeWidgetProvider"
+            android:exported="true" android:label="Monthly Income">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/monthly_income_widget" />
+        </receiver>
+        <receiver android:name="MinusWidgetProvider"
+            android:exported="true" android:label="Transaction Minus">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/minus_widget" />
+        </receiver>
+        <!-- <service android:name="im.zoe.labs.flutter_notification_listener.NotificationsHandlerService"
+            android:label="Flutter Notifications Handler"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+        <receiver android:name="im.zoe.labs.flutter_notification_listener.RebootBroadcastReceiver"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.REBOOT"/>
+            </intent-filter>
+        </receiver> -->
+        <!-- Don't delete the meta-data below.
+             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+</manifest>
