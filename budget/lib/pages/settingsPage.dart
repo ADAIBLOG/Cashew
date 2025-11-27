@@ -83,66 +83,6 @@ class MoreActionsPageState extends State<MoreActionsPage> {
     pageState.currentState?.scrollToTop();
   }
 
-  void _showAboutPopup(BuildContext context) {
-    openPopup(
-      context,
-      title: "",
-      description: "",
-      // 将content参数改为child
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Cashew图标和版本号
-          Wrap(
-            alignment: WrapAlignment.center,
-            runAlignment: WrapAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              Image(
-                image: AssetImage("assets/icon/icon-small.png"),
-                height: 70,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  TextFont(
-                    text: globalAppName,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 25,
-                    textAlign: TextAlign.center,
-                    maxLines: 5,
-                  ),
-                  TextFont(
-                    text: getVersionString(),
-                    fontSize: 14,
-                    textAlign: TextAlign.center,
-                    maxLines: 5,
-                  ),
-                ],
-              )
-            ],
-          ),
-          SizedBox(height: 20),
-          // Source Code按钮
-          OutlinedButtonStacked(
-            text: "Source Code",
-            iconData: Icons.code,
-            // 移除color参数
-            onTap: () {
-              openUrl("https://github.com/ADAIBLOG/Cashew");
-            },
-          ),
-        ],
-      ),
-      onCancel: () {
-        popRoute(context);
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return OrientationBuilder(builder: (context, _) {
@@ -151,20 +91,7 @@ class MoreActionsPageState extends State<MoreActionsPage> {
         title: "more-actions".tr(),
         backButton: false,
         horizontalPaddingConstrained: true,
-        actions: [
-          IconButton(
-            padding: EdgeInsetsDirectional.all(15),
-            tooltip: "about".tr(),
-            onPressed: () {
-              _showAboutPopup(context);
-            },
-            icon: Icon(
-              appStateSettings["outlinedIcons"]
-                  ? Icons.info_outlined
-                  : Icons.info_outline_rounded,
-            ),
-          ),
-        ],
+        actions: [],
         listWidgets: [
           MorePages()
         ],
@@ -243,10 +170,30 @@ class MorePages extends StatelessWidget {
                         isOutlined: true,
                       ),
                     )
-                  : // 移除通知按钮，现在只在设置页面显示
-                    SizedBox.shrink(),
-              // 移除交通交易按钮，现在只在设置页面显示
-              SizedBox.shrink(),
+                  : notificationsGlobalEnabled
+                      ? Expanded(
+                          child: SettingsContainerOpenPage(
+                            openPage: NotificationsPage(),
+                            title: navBarIconsData["notifications"]!.label.tr(),
+                            icon: navBarIconsData["notifications"]!.iconData,
+                            isOutlined: true,
+                          ),
+                        )
+                      : SizedBox.shrink(),
+              // 交通交易按钮
+              notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
+                  getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
+                  ? Expanded(
+                      child: SettingsContainerOpenPage(
+                        openPage: AutoTransactionsPageNotifications(),
+                        title: "notification-transactions".tr(),
+                        icon: appStateSettings["outlinedIcons"]
+                            ? Icons.edit_notifications_outlined
+                            : Icons.edit_notifications_rounded,
+                        isOutlined: true,
+                      ),
+                    )
+                  : SizedBox.shrink(),
             ],
           ),
           if (hasSideNavigation == false)
@@ -544,33 +491,29 @@ class SettingsPageContent extends StatelessWidget {
               ? Icons.home_outlined
               : Icons.home_rounded,
         ),
-
-        // 添加通知和通知交易按钮
-        appStateSettings["notificationsGlobalEnabled"]
+        
+        // 添加通知和通知交易按钮，保持与编辑主页相同的UI格局
+        notificationsGlobalEnabled
             ? SettingsContainerOpenPage(
                 openPage: NotificationsPage(),
-                title: "notifications".tr(),
-                icon: navBarIconsData["notifications"]!,
+                title: navBarIconsData["notifications"]!.label.tr(),
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.notifications_outlined
+                    : Icons.notifications_rounded,
               )
             : SizedBox.shrink(),
-        appStateSettings["autoTransactionsEnabled"] && appStateSettings["notificationsGlobalEnabled"]
+            
+        notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
+            getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
             ? SettingsContainerOpenPage(
                 openPage: AutoTransactionsPageNotifications(),
                 title: "notification-transactions".tr(),
-                icon: NavBarIconData(
-                  iconData: appStateSettings["outlinedIcons"]
-                      ? Icons.notifications_outlined
-                      : Icons.notifications_rounded,
-                  label: "notification-transactions",
-                  navigationIndexedStackIndex: 6,
-                  labelLong: "",
-                  iconScale: 1,
-                ),
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.edit_notifications_outlined
+                    : Icons.edit_notifications_rounded,
               )
             : SizedBox.shrink(),
 
-        // Notification button removed as requested
-        SizedBox.shrink(),
         BiometricsSettingToggle(),
 
         SettingsContainer(
