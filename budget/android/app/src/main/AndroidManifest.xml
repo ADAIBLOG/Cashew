@@ -129,6 +129,14 @@
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/monthly_expense_widget" />
         </receiver>
+        <receiver android:name="DailyExpenseWidgetProvider"
+            android:exported="true" android:label="当日支出">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/daily_expense_widget" />
+        </receiver>
         <receiver android:name="MonthlyIncomeWidgetProvider"
             android:exported="true" android:label="Monthly Income">
             <intent-filter>
@@ -144,22 +152,6 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/minus_widget" />
-        </receiver>
-        <receiver android:name="DailyIncomeWidgetProvider"
-            android:exported="true" android:label="今日收入">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                android:resource="@xml/daily_income_widget" />
-        </receiver>
-        <receiver android:name="DailyExpenseWidgetProvider"
-            android:exported="true" android:label="今日支出">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                android:resource="@xml/daily_expense_widget" />
         </receiver>
         <!-- <service android:name="im.zoe.labs.flutter_notification_listener.NotificationsHandlerService"
             android:label="Flutter Notifications Handler"
