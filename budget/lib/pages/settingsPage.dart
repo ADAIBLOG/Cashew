@@ -93,7 +93,20 @@ class MoreActionsPageState extends State<MoreActionsPage> {
         title: "more-actions".tr(),
         backButton: false,
         horizontalPaddingConstrained: true,
-        actions: [],
+        actions: [
+          IconButton(
+            onPressed: () {
+              pushRoute(context, AboutPage());
+            },
+            icon: Icon(
+              appStateSettings["outlinedIcons"] 
+                  ? Icons.info_outline_rounded
+                  : Icons.info_rounded,
+              size: 24,
+            ),
+            tooltip: "about-cashew".tr(),
+          ),
+        ],
         listWidgets: [
           MorePages()
         ],
