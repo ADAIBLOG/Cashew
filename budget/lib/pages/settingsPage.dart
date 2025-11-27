@@ -77,6 +77,7 @@ class MoreActionsPage extends StatefulWidget {
 void showAboutDialog(BuildContext context) {
   showDialog(
     context: context,
+    barrierDismissible: true, // 允许点击外部区域关闭对话框
     builder: (context) {
       return AlertDialog(
         title: Text('关于Cashew'),
@@ -115,14 +116,6 @@ void showAboutDialog(BuildContext context) {
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text('确定'),
-          ),
-        ],
       );
     },
   );
