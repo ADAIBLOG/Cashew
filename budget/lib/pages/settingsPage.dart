@@ -12,10 +12,8 @@ import 'package:budget/pages/transactionsListPage.dart';
 import 'package:budget/pages/upcomingOverdueTransactionsPage.dart';
 import 'package:budget/struct/currencyFunctions.dart';
 import 'package:budget/struct/defaultPreferences.dart';
-import 'package:budget/struct/languageMap.dart';
 import 'package:budget/struct/navBarIconsData.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
-import 'package:budget/widgets/dropdownSelect.dart';
 import 'package:budget/widgets/exportDB.dart';
 import 'package:budget/widgets/importCSV.dart';
 import 'package:budget/widgets/exportCSV.dart';
@@ -27,7 +25,6 @@ import 'package:budget/pages/editCategoriesPage.dart';
 import 'package:budget/pages/editWalletsPage.dart';
 import 'package:budget/pages/notificationsPage.dart';
 import 'package:budget/pages/subscriptionsPage.dart';
-import 'package:budget/widgets/accountAndBackup.dart';
 import 'package:budget/widgets/importDB.dart';
 import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/notificationsSettings.dart';
@@ -40,7 +37,6 @@ import 'package:budget/widgets/selectAmount.dart';
 import 'package:budget/widgets/selectColor.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/pages/walletDetailsPage.dart';
-import 'package:budget/pages/aboutCashewPage.dart';
 import 'package:budget/struct/initializeBiometrics.dart';
 import 'package:budget/widgets/sliderSelector.dart';
 import 'package:budget/widgets/tappable.dart';
@@ -57,6 +53,7 @@ import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:budget/widgets/outlinedButtonStacked.dart';
+import 'package:budget/pages/aboutCashewPage.dart';
 
 //To get SHA1 Key run
 // ./gradlew signingReport
@@ -88,7 +85,29 @@ class MoreActionsPageState extends State<MoreActionsPage> {
     return OrientationBuilder(builder: (context, _) {
       return Scaffold(
         // 直接使用Scaffold而不是PageFramework，避免任何可能的滚动功能
-        appBar: null, // 完全移除appBar
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          title: Text(""),
+          actions: [
+            IconButton(
+              icon: Icon(
+                appStateSettings["outlinedIcons"]
+                    ? Icons.info_outline
+                    : Icons.info_rounded,
+                size: 25,
+              ),
+              onPressed: () {
+                pushRoute(
+                  context,
+                  AboutCashewPage(),
+                );
+              },
+            ),
+            SizedBox(width: 8),
+          ],
+        ),
         body: SafeArea(
           child: Container(
             // 占据整个屏幕
@@ -116,11 +135,9 @@ class MorePages extends StatelessWidget {
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 16),
       // 限制最大宽度，使内容在宽屏上也能居中良好显示
       constraints: BoxConstraints(maxWidth: 600),
-      child: Stack(
-        children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (hasSideNavigation == false)
             Row(
@@ -1440,32 +1457,6 @@ class _CustomNumberFormatPopupState extends State<CustomNumberFormatPopup> {
               ),
             )
           ],
-        ),
-        // 右上角！按钮
-        Positioned(
-          top: 10,
-          right: 10,
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AboutCashewPage()),
-              );
-            },
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                Icons.question_mark,
-                size: 24,
-                color: Colors.white,
-              ),
-            ),
-          ),
         ),
       ],
     );
