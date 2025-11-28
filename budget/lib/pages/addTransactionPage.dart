@@ -50,9 +50,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:io';
 import 'package:budget/colors.dart';
 import 'package:flutter/services.dart' hide TextInput;
 import 'package:provider/provider.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker';
 import 'package:budget/widgets/util/showTimePicker.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
@@ -4191,11 +4194,151 @@ class TransactionNotesTextInput extends StatefulWidget {
 
 class _TransactionNotesTextInputState extends State<TransactionNotesTextInput> {
   bool notesInputFocused = false;
+  // 添加附件链接相关变量
+  late List<String> extractedLinks = [];
+  // 本地文件路径存储
+  Map<String, String> localFilePaths = {};
+
+  // 确保附件目录存在
+  Future<String> _ensureAttachmentsDirectory() async {
+    Directory? directory;
+    if (kIsWeb) {
+      return ''; // Web不支持本地文件系统访问
+    } else if (Platform.isAndroid || Platform.isIOS) {
+      directory = await getApplicationDocumentsDirectory();
+    } else {
+      // 桌面平台
+      directory = await getApplicationDocumentsDirectory();
+    }
+    
+    final attachmentsDir = Directory('${directory.path}/attachments');
+    if (!await attachmentsDir.exists()) {
+      await attachmentsDir.create(recursive: true);
+    }
+    return attachmentsDir.path;
+  }
+
+  // 添加附件链接到笔记的方法
+  void addAttachmentLinkToNote(String? link) {
+    if (link == null) return;
+    String noteUpdated = widget.noteInputController.text +
+        (widget.noteInputController.text == "" ? "" : "\n") +
+        (link) + " ";
+
+    widget.setSelectedNoteController(noteUpdated);
+    updateExtractedLinks(noteUpdated);
+  }
+
+  // 从笔记中移除链接的方法
+  void removeLinkFromNote(String link) {
+    String originalText = widget.noteInputController.text;
+    String noteUpdated = widget.noteInputController.text.replaceAll(link + " ", "");
+    if (noteUpdated == originalText) {
+      noteUpdated = widget.noteInputController.text.replaceAll(link + "\n", "");
+    }
+    widget.setSelectedNoteController(noteUpdated);
+    updateExtractedLinks(noteUpdated);
+    
+    // 移除本地文件路径引用
+    if (link.startsWith('local_attachment://')) {
+      localFilePaths.remove(link);
+    }
+  }
+
+  // 更新提取的链接列表
+  void updateExtractedLinks(String text) {
+    // 更新：支持本地文件路径和URL链接
+    List<String> newlyExtractedLinks = [];
+    
+    // 匹配URL
+    RegExp urlRegExp = RegExp(r'https?://[^\s]+');
+    Iterable<Match> urlMatches = urlRegExp.allMatches(text);
+    for (Match match in urlMatches) {
+      newlyExtractedLinks.add(match.group(0)!);
+    }
+    
+    // 匹配本地文件路径
+    RegExp localPathRegExp = RegExp(r'local_attachment://[^\s]+');
+    Iterable<Match> localPathMatches = localPathRegExp.allMatches(text);
+    for (Match match in localPathMatches) {
+      newlyExtractedLinks.add(match.group(0)!);
+    }
+    
+    if (newlyExtractedLinks.toString() != extractedLinks.toString()) {
+      setState(() {
+        extractedLinks = newlyExtractedLinks;
+      });
+    }
+  }
+
+  // 生成唯一的本地附件ID
+  String _generateLocalAttachmentId(String filename) {
+    String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+    String extension = filename.split('.').last;
+    return 'local_attachment://${timestamp}_attachment.$extension';
+  }
+
+  // 选择本地文件
+  Future<void> _pickLocalFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        allowMultiple: false,
+        type: FileType.any,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        String sourcePath = result.files.single.path!;
+        String filename = result.files.single.name;
+        String attachmentId = _generateLocalAttachmentId(filename);
+        
+        if (kIsWeb) {
+          // Web平台直接使用文件名作为标识
+          localFilePaths[attachmentId] = filename;
+          addAttachmentLinkToNote(attachmentId);
+        } else {
+          // 非Web平台复制文件到应用目录
+          String attachmentsDir = await _ensureAttachmentsDirectory();
+          String destinationPath = '$attachmentsDir/${attachmentId.split('://').last}';
+          
+          File sourceFile = File(sourcePath);
+          await sourceFile.copy(destinationPath);
+          
+          localFilePaths[attachmentId] = destinationPath;
+          addAttachmentLinkToNote(attachmentId);
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('选择文件失败: $e')),
+      );
+    }
+  }
+
+  // 打开本地附件
+  void _openLocalAttachment(String attachmentId) {
+    if (localFilePaths.containsKey(attachmentId)) {
+      String filePath = localFilePaths[attachmentId]!;
+      // 这里可以根据不同平台实现文件打开逻辑
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('正在打开本地文件: $filePath')),
+      );
+    }
+  }
+
+  // 获取显示名称
+  String _getDisplayName(String link) {
+    if (link.startsWith('local_attachment://')) {
+      return localFilePaths[link]?.split('/').last ?? link.split('://').last;
+    }
+    return getDomainNameFromURL(link);
+  }
 
   @override
   void initState() {
     super.initState();
     widget.noteInputController.addListener(_printLatestValue);
+    // 初始化时提取现有链接
+    updateExtractedLinks(widget.noteInputController.text);
   }
 
   @override
@@ -4205,7 +4348,7 @@ class _TransactionNotesTextInputState extends State<TransactionNotesTextInput> {
   }
 
   void _printLatestValue() {
-    // Nothing to do here
+    updateExtractedLinks(widget.noteInputController.text);
   }
 
   @override
@@ -4232,6 +4375,7 @@ class _TransactionNotesTextInputState extends State<TransactionNotesTextInput> {
               minLines: 3,
               onChanged: (text) async {
                 widget.setSelectedNoteController(text, setInput: false);
+                updateExtractedLinks(text);
               },
             ),
             onFocusChange: (hasFocus) {
@@ -4254,6 +4398,208 @@ class _TransactionNotesTextInputState extends State<TransactionNotesTextInput> {
                     inverse: true,
                   )
                 : getColor(context, "lightDarkAccent"),
+          ),
+          // 添加附件按钮
+          LinkInNotes(
+            color: (appStateSettings["materialYou"]
+                ? Theme.of(context).colorScheme.secondaryContainer
+                : getColor(context, "canvasContainer")),
+            link: "add-attachment".tr(),
+            iconData: appStateSettings["outlinedIcons"]
+                ? Icons.attachment_outlined
+                : Icons.attachment_rounded,
+            iconDataAfter: appStateSettings["outlinedIcons"]
+                ? Icons.add_outlined
+                : Icons.add_rounded,
+            onTap: () async {
+              openBottomSheet(
+                context,
+                useCustomController: true,
+                reAssignBottomSheetControllerGlobal: false,
+                PopupFramework(
+                  title: "add-attachment".tr().capitalizeFirstofEach,
+                  subtitle: "add-attachment-description".tr() + " (本地存储)",
+                  child: Column(
+                    children: [
+                      if (kIsWeb == false)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(bottom: 13),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButtonStacked(
+                                  filled: false,
+                                  alignStart: true,
+                                  alignBeside: true,
+                                  padding: EdgeInsetsDirectional.symmetric(
+                                      horizontal: 20, vertical: 20),
+                                  text: "take-photo".tr(),
+                                  iconData: appStateSettings["outlinedIcons"]
+                                      ? Icons.camera_alt_outlined
+                                      : Icons.camera_alt_rounded,
+                                  onTap: () async {
+                                    popRoute(context);
+                                    // 拍照功能 - 使用本地附件ID
+                                    String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+                                    String attachmentId = _generateLocalAttachmentId('camera_$timestamp.jpg');
+                                    
+                                    // 模拟拍照，实际应用中需要使用相机插件
+                                    localFilePaths[attachmentId] = '相机照片_$timestamp.jpg';
+                                    addAttachmentLinkToNote(attachmentId);
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (kIsWeb == false)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(bottom: 13),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButtonStacked(
+                                  filled: false,
+                                  alignStart: true,
+                                  alignBeside: true,
+                                  padding: EdgeInsetsDirectional.symmetric(
+                                      horizontal: 20, vertical: 20),
+                                  text: "select-photo".tr(),
+                                  iconData: appStateSettings["outlinedIcons"]
+                                      ? Icons.photo_library_outlined
+                                      : Icons.photo_library_rounded,
+                                  onTap: () async {
+                                    popRoute(context);
+                                    // 选择照片 - 使用文件选择器限制为图片类型
+                                    try {
+                                      FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                        allowMultiple: false,
+                                        type: FileType.image,
+                                      );
+
+                                      if (result != null && result.files.single.path != null) {
+                                        String sourcePath = result.files.single.path!;
+                                        String filename = result.files.single.name;
+                                        String attachmentId = _generateLocalAttachmentId(filename);
+                                        
+                                        if (kIsWeb) {
+                                          localFilePaths[attachmentId] = filename;
+                                          addAttachmentLinkToNote(attachmentId);
+                                        } else {
+                                          String attachmentsDir = await _ensureAttachmentsDirectory();
+                                          String destinationPath = '$attachmentsDir/${attachmentId.split('://').last}';
+                                          
+                                          File sourceFile = File(sourcePath);
+                                          await sourceFile.copy(destinationPath);
+                                          
+                                          localFilePaths[attachmentId] = destinationPath;
+                                          addAttachmentLinkToNote(attachmentId);
+                                        }
+                                      }
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('选择照片失败: $e')),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(bottom: 13),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButtonStacked(
+                                filled: false,
+                                alignStart: true,
+                                alignBeside: true,
+                                padding: EdgeInsetsDirectional.symmetric(
+                                    horizontal: 20, vertical: 20),
+                                text: "select-file".tr(),
+                                iconData: appStateSettings["outlinedIcons"]
+                                    ? Icons.file_open_outlined
+                                    : Icons.file_open_rounded,
+                                onTap: () async {
+                                  popRoute(context);
+                                  // 选择任意文件
+                                  await _pickLocalFile();
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          // 显示提取的链接列表
+          AnimatedSizeSwitcher(
+            child: extractedLinks.length <= 0
+                ? Container(
+                    key: ValueKey(1),
+                  )
+                : Column(
+                    children: [
+                      for (String link in extractedLinks)
+                        LinkInNotes(
+                            link: _getDisplayName(link),
+                            onLongPress: () {
+                              // 复制到剪贴板的功能
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("附件信息已复制到剪贴板")),
+                              );
+                            },
+                            onTap: () async {
+                              // 打开链接或本地附件
+                              if (link.startsWith('local_attachment://')) {
+                                _openLocalAttachment(link);
+                              } else {
+                                print("Opening external link: $link");
+                              }
+                            },
+                          extraWidget: Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsetsDirectional.only(
+                                    end: 11, start: 5),
+                                child: IconButtonScaled(
+                                  iconData: appStateSettings["outlinedIcons"]
+                                      ? Icons.remove_outlined
+                                      : Icons.remove_rounded,
+                                  iconSize: 16,
+                                  scale: 1.6,
+                                  onTap: () {
+                                    openPopup(
+                                      context,
+                                      icon: appStateSettings["outlinedIcons"]
+                                          ? Icons.link_off_outlined
+                                          : Icons.link_off_rounded,
+                                      title: "remove-link-question".tr(),
+                                      description: "remove-link-description".tr(),
+                                      onCancel: () {
+                                        popRoute(context);
+                                      },
+                                      onCancelLabel: "cancel".tr(),
+                                      onSubmit: () {
+                                        removeLinkFromNote(link);
+                                        popRoute(context);
+                                      },
+                                      onSubmitLabel: "remove".tr(),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
           ),
         ],
       ),
