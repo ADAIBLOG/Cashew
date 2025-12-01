@@ -615,63 +615,65 @@ class _SelectAmountState extends State<SelectAmount> {
                 ),
           ),
         ),
-        widget.enableWalletPicker == false ||
-                Provider.of<AllWallets>(context).list.length <= 1 ||
-                (widget.hideWalletPickerIfOneCurrency &&
-                    Provider.of<AllWallets>(context).allContainSameCurrency())
-            ? SizedBox.shrink()
-            : MediaQuery(
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.symmetric(vertical: 3.0),
-                  child: AnimatedExpanded(
-                    axis: Axis.horizontal,
-                    expand: (getSelectedWallet(listen: true)?.walletPk ==
-                                appStateSettings["selectedWalletPk"] ||
-                            ((Provider.of<AllWallets>(context)
-                                    .indexedByPk[getSelectedWallet(listen: true)
-                                        ?.walletPk]
-                                    ?.currency) ==
-                                Provider.of<AllWallets>(context)
-                                    .indexedByPk[
-                                        appStateSettings["selectedWalletPk"]]
-                                    ?.currency)) ==
-                        false,
-                    child: Tappable(
-                      key: ValueKey(getSelectedWallet(listen: true)?.walletPk),
-                      color: Theme.of(context).colorScheme.secondaryContainer,
-                      borderRadius: 13,
-                      onTap: () => convertAmountToSelectedCurrency(),
-                      child: Padding(
-                        padding: const EdgeInsetsDirectional.symmetric(
-                            horizontal: 8, vertical: 7),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.currency_exchange_rounded,
-                              size: 16,
-                            ),
-                            SizedBox(height: 2),
-                            TextFont(
-                              text: Provider.of<AllWallets>(context)
-                                      .indexedByPk[
-                                          appStateSettings["selectedWalletPk"]]
-                                      ?.currency
-                                      .toString()
-                                      .toUpperCase() ??
-                                  "",
-                              fontSize: 11,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                data: MediaQuery.of(context)
-                    .copyWith(textScaler: TextScaler.linear(1.0)),
-              ),
+        // 隐藏汇率转换按钮，因为网络功能已被禁用
+        // widget.enableWalletPicker == false ||
+        //         Provider.of<AllWallets>(context).list.length <= 1 ||
+        //         (widget.hideWalletPickerIfOneCurrency &&
+        //             Provider.of<AllWallets>(context).allContainSameCurrency())
+        //     ? SizedBox.shrink()
+        //     : MediaQuery(
+        //         child: Padding(
+        //           padding: const EdgeInsetsDirectional.symmetric(vertical: 3.0),
+        //           child: AnimatedExpanded(
+        //             axis: Axis.horizontal,
+        //             expand: (getSelectedWallet(listen: true)?.walletPk ==
+        //                         appStateSettings["selectedWalletPk"] ||
+        //                     ((Provider.of<AllWallets>(context)
+        //                             .indexedByPk[getSelectedWallet(listen: true)
+        //                                 ?.walletPk]
+        //                             ?.currency) ==
+        //                         Provider.of<AllWallets>(context)
+        //                             .indexedByPk[
+        //                                 appStateSettings["selectedWalletPk"]]
+        //                             ?.currency)) ==
+        //                 false,
+        //             child: Tappable(
+        //               key: ValueKey(getSelectedWallet(listen: true)?.walletPk),
+        //               color: Theme.of(context).colorScheme.secondaryContainer,
+        //               borderRadius: 13,
+        //               onTap: () => convertAmountToSelectedCurrency(),
+        //               child: Padding(
+        //                 padding: const EdgeInsetsDirectional.symmetric(
+        //                     horizontal: 8, vertical: 7),
+        //                 child: Column(
+        //                   crossAxisAlignment: CrossAxisAlignment.center,
+        //                   mainAxisAlignment: MainAxisAlignment.center,
+        //                   children: [
+        //                     Icon(
+        //                       Icons.currency_exchange_rounded,
+        //                       size: 16,
+        //                     ),
+        //                     SizedBox(height: 2),
+        //                     TextFont(
+        //                       text: Provider.of<AllWallets>(context)
+        //                               .indexedByPk[
+        //                                   appStateSettings["selectedWalletPk"]]
+        //                               ?.currency
+        //                               .toString()
+        //                               .toUpperCase() ??
+        //                           "",
+        //                       fontSize: 11,
+        //                     ),
+        //                   ],
+        //                 ),
+        //               ),
+        //             ),
+        //           ),
+        //         ),
+        //         data: MediaQuery.of(context)
+        //             .copyWith(textScaler: TextScaler.linear(1.0)),
+        //       ),
+        SizedBox.shrink(),
       ],
     );
   }
