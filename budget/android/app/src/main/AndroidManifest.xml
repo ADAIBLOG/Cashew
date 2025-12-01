@@ -6,10 +6,8 @@
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
   
-  <!-- 明确移除所有网络相关权限 -->
-  <uses-permission android:name="android.permission.INTERNET" tools:remove="android:name" />
-  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:remove="android:name" />
-  <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" tools:remove="android:name" />
+  <!-- 不声明任何网络相关权限 -->
+  <!-- 这些权限会由依赖包自动添加，我们通过其他方式禁用网络功能 -->
   <queries>
     <!-- If your app opens https URLs -->
     <intent>
