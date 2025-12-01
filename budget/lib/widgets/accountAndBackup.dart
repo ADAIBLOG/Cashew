@@ -47,21 +47,9 @@ import '../../disable_cloud_services.dart';
 import 'package:budget/struct/randomConstants.dart';
 
 Future<bool> checkConnection() async {
-  late bool isConnected;
-  if (!kIsWeb) {
-    try {
-      final result = await InternetAddress.lookup('example.com');
-      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        isConnected = true;
-      }
-    } on SocketException catch (e) {
-      print(e.toString());
-      isConnected = false;
-    }
-  } else {
-    isConnected = true;
-  }
-  return isConnected;
+  print("网络连接检查功能已被禁用");
+  // 禁用网络连接检查，直接返回false
+  return false;
 }
 
 class GoogleAuthClient extends http.BaseClient {
