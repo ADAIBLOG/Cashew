@@ -583,14 +583,7 @@ class _ImportCSVState extends State<ImportCSV> {
   }
 
   Future<String?> fetchDataFromCsvUrl(String? csvUrl) async {
-    if (csvUrl == null) throw ("URL Parsing error.");
-    final response = await http.get(Uri.parse(csvUrl));
-    if (response.statusCode == 200) {
-      String data = response.body;
-      return data;
-    } else {
-      throw ("HTTP Request failed with status code: ${response.statusCode}");
-    }
+    throw ("从URL导入CSV功能已被禁用");
   }
 
   @override
