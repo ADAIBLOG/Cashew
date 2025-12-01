@@ -178,8 +178,30 @@ class MorePages extends StatelessWidget {
                         isOutlined: true,
                       ),
                     )
-                  : SizedBox.shrink(),
-              // 通知和通知交易按钮已删除
+                  : /* notificationsGlobalEnabled
+                      ? Expanded(
+                          child: SettingsContainerOpenPage(
+                            openPage: NotificationsPage(),
+                            title: navBarIconsData["notifications"]!.label.tr(),
+                            icon: navBarIconsData["notifications"]!.iconData,
+                            isOutlined: true,
+                          ),
+                        )
+                      : */ SizedBox.shrink(),
+              // 交通交易按钮
+              /* notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
+                  getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
+                  ? Expanded(
+                      child: SettingsContainerOpenPage(
+                        openPage: AutoTransactionsPageNotifications(),
+                        title: "notification-transactions".tr(),
+                        icon: appStateSettings["outlinedIcons"]
+                            ? Icons.edit_notifications_outlined
+                            : Icons.edit_notifications_rounded,
+                        isOutlined: true,
+                      ),
+                    )
+                  : */ SizedBox.shrink(),
             ],
           ),
           if (hasSideNavigation == false)
