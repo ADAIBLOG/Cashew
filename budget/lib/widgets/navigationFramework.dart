@@ -297,46 +297,13 @@ bool runningCloudFunctions = false;
 bool errorSigningInDuringCloud = false;
 Future<bool> runAllCloudFunctions(BuildContext context,
     {bool forceSignIn = false}) async {
-  print("Running All Cloud Functions");
+  print("Skipping All Cloud Functions - Running in local mode");
   runningCloudFunctions = true;
   errorSigningInDuringCloud = false;
-  try {
-    loadingIndeterminateKey.currentState?.setVisibility(true);
-    await runForceSignIn(context);
-    await syncData(context);
-    if (appStateSettings["emailScanningPullToRefresh"] ||
-        entireAppLoaded == false) {
-      loadingIndeterminateKey.currentState?.setVisibility(true);
-      await parseEmailsInBackground(context, forceParse: true);
-    }
-    loadingIndeterminateKey.currentState?.setVisibility(true);
-    await syncPendingQueueOnServer(); //sync before download
-    loadingIndeterminateKey.currentState?.setVisibility(true);
-    await getCloudBudgets();
-    loadingIndeterminateKey.currentState?.setVisibility(true);
-    await createBackupInBackground(context);
-    loadingIndeterminateKey.currentState?.setVisibility(true);
-    await getExchangeRates();
-  } catch (e) {
-    print("Error running sync functions on load: " + e.toString());
-    loadingIndeterminateKey.currentState?.setVisibility(false);
-    runningCloudFunctions = false;
-    canSyncData = true;
-    if (e is DetailedApiRequestError &&
-            e.status == 401 &&
-            forceSignIn == true ||
-        e is PlatformException) {
-      // Request had invalid authentication credentials. Try logging out and back in.
-      // This stems from silent sign-in not providing the credentials for GDrive API for e.g.
-      await refreshGoogleSignIn();
-      runAllCloudFunctions(context);
-    } else {
-      if (kIsWeb && appStateSettings["webForceLoginPopupOnLaunch"] == true) {
-        signOutGoogle();
-      }
-    }
-    return false;
-  }
+  
+  // Skip all cloud functions for local-only use
+  // This includes: sync data, email scanning, cloud budgets, backups, exchange rates
+  
   loadingIndeterminateKey.currentState?.setVisibility(false);
   Future.delayed(Duration(milliseconds: 2000), () {
     runningCloudFunctions = false;
