@@ -4,6 +4,7 @@ import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/billSplitter.dart';
 import 'package:budget/pages/budgetsListPage.dart';
 import 'package:budget/pages/creditDebtTransactionsPage.dart';
+import 'package:budget/pages/aboutPage.dart';
 import 'package:budget/pages/editHomePage.dart';
 import 'package:budget/pages/editObjectivesPage.dart';
 import 'package:budget/pages/homePage/homePageNetWorth.dart';
@@ -45,6 +46,7 @@ import 'package:budget/widgets/sliderSelector.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/util/checkWidgetLaunch.dart';
+import 'package:budget/functions.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/main.dart';
@@ -72,31 +74,42 @@ class MoreActionsPage extends StatefulWidget {
 }
 
 class MoreActionsPageState extends State<MoreActionsPage> {
+  GlobalKey<PageFrameworkState> pageState = GlobalKey();
+
   void refreshState() {
     print("refresh settings");
     setState(() {});
   }
 
-  // 重新添加scrollToTop方法以兼容底部导航栏的调用
   void scrollToTop() {
-    // 由于不再使用滚动视图，此方法保持空实现
+    pageState.currentState?.scrollToTop();
   }
 
   @override
   Widget build(BuildContext context) {
     return OrientationBuilder(builder: (context, _) {
-      return Scaffold(
-        // 直接使用Scaffold而不是PageFramework，避免任何可能的滚动功能
-        appBar: null, // 完全移除appBar
-        body: SafeArea(
-          child: Container(
-            // 占据整个屏幕
-            width: double.infinity,
-            height: double.infinity,
-            alignment: Alignment.center,
-            child: MorePages(),
+      return PageFramework(
+        key: pageState,
+        title: "more-actions".tr(),
+        backButton: false,
+        horizontalPaddingConstrained: true,
+        actions: [
+          IconButton(
+            onPressed: () {
+              pushRoute(context, AboutPage());
+            },
+            icon: Icon(
+              appStateSettings["outlinedIcons"] 
+                  ? Icons.info_outline_rounded
+                  : Icons.info_rounded,
+              size: 24,
+            ),
+            tooltip: "about-cashew".tr(),
           ),
-        ),
+        ],
+        listWidgets: [
+          MorePages()
+        ],
       );
     });
   }
@@ -109,15 +122,9 @@ class MorePages extends StatelessWidget {
   Widget build(BuildContext context) {
     bool hasSideNavigation = getIsFullScreen(context);
 
-    return Container(
-      // 确保内容完全居中且无滑动
-      alignment: Alignment.center,
-      padding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 16),
-      // 限制最大宽度，使内容在宽屏上也能居中良好显示
-      constraints: BoxConstraints(maxWidth: 600),
+    return Padding(
+      padding: const EdgeInsetsDirectional.symmetric(horizontal: 4),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (hasSideNavigation == false)
             Row(
@@ -127,6 +134,22 @@ class MorePages extends StatelessWidget {
                   child: SettingsContainerOpenPage(
                     openPage: SettingsPageFramework(
                       key: settingsPageFrameworkStateKey,
+                      actions: hasSideNavigation == false
+                          ? [
+                              IconButton(
+                                onPressed: () {
+                                  pushRoute(context, AboutPage());
+                                },
+                                icon: Icon(
+                                  appStateSettings["outlinedIcons"] 
+                                      ? Icons.info_outline_rounded
+                                      : Icons.info_rounded,
+                                  size: 24,
+                                ),
+                                tooltip: "about-cashew".tr(),
+                              ),
+                            ]
+                          : null,
                     ),
                     title: navBarIconsData["settings"]!.labelLong.tr(),
                     icon: navBarIconsData["settings"]!.iconData,
@@ -160,12 +183,6 @@ class MorePages extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // "关于Cashew"按钮和反馈按钮已删除
-            ],
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
               appStateSettings["showBillSplitterShortcut"] == true &&
                       hasSideNavigation == false
                   ? Expanded(
@@ -179,36 +196,31 @@ class MorePages extends StatelessWidget {
                       ),
                     )
                   : SizedBox.shrink(),
-            ],
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 通知按钮
-              notificationsGlobalEnabled
-                  ? Expanded(
-                      child: SettingsContainerOpenPage(
-                        openPage: NotificationsPage(),
-                        title: navBarIconsData["notifications"]!.label.tr(),
-                        icon: navBarIconsData["notifications"]!.iconData,
-                        isOutlined: true,
-                      ),
-                    )
-                  : SizedBox.shrink(),
-              // 自动交易按钮
-              notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
-                  getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
-                  ? Expanded(
-                      child: SettingsContainerOpenPage(
-                        openPage: AutoTransactionsPageNotifications(),
-                        title: "notification-transactions".tr(),
-                        icon: appStateSettings["outlinedIcons"]
-                            ? Icons.edit_notifications_outlined
-                            : Icons.edit_notifications_rounded,
-                        isOutlined: true,
-                      ),
-                    )
-                  : SizedBox.shrink(),
+              // 注释掉通知按钮，不再显示
+              // notificationsGlobalEnabled
+              //     ? Expanded(
+              //         child: SettingsContainerOpenPage(
+              //           openPage: NotificationsPage(),
+              //           title: navBarIconsData["notifications"]!.label.tr(),
+              //           icon: navBarIconsData["notifications"]!.iconData,
+              //           isOutlined: true,
+              //         ),
+              //       )
+              //     : SizedBox.shrink(),
+              // 注释掉自动添加按钮，不再显示
+              // notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
+              //     getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
+              //     ? Expanded(
+              //         child: SettingsContainerOpenPage(
+              //           openPage: AutoTransactionsPageNotifications(),
+              //           title: "notification-transactions".tr(),
+              //           icon: appStateSettings["outlinedIcons"]
+              //               ? Icons.edit_notifications_outlined
+              //               : Icons.edit_notifications_rounded,
+              //           isOutlined: true,
+              //         ),
+              //       )
+              //     : SizedBox.shrink(),
             ],
           ),
           if (hasSideNavigation == false)
@@ -390,7 +402,12 @@ Future<String> enterNameBottomSheet(context,
 }
 
 class SettingsPageFramework extends StatefulWidget {
-  const SettingsPageFramework({super.key});
+  const SettingsPageFramework({
+    super.key,
+    this.actions,
+  });
+
+  final List<Widget>? actions;
 
   @override
   State<SettingsPageFramework> createState() => SettingsPageFrameworkState();
@@ -407,6 +424,7 @@ class SettingsPageFrameworkState extends State<SettingsPageFramework> {
     return PageFramework(
       title: "settings".tr(),
       dragDownToDismiss: true,
+      actions: widget.actions,
       listWidgets: [SettingsPageContent()],
     );
   }
@@ -506,9 +524,30 @@ class SettingsPageContent extends StatelessWidget {
               ? Icons.home_outlined
               : Icons.home_rounded,
         ),
-
-        // Notification button removed as requested
-        SizedBox.shrink(),
+        
+        // 添加通知和通知交易按钮，保持与编辑主页相同的UI格局
+        // 注释掉通知按钮，不再显示
+        // notificationsGlobalEnabled
+        //     ? SettingsContainerOpenPage(
+        //         openPage: NotificationsPage(),
+        //         title: navBarIconsData["notifications"]!.label.tr(),
+        //         icon: appStateSettings["outlinedIcons"]
+        //             ? Icons.notifications_outlined
+        //             : Icons.notifications_rounded,
+        //       )
+        //     : SizedBox.shrink(),
+            
+        // 注释掉自动添加按钮，不再显示
+        // notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
+        //     getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
+        //     ? SettingsContainerOpenPage(
+        //         openPage: AutoTransactionsPageNotifications(),
+        //         title: "notification-transactions".tr(),
+        //         icon: appStateSettings["outlinedIcons"]
+        //             ? Icons.edit_notifications_outlined
+        //             : Icons.edit_notifications_rounded,
+        //       )
+        //     : SizedBox.shrink(),
 
         BiometricsSettingToggle(),
 
