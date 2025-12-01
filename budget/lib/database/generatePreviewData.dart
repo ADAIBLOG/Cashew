@@ -76,6 +76,10 @@ Future deletePreviewData({bool resetOnboard = false}) async {
 }
 
 Future generatePreviewData() async {
+  // 禁用演示数据生成功能，直接返回
+  print("演示数据生成功能已被禁用");
+  return;
+  // 以下代码不会执行
   updateSettings("previewDemo", true, updateGlobalState: false);
   loadingIndeterminateKey.currentState?.setVisibility(true);
   await createDefaultCategories();
@@ -867,38 +871,8 @@ class PreviewDemoButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Only allow preview demo if the language is English
-    if (context.locale.toString() == "en") {
-      return LowKeyButton(
-        onTap: () {
-          openPopup(
-            context,
-            title: "preview-demo".tr(),
-            description: "preview-demo-description".tr(),
-            onCancel: () {
-              popRoute(context);
-            },
-            onCancelLabel: "cancel".tr(),
-            onSubmit: () {
-              popRoute(context);
-              nextNavigation(generatePreview: true);
-            },
-            onSubmitLabel: "activate".tr(),
-          );
-        },
-        text: "preview-demo".tr(),
-        extraWidget: Padding(
-          padding: const EdgeInsetsDirectional.only(start: 5),
-          child: Icon(
-            Icons.help,
-            size: 17,
-            color: getColor(context, "black").withOpacity(0.5),
-          ),
-        ),
-      );
-    } else {
-      return SizedBox.shrink();
-    }
+    // 禁用演示数据功能，始终返回空组件
+    return SizedBox.shrink();
   }
 }
 
