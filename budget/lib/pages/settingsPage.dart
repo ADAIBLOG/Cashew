@@ -178,18 +178,25 @@ class MorePages extends StatelessWidget {
                         isOutlined: true,
                       ),
                     )
-                  : /* notificationsGlobalEnabled
-                      ? Expanded(
-                          child: SettingsContainerOpenPage(
-                            openPage: NotificationsPage(),
-                            title: navBarIconsData["notifications"]!.label.tr(),
-                            icon: navBarIconsData["notifications"]!.iconData,
-                            isOutlined: true,
-                          ),
-                        )
-                      : */ SizedBox.shrink(),
-              // 交通交易按钮
-              /* notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
+                  : SizedBox.shrink(),
+            ],
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 通知按钮
+              notificationsGlobalEnabled
+                  ? Expanded(
+                      child: SettingsContainerOpenPage(
+                        openPage: NotificationsPage(),
+                        title: navBarIconsData["notifications"]!.label.tr(),
+                        icon: navBarIconsData["notifications"]!.iconData,
+                        isOutlined: true,
+                      ),
+                    )
+                  : SizedBox.shrink(),
+              // 自动交易按钮
+              notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
                   getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
                   ? Expanded(
                       child: SettingsContainerOpenPage(
@@ -201,7 +208,7 @@ class MorePages extends StatelessWidget {
                         isOutlined: true,
                       ),
                     )
-                  : */ SizedBox.shrink(),
+                  : SizedBox.shrink(),
             ],
           ),
           if (hasSideNavigation == false)
