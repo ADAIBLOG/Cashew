@@ -12,29 +12,8 @@ loadCurrencyJSON() async {
 }
 
 Future<bool> getExchangeRates() async {
-  print("Getting exchange rates for current wallets");
-  // List<String?> uniqueCurrencies =
-  //     await database.getUniqueCurrenciesFromWallets();
-  Map<dynamic, dynamic> cachedCurrencyExchange =
-      appStateSettings["cachedCurrencyExchange"];
-  try {
-    Uri url = Uri.parse(
-        "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.min.json");
-    dynamic response = await http.get(url);
-    if (response.statusCode == 200) {
-      cachedCurrencyExchange = json.decode(response.body)?["usd"];
-    }
-  } catch (e) {
-    print("Error getting currency rates: " + e.toString());
-    return false;
-  }
-  // print(cachedCurrencyExchange);
-  updateSettings(
-    "cachedCurrencyExchange",
-    cachedCurrencyExchange,
-    updateGlobalState:
-        appStateSettings["cachedCurrencyExchange"].keys.length <= 0,
-  );
+  print("获取汇率功能已被禁用，使用缓存汇率数据");
+  // 禁用网络请求，直接返回true
   return true;
 }
 
