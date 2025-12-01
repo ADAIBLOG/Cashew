@@ -83,7 +83,7 @@
   "titles-details": "标题详情",
   "edit-accounts": "编辑账户",
   "edit-budgets": "编辑预算",
-  "notification-transactions": "通知交易",
+  "notification-transactions": "自动添加",
   "auto-transactions-title": "自动交易",
   "transactions-created-based-notifications": "可以根据通知自动创建交易。",
   "notification-configuration-missing": "通知配置缺失",
