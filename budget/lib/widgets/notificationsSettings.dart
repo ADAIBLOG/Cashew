@@ -192,122 +192,121 @@ class _UpcomingTransactionsNotificationsSettingsState
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // 已注释掉交易提醒按钮
-        // SettingsContainerSwitch(
-        //   title: "upcoming-transactions".tr(),
-        //   onSwitched: (value) async {
-        //     updateSettings("notificationsUpcomingTransactions", value,
-        //         updateGlobalState: false);
-        //     if (value == true) {
-        //       await initializeNotificationsPlatform();
-        //       await scheduleUpcomingTransactionsNotification(context);
-        //     } else {
-        //       await cancelUpcomingTransactionsNotification();
-        //     }
-        //     setState(() {
-        //       notificationsEnabled = !notificationsEnabled;
-        //     });
-        //     return true;
-        //   },
-        //   initialValue: appStateSettings["notificationsUpcomingTransactions"],
-        //   icon: appStateSettings["outlinedIcons"]
-        //       ? Icons.calendar_month_outlined
-        //       : Icons.calendar_month_rounded,
-        // ),
-        // IgnorePointer(
-        //   ignoring: !notificationsEnabled,
-        //   child: AnimatedOpacity(
-        //     opacity: notificationsEnabled ? 1 : 0,
-        //     duration: Duration(milliseconds: 300),
-        //     child: Container(
-        //       padding:
-        //           EdgeInsetsDirectional.symmetric(horizontal: 0, vertical: 0),
-        //       margin:
-        //           EdgeInsetsDirectional.symmetric(horizontal: 20, vertical: 10),
-        //       decoration: BoxDecoration(
-        //         borderRadius: BorderRadiusDirectional.circular(
-        //             getPlatform() == PlatformOS.isIOS ? 10 : 15),
-        //         color: appStateSettings["materialYou"]
-        //             ? dynamicPastel(context,
-        //                 Theme.of(context).colorScheme.secondaryContainer,
-        //                 amountLight: 0, amountDark: 0.6)
-        //             : getColor(context, "lightDarkAccent"),
-        //       ),
-        //       child: ClipRRect(
-        //         borderRadius: BorderRadiusDirectional.circular(
-        //             getPlatform() == PlatformOS.isIOS ? 10 : 15),
-        //         child: StreamBuilder<List<Transaction>>(
-        //           stream: database.watchAllOverdueUpcomingTransactions(false),
-        //           builder: (context, snapshot) {
-        //             if (snapshot.hasData) {
-        //               return Column(
-        //                 children: [
-        //                   for (Transaction transaction in snapshot.data!)
-        //                     StreamBuilder<TransactionCategory>(
-        //                       stream: database
-        //                           .getCategory(transaction.categoryFk)
-        //                           .$1,
-        //                       builder: (context, snapshot) {
-        //                         if (snapshot.hasData) {
-        //                           return SettingsContainerSwitch(
-        //                             onLongPress: () {
-        //                               pushRoute(
-        //                                 context,
-        //                                 AddTransactionPage(
-        //                                   transaction: transaction,
-        //                                   routesToPopAfterDelete:
-        //                                       RoutesToPopAfterDelete.One,
-        //                                 ),
-        //                               );
-        //                             },
-        //                             onTap: () {
-        //                               pushRoute(
-        //                                 context,
-        //                                 AddTransactionPage(
-        //                                   transaction: transaction,
-        //                                   routesToPopAfterDelete:
-        //                                       RoutesToPopAfterDelete.One,
-        //                                 ),
-        //                               );
-        //                             },
-        //                             icon: getTransactionTypeIcon(
-        //                                 transaction.type),
-        //                             title: getTransactionLabelSync(
-        //                                 transaction, snapshot.data!),
-        //                             description: getWordedDateShortMore(
-        //                                     transaction.dateCreated) +
-        //                                 ", " +
-        //                                 getWordedTime(
-        //                                     null, transaction.dateCreated),
-        //                             onSwitched: (value) async {
-        //                               await database.createOrUpdateTransaction(
-        //                                   transaction.copyWith(
-        //                                       upcomingTransactionNotification:
-        //                                           Value(value)));
-        //                               await initializeNotificationsPlatform();
-        //                               await scheduleUpcomingTransactionsNotification(
-        //                                   context);
-        //                               return;
-        //                             },
-        //                             syncWithInitialValue: false,
-        //                             initialValue: transaction
-        //                                     .upcomingTransactionNotification ??
-        //                                 true,
-        //                           );
-        //                         }
-        //                         return Container();
-        //                       },
-        //                     )
-        //                 ],
-        //               );
-        //             }
-        //             return SizedBox.shrink();
-        //           },
-        //         ),
-        //       ),
-        //     ),
-        //   ),
-        // ),
+        SettingsContainerSwitch(
+          title: "upcoming-transactions".tr(),
+          onSwitched: (value) async {
+            updateSettings("notificationsUpcomingTransactions", value,
+                updateGlobalState: false);
+            if (value == true) {
+              await initializeNotificationsPlatform();
+              await scheduleUpcomingTransactionsNotification(context);
+            } else {
+              await cancelUpcomingTransactionsNotification();
+            }
+            setState(() {
+              notificationsEnabled = !notificationsEnabled;
+            });
+            return true;
+          },
+          initialValue: appStateSettings["notificationsUpcomingTransactions"],
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.calendar_month_outlined
+              : Icons.calendar_month_rounded,
+        ),
+        IgnorePointer(
+          ignoring: !notificationsEnabled,
+          child: AnimatedOpacity(
+            opacity: notificationsEnabled ? 1 : 0,
+            duration: Duration(milliseconds: 300),
+            child: Container(
+              padding:
+                  EdgeInsetsDirectional.symmetric(horizontal: 0, vertical: 0),
+              margin:
+                  EdgeInsetsDirectional.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadiusDirectional.circular(
+                    getPlatform() == PlatformOS.isIOS ? 10 : 15),
+                color: appStateSettings["materialYou"]
+                    ? dynamicPastel(context,
+                        Theme.of(context).colorScheme.secondaryContainer,
+                        amountLight: 0, amountDark: 0.6)
+                    : getColor(context, "lightDarkAccent"),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadiusDirectional.circular(
+                    getPlatform() == PlatformOS.isIOS ? 10 : 15),
+                child: StreamBuilder<List<Transaction>>(
+                  stream: database.watchAllOverdueUpcomingTransactions(false),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Column(
+                        children: [
+                          for (Transaction transaction in snapshot.data!)
+                            StreamBuilder<TransactionCategory>(
+                              stream: database
+                                  .getCategory(transaction.categoryFk)
+                                  .$1,
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  return SettingsContainerSwitch(
+                                    onLongPress: () {
+                                      pushRoute(
+                                        context,
+                                        AddTransactionPage(
+                                          transaction: transaction,
+                                          routesToPopAfterDelete:
+                                              RoutesToPopAfterDelete.One,
+                                        ),
+                                      );
+                                    },
+                                    onTap: () {
+                                      pushRoute(
+                                        context,
+                                        AddTransactionPage(
+                                          transaction: transaction,
+                                          routesToPopAfterDelete:
+                                              RoutesToPopAfterDelete.One,
+                                        ),
+                                      );
+                                    },
+                                    icon: getTransactionTypeIcon(
+                                        transaction.type),
+                                    title: getTransactionLabelSync(
+                                        transaction, snapshot.data!),
+                                    description: getWordedDateShortMore(
+                                            transaction.dateCreated) +
+                                        ", " +
+                                        getWordedTime(
+                                            null, transaction.dateCreated),
+                                    onSwitched: (value) async {
+                                      await database.createOrUpdateTransaction(
+                                          transaction.copyWith(
+                                              upcomingTransactionNotification:
+                                                  Value(value)));
+                                      await initializeNotificationsPlatform();
+                                      await scheduleUpcomingTransactionsNotification(
+                                          context);
+                                      return;
+                                    },
+                                    syncWithInitialValue: false,
+                                    initialValue: transaction
+                                            .upcomingTransactionNotification ??
+                                        true,
+                                  );
+                                }
+                                return Container();
+                              },
+                            )
+                        ],
+                      );
+                    }
+                    return SizedBox.shrink();
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -394,13 +393,20 @@ Future<bool> cancelDailyNotification() async {
 }
 
 Future<bool> scheduleUpcomingTransactionsNotification(context) async {
-  // 确保交易提醒始终为禁用状态，直接取消所有现有通知并返回
   await cancelUpcomingTransactionsNotification();
-  print("交易提醒已被永久禁用");
-  return true;
-}
 
-Future<bool> cancelUpcomingTransactionsNotification() async {
+  AndroidNotificationDetails androidNotificationDetails =
+      AndroidNotificationDetails(
+    'upcomingTransactions',
+    'Upcoming Transactions',
+    importance: Importance.max,
+    priority: Priority.high,
+    color: Theme.of(context).colorScheme.primary,
+  );
+
+  DarwinNotificationDetails darwinNotificationDetails =
+      DarwinNotificationDetails(threadIdentifier: 'upcomingTransactions');
+
   List<Transaction> upcomingTransactions =
       await database.getAllUpcomingTransactions(
     startDate: DateTime.now().justDay(dayOffset: -1),
