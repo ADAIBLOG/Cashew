@@ -184,6 +184,9 @@ Future updateWidgetColorsAndText(BuildContext context) async {
       name: 'PlusWidgetProvider',
     );
     await HomeWidget.updateWidget(
+      name: 'MinusWidgetProvider',
+    );
+    await HomeWidget.updateWidget(
       name: 'TransferWidgetProvider',
     );
     await HomeWidget.updateWidget(
