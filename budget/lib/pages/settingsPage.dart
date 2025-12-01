@@ -195,32 +195,30 @@ class MorePages extends StatelessWidget {
                         isOutlined: true,
                       ),
                     )
+                  : notificationsGlobalEnabled
+                      ? Expanded(
+                          child: SettingsContainerOpenPage(
+                            openPage: NotificationsPage(),
+                            title: navBarIconsData["notifications"]!.label.tr(),
+                            icon: navBarIconsData["notifications"]!.iconData,
+                            isOutlined: true,
+                          ),
+                        )
+                      : SizedBox.shrink(),
+              // 交通交易按钮
+              notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
+                  getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
+                  ? Expanded(
+                      child: SettingsContainerOpenPage(
+                        openPage: AutoTransactionsPageNotifications(),
+                        title: "notification-transactions".tr(),
+                        icon: appStateSettings["outlinedIcons"]
+                            ? Icons.edit_notifications_outlined
+                            : Icons.edit_notifications_rounded,
+                        isOutlined: true,
+                      ),
+                    )
                   : SizedBox.shrink(),
-              // 注释掉通知按钮，不再显示
-              // notificationsGlobalEnabled
-              //     ? Expanded(
-              //         child: SettingsContainerOpenPage(
-              //           openPage: NotificationsPage(),
-              //           title: navBarIconsData["notifications"]!.label.tr(),
-              //           icon: navBarIconsData["notifications"]!.iconData,
-              //           isOutlined: true,
-              //         ),
-              //       )
-              //     : SizedBox.shrink(),
-              // 注释掉自动添加按钮，不再显示
-              // notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
-              //     getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
-              //     ? Expanded(
-              //         child: SettingsContainerOpenPage(
-              //           openPage: AutoTransactionsPageNotifications(),
-              //           title: "notification-transactions".tr(),
-              //           icon: appStateSettings["outlinedIcons"]
-              //               ? Icons.edit_notifications_outlined
-              //               : Icons.edit_notifications_rounded,
-              //           isOutlined: true,
-              //         ),
-              //       )
-              //     : SizedBox.shrink(),
             ],
           ),
           if (hasSideNavigation == false)
@@ -526,28 +524,26 @@ class SettingsPageContent extends StatelessWidget {
         ),
         
         // 添加通知和通知交易按钮，保持与编辑主页相同的UI格局
-        // 注释掉通知按钮，不再显示
-        // notificationsGlobalEnabled
-        //     ? SettingsContainerOpenPage(
-        //         openPage: NotificationsPage(),
-        //         title: navBarIconsData["notifications"]!.label.tr(),
-        //         icon: appStateSettings["outlinedIcons"]
-        //             ? Icons.notifications_outlined
-        //             : Icons.notifications_rounded,
-        //       )
-        //     : SizedBox.shrink(),
+        notificationsGlobalEnabled
+            ? SettingsContainerOpenPage(
+                openPage: NotificationsPage(),
+                title: navBarIconsData["notifications"]!.label.tr(),
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.notifications_outlined
+                    : Icons.notifications_rounded,
+              )
+            : SizedBox.shrink(),
             
-        // 注释掉自动添加按钮，不再显示
-        // notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
-        //     getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
-        //     ? SettingsContainerOpenPage(
-        //         openPage: AutoTransactionsPageNotifications(),
-        //         title: "notification-transactions".tr(),
-        //         icon: appStateSettings["outlinedIcons"]
-        //             ? Icons.edit_notifications_outlined
-        //             : Icons.edit_notifications_rounded,
-        //       )
-        //     : SizedBox.shrink(),
+        notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
+            getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
+            ? SettingsContainerOpenPage(
+                openPage: AutoTransactionsPageNotifications(),
+                title: "notification-transactions".tr(),
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.edit_notifications_outlined
+                    : Icons.edit_notifications_rounded,
+              )
+            : SizedBox.shrink(),
 
         BiometricsSettingToggle(),
 
