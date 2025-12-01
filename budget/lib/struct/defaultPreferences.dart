@@ -148,7 +148,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "notifications": true,
     "notificationHour": 20,
     "notificationMinute": 0,
-    "notificationsUpcomingTransactions": true,
+    "notificationsUpcomingTransactions": false,
     "notificationsReminderType": ReminderNotificationType.IfAppNotOpened.index,
     "appOpenedHour": DateTime.now().hour,
     "appOpenedMinute": DateTime.now().minute,
@@ -431,3 +431,4 @@ Map<String, String> migrateCyclePreferencesKeys = {
   "customPeriodStartDateAllSpendingSummary": "customPeriodStartDate",
   "customPeriodPastDaysAllSpendingSummary": "customPeriodPastDays",
 };
+
