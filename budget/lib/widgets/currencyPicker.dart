@@ -148,37 +148,38 @@ class _CurrencyPickerState extends State<CurrencyPicker> {
                         ),
                       ),
                     ),
-                    if (widget.showExchangeRateInfoNotice)
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(start: 7),
-                        child: ButtonIcon(
-                          onTap: () {
-                            openPopup(
-                              context,
-                              title: "exchange-rate-notice".tr(),
-                              description:
-                                  "exchange-rate-notice-description".tr(),
-                              icon: appStateSettings["outlinedIcons"]
-                                  ? Icons.info_outlined
-                                  : Icons.info_outline_rounded,
-                              onCancel: () {
-                                popRoute(context);
-                              },
-                              onCancelLabel: "ok".tr(),
-                              onSubmit: () async {
-                                checkIfExchangeRateChangeBefore();
-                                popRoute(context);
-                                await pushRoute(context, ExchangeRates());
-                                checkIfExchangeRateChangeAfter();
-                              },
-                              onSubmitLabel: "exchange-rates".tr(),
-                            );
-                          },
-                          icon: appStateSettings["outlinedIcons"]
-                              ? Icons.info_outlined
-                              : Icons.info_outline_rounded,
-                        ),
-                      ),
+                    // 隐藏汇率通知按钮，因为网络功能已被禁用
+                    // if (widget.showExchangeRateInfoNotice)
+                    //   Padding(
+                    //     padding: const EdgeInsetsDirectional.only(start: 7),
+                    //     child: ButtonIcon(
+                    //       onTap: () {
+                    //         openPopup(
+                    //           context,
+                    //           title: "exchange-rate-notice".tr(),
+                    //           description:
+                    //               "exchange-rate-notice-description".tr(),
+                    //           icon: appStateSettings["outlinedIcons"]
+                    //               ? Icons.info_outlined
+                    //               : Icons.info_outline_rounded,
+                    //           onCancel: () {
+                    //             popRoute(context);
+                    //           },
+                    //           onCancelLabel: "ok".tr(),
+                    //           onSubmit: () async {
+                    //             checkIfExchangeRateChangeBefore();
+                    //             popRoute(context);
+                    //             await pushRoute(context, ExchangeRates());
+                    //             checkIfExchangeRateChangeAfter();
+                    //           },
+                    //           onSubmitLabel: "exchange-rates".tr(),
+                    //         );
+                    //       },
+                    //       icon: appStateSettings["outlinedIcons"]
+                    //           ? Icons.info_outlined
+                    //           : Icons.info_outline_rounded,
+                    //     ),
+                    //   ),
                   ],
                 ),
                 SizedBox(height: 12),
