@@ -246,12 +246,13 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                     bool isCustomCurrency = customCurrencies.contains(key);
                     bool isUnsetCustomCurrency = isCustomCurrency &&
                         appStateSettings["customCurrencyAmounts"]?[key] == null;
-                    String calculatedExchangeRateString = isUnsetCustomCurrency
-                        ? "1"
+                    double primaryCurrencyToTargetCurrency = isUnsetCustomCurrency
+                        ? 1
                         : (1 /
                                 ((amountRatioToPrimaryCurrency(
-                                    Provider.of<AllWallets>(context), key))))
-                            .toStringAsFixed(14);
+                                    Provider.of<AllWallets>(context), key))));
+                    String calculatedExchangeRateString = primaryCurrencyToTargetCurrency
+                        .toStringAsFixed(14);
                     return ScaledAnimatedSwitcher(
                       keyToWatch: (appStateSettings["customCurrencyAmounts"]
                               ?[key])
@@ -295,9 +296,12 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                                         maxLines: 3,
                                         richTextSpan: [
                                           TextSpan(
-                                            text: (isUnsetCustomCurrency
-                                                    ? " " + "1 USD"
-                                                    : "") +
+                                            text: "1 " +
+                                                Provider.of<AllWallets>(context)
+                                                    .indexedByPk[appStateSettings["selectedWalletPk"]]!
+                                                    .currency
+                                                    .toString()
+                                                    .allCaps +
                                                 " = " +
                                                 calculatedExchangeRateString,
                                             style: TextStyle(
@@ -365,14 +369,13 @@ class _SetCustomCurrencyState extends State<SetCustomCurrency> {
   Widget build(BuildContext context) {
     return PopupFramework(
       title: "set-currency".tr(),
-      // subtitle: "1 " +
-      //     Provider.of<AllWallets>(context)
-      //         .indexedByPk[appStateSettings["selectedWalletPk"]]!
-      //         .currency
-      //         .toString()
-      //         .allCaps +
-      //     " = ",
-      subtitle: "1 USD = ",
+      subtitle: "1 " +
+          Provider.of<AllWallets>(context)
+              .indexedByPk[appStateSettings["selectedWalletPk"]]!
+              .currency
+              .toString()
+              .allCaps +
+          " = ",
       child: SelectAmountValue(
         allowZero: true,
         setSelectedAmount: (amount, amountString) {
@@ -381,18 +384,16 @@ class _SetCustomCurrencyState extends State<SetCustomCurrency> {
           if (amount == 0 || amountString == "") {
             customCurrencyAmountsMap.remove(widget.currencyKey);
           } else {
-            // This will convert the primary currency to the custom currency
-            // Issue: the selected currency may change, causing the custom currency to change
-            // That is why we only allow the user to set the exchange rate of USD! since it is our reference
-            // E.g. primary currency CAD, set custom currency of EUR to 5, then USD->CAD exchange rate changes when it's
-            // pulled (the CAD exchange rate entry), the exchange rate for EUR will change, since it references USD!
-            // double currentExchangeRate = getCurrencyExchangeRate(
-            //     Provider.of<AllWallets>(context, listen: false)
-            //         .indexedByPk[appStateSettings["selectedWalletPk"]]!
-            //         .currency);
-            // customCurrencyAmountsMap[widget.currencyKey] =
-            //     currentExchangeRate * amount;
-            customCurrencyAmountsMap[widget.currencyKey] = amount;
+            // Convert user input: "1 [当前货币] = X [目标货币]" 
+            // to system storage: "1 USD = Y [目标货币]"
+            String primaryCurrency = Provider.of<AllWallets>(context, listen: false)
+                .indexedByPk[appStateSettings["selectedWalletPk"]]!
+                .currency;
+            // Get the exchange rate of primary currency to USD
+            double primaryToUSDRate = getCurrencyExchangeRate(primaryCurrency);
+            // Calculate 1 USD = (amount / primaryToUSDRate) [目标货币]
+            double usdToTargetCurrency = amount / primaryToUSDRate;
+            customCurrencyAmountsMap[widget.currencyKey] = usdToTargetCurrency;
           }
           updateSettings("customCurrencyAmounts", customCurrencyAmountsMap,
               updateGlobalState: false);
@@ -415,10 +416,19 @@ class _SetCustomCurrencyState extends State<SetCustomCurrency> {
                     ?[widget.currencyKey] ==
                 null
             ? ""
-            : removeTrailingZeroes(appStateSettings["customCurrencyAmounts"]
-                        ?[widget.currencyKey]
-                    .toString() ??
-                "0"),
+            : () {
+                // Convert stored USD->target currency rate to primary currency->target currency rate for display
+                String primaryCurrency = Provider.of<AllWallets>(context, listen: false)
+                    .indexedByPk[appStateSettings["selectedWalletPk"]]!
+                    .currency;
+                double primaryToUSDRate = getCurrencyExchangeRate(primaryCurrency);
+                double usdToTargetCurrency = appStateSettings["customCurrencyAmounts"]
+                    ?[widget.currencyKey]
+                    .toDouble();
+                // Calculate 1 primary currency = (primaryToUSDRate * usdToTargetCurrency) target currency
+                double primaryToTargetCurrency = primaryToUSDRate * usdToTargetCurrency;
+                return removeTrailingZeroes(primaryToTargetCurrency.toString());
+              }(),
         suffix: " " + widget.currencyKey.allCaps,
         nextLabel: "set-amount".tr(),
         next: () {
