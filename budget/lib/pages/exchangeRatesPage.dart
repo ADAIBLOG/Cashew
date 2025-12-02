@@ -386,11 +386,11 @@ class _SetCustomCurrencyState extends State<SetCustomCurrency> {
           } else {
             // Convert user input: "1 [当前货币] = X [目标货币]" 
             // to system storage: "1 USD = Y [目标货币]"
-            String primaryCurrency = Provider.of<AllWallets>(context, listen: false)
+            String? primaryCurrency = Provider.of<AllWallets>(context, listen: false)
                 .indexedByPk[appStateSettings["selectedWalletPk"]]!
                 .currency;
             // Get the exchange rate of primary currency to USD
-            double primaryToUSDRate = getCurrencyExchangeRate(primaryCurrency);
+            double primaryToUSDRate = getCurrencyExchangeRate(primaryCurrency ?? "USD");
             // Calculate 1 USD = (amount / primaryToUSDRate) [目标货币]
             double usdToTargetCurrency = amount / primaryToUSDRate;
             customCurrencyAmountsMap[widget.currencyKey] = usdToTargetCurrency;
@@ -418,10 +418,10 @@ class _SetCustomCurrencyState extends State<SetCustomCurrency> {
             ? ""
             : () {
                 // Convert stored USD->target currency rate to primary currency->target currency rate for display
-                String primaryCurrency = Provider.of<AllWallets>(context, listen: false)
+                String? primaryCurrency = Provider.of<AllWallets>(context, listen: false)
                     .indexedByPk[appStateSettings["selectedWalletPk"]]!
                     .currency;
-                double primaryToUSDRate = getCurrencyExchangeRate(primaryCurrency);
+                double primaryToUSDRate = getCurrencyExchangeRate(primaryCurrency ?? "USD");
                 double usdToTargetCurrency = appStateSettings["customCurrencyAmounts"]
                     ?[widget.currencyKey]
                     .toDouble();
