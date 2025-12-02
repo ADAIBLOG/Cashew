@@ -1225,6 +1225,8 @@
   "import-warning-description": "导入可能会失败！请确保您选择了有效的 Cashew [.sqlite] 或 [.sql] 备份文件",
   "duplicate-budget-question": "预算重复？",
   "duplicate-budget": "重复预算",
-  "monthly-expense": "月度支出"
+  "monthly-expense": "月度支出",
+  "currency-label": "货币标签",
+  "currency-label-description": "在钱包名称旁显示货币代码"
 }
 
