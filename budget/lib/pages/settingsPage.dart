@@ -493,7 +493,14 @@ class SettingsPageContent extends StatelessWidget {
               )
             : SizedBox.shrink(),
             
-
+        // 添加通知交易设置入口
+        SettingsContainerOpenPage(
+            openPage: AutoTransactionsPageEmail(),
+            title: "notification-transactions".tr(),
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.edit_notifications_outlined
+                : Icons.edit_notifications_rounded,
+        ),
 
         BiometricsSettingToggle(),
 
