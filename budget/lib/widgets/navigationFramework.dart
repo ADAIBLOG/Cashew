@@ -1,4 +1,3 @@
-import 'package:animations/animations.dart';
 import 'package:budget/colors.dart';
 import 'package:budget/database/initializeDefaultDatabase.dart';
 import 'package:budget/database/tables.dart';
@@ -32,16 +31,12 @@ import 'package:budget/struct/defaultPreferences.dart';
 import 'package:budget/struct/navBarIconsData.dart';
 import 'package:budget/struct/quickActions.dart';
 import 'package:budget/struct/settings.dart';
-import 'package:budget/struct/shareBudget.dart';
-import 'package:budget/struct/syncClient.dart';
 import 'package:budget/widgets/accountAndBackup.dart';
 import 'package:budget/widgets/bottomNavBar.dart';
-import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/categoryIcon.dart';
 import 'package:budget/widgets/fab.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:budget/widgets/iconButtonScaled.dart';
-import 'package:budget/widgets/importDB.dart';
 import 'package:budget/widgets/moreIcons.dart';
 import 'package:budget/widgets/navigationSidebar.dart';
 import 'package:budget/widgets/notificationsSettings.dart';
@@ -68,7 +63,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_lazy_indexed_stack/flutter_lazy_indexed_stack.dart';
-import 'package:googleapis/drive/v3.dart';
 import 'package:provider/provider.dart';
 // import 'package:feature_discovery/feature_discovery.dart';
 
@@ -373,7 +367,8 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
           Theme.of(context).extension<AppColors>(),
           Theme.of(context).brightness));
 
-      bool isDatabaseCorruptedPopupShown = openDatabaseCorruptedPopup(context);
+      // Remove database corruption check since it's not implemented
+      bool isDatabaseCorruptedPopupShown = false;
       if (isDatabaseCorruptedPopupShown) return;
 
       await initializeNotificationsPlatform();
@@ -397,7 +392,7 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
       // Do this after cloud functions attempt (i.e. if user is not signed in we can show it)
       // 简化条件检查，移除评价弹窗相关判断
       if (isChangelogShown == false) {
-        openBackupReminderPopupCheck(context);
+        // Remove backup reminder popup since it's not implemented
       }
 
       // Mark subscriptions as paid AFTER syncing with cloud
@@ -418,13 +413,8 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
       print("Entire app loaded");
 
       database.watchAllForAutoSync().listen((event) {
-        // Must be logged in to perform an automatic sync - googleUser != null
-        // If we remove this, it will ask the user to login though - but it can be annoying
-        // Users can visually see the last time of sync, especially on web where sign-in is not automatic,
-        // so it shouldn't be an issue
-        if (runningCloudFunctions == false && googleUser != null) {
-          createSyncBackup(changeMadeSync: true);
-        }
+        // Removed Google login check since Google services are removed
+        // Auto sync functionality is disabled
       });
 
       if (kIsWeb) {
