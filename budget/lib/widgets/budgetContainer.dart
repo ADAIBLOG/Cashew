@@ -1223,9 +1223,6 @@ class _BudgetSpenderSummaryState extends State<BudgetSpenderSummary> {
                       }
                     }
                   },
-                  onLongPress: () {
-                    memberPopup(context, spender.member);
-                  },
                   color: Colors.transparent,
                   child: AnimatedContainer(
                     curve: Curves.easeInOut,
