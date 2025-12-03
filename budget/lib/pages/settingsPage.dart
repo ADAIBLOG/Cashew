@@ -493,16 +493,7 @@ class SettingsPageContent extends StatelessWidget {
               )
             : SizedBox.shrink(),
             
-        notificationsGlobalEnabled && appStateSettings["notificationScanningDebug"] &&
-            getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
-            ? SettingsContainerOpenPage(
-                openPage: AutoTransactionsPageNotifications(),
-                title: "notification-transactions".tr(),
-                icon: appStateSettings["outlinedIcons"]
-                    ? Icons.edit_notifications_outlined
-                    : Icons.edit_notifications_rounded,
-              )
-            : SizedBox.shrink(),
+
 
         BiometricsSettingToggle(),
 
