@@ -28,16 +28,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'firebase_options.dart';
 import 'package:easy_localization/easy_localization.dart';
-
-// 导入云服务禁用配置
-import '../disable_cloud_services.dart';
 
 // Requires hot restart when changed
 bool enableDevicePreview = false && kDebugMode;
@@ -48,19 +43,7 @@ void main() async {
   captureLogs(() async {
     WidgetsFlutterBinding.ensureInitialized();
     
-    // Initialize Firebase
-    if (!disableAllCloudServices) {
-      try {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
-      } catch (e) {
-        // Firebase initialization failed, but we'll continue with local mode
-      }
-    }
-    
-    // 总是应用云服务禁用设置
-    applyCloudServicesDisableSettings(appStateSettings);
+
     
     await EasyLocalization.ensureInitialized();
     sharedPreferences = await SharedPreferences.getInstance();
@@ -159,8 +142,7 @@ class App extends StatelessWidget {
                 )),
               ],
             ),
-            // 仅在不禁用Google登录时包含此组件
-            if (!disableAllCloudServices) EnableSignInWithGoogleFlyIn(),
+
             GlobalLoadingIndeterminate(key: loadingIndeterminateKey),
             GlobalLoadingProgress(key: loadingProgressKey),
           ],
@@ -179,13 +161,11 @@ class App extends StatelessWidget {
             await setHighRefreshRate();
           },
           child: InitializeBiometrics(
-            child: InitializeNotificationService(
-              child: InitializeAppLinks(
-                child: WatchForDayChange(
-                  child: WatchSelectedWalletPk(
-                    child: WatchAllWallets(
-                      child: child ?? SizedBox.shrink(),
-                    ),
+            child: InitializeAppLinks(
+              child: WatchForDayChange(
+                child: WatchSelectedWalletPk(
+                  child: WatchAllWallets(
+                    child: child ?? SizedBox.shrink(),
                   ),
                 ),
               ),
