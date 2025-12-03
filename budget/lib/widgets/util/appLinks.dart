@@ -256,22 +256,7 @@ Future processAddTransactionRouteFromParams(
 
 Future processMessageToParse(
     BuildContext context, Map<String, String?> params) async {
-  String messageString = params["messageToParse"].toString();
-  recentCapturedNotifications.insert(0, messageString);
-  recentCapturedNotifications.take(50);
-  dynamic result = await queueTransactionFromMessage(
-    messageString,
-    willPushRoute: true,
-    dateTime: await getDateTimeFromParams(params, context),
-  );
-  if (result == false) {
-    pushRoute(
-      null,
-      AddEmailTemplate(
-        messagesList: recentCapturedNotifications,
-      ),
-    );
-  }
+  // Email scanning functionality has been removed, so we don't need to parse messages
 }
 
 Future executeAppLink(BuildContext? context, Uri uri,
