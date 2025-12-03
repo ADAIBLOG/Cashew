@@ -1509,9 +1509,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                     getSelected: (String item) {
                       return selectedPayer == item;
                     },
-                    onLongPress: (String item) {
-                      memberPopup(context, item);
-                    },
+
                   ),
                 ),
               ),
