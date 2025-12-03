@@ -198,6 +198,8 @@ Future<void> setDailyNotifications(context) async {
       print(e.toString() +
           " Error setting up notifications for upcoming transactions");
     }
+  } else {
+    await cancelDailyNotification();
   }
 }
 
@@ -212,6 +214,8 @@ Future<void> setUpcomingNotifications(context) async {
       print(e.toString() +
           " Error setting up notifications for upcoming transactions");
     }
+  } else {
+    await cancelUpcomingTransactionsNotification();
   }
   return;
 }
