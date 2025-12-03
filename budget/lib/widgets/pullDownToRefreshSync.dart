@@ -12,12 +12,8 @@ import 'package:flutter/services.dart';
 import 'package:timer_builder/timer_builder.dart';
 
 bool enableSwipeDownToRefresh(BuildContext context) {
-  return selectingTransactionsActive == 0 &&
-      runningCloudFunctions == false &&
-      appStateSettings["hasSignedIn"] != false &&
-      appStateSettings["backupSync"] == true &&
-      googleUser != null;
-  // && getIsFullScreen(context) == false;
+  // Disable swipe down to refresh since Google services are removed
+  return false;
 }
 
 class PullDownToRefreshSync extends StatefulWidget {
