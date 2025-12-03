@@ -1,7 +1,6 @@
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/struct/settings.dart';
-import 'package:budget/struct/syncClient.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
@@ -37,8 +36,6 @@ Future<String?> importDBFileFromDevice(BuildContext context) async {
           : Icons.warning_rounded,
     ));
   }
-
-  await cancelAndPreventSyncOperation();
 
   if (kIsWeb) {
     Uint8List fileBytes = result.files.single.bytes!;
