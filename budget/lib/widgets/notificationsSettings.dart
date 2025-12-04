@@ -17,6 +17,7 @@ import 'package:budget/widgets/radioItems.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/widgets/transactionEntry/transactionLabel.dart';
 import 'package:budget/widgets/util/showTimePicker.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
@@ -319,76 +320,12 @@ List<String> _reminderStrings = [
 Future<bool> scheduleDailyNotification(
     BuildContext context, TimeOfDay timeOfDay,
     {bool scheduleNowDebug = false}) async {
-  // If the app was opened on the day the notification was scheduled it will be
-  // cancelled and set to the next day because of _nextInstanceOfSetTime
-  // If ReminderNotificationType.Everyday is not true
-  await cancelDailyNotification();
-
-  AndroidNotificationDetails androidNotificationDetails =
-      AndroidNotificationDetails(
-    'transactionReminders',
-    'Transaction Reminders',
-    importance: Importance.max,
-    priority: Priority.high,
-    color: Theme.of(context).colorScheme.primary,
-  );
-
-  DarwinNotificationDetails darwinNotificationDetails =
-      DarwinNotificationDetails(threadIdentifier: 'transactionReminders');
-
-  // schedule 2 weeks worth of notifications
-  for (int i = (ReminderNotificationType
-                  .values[appStateSettings["notificationsReminderType"]] ==
-              ReminderNotificationType.Everyday
-          ? 0
-          : 1);
-      i <= 14;
-      i++) {
-    String chosenMessage =
-        _reminderStrings[Random().nextInt(_reminderStrings.length)].tr();
-    tz.TZDateTime dateTime = _nextInstanceOfSetTime(timeOfDay, dayOffset: i);
-    if (scheduleNowDebug)
-      dateTime = tz.TZDateTime.now(tz.local).add(Duration(seconds: i * 5));
-    NotificationDetails notificationDetails = NotificationDetails(
-      android: androidNotificationDetails,
-      iOS: darwinNotificationDetails,
-    );
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      i,
-      'notification-reminder-title'.tr(),
-      chosenMessage,
-      dateTime,
-      notificationDetails,
-      androidAllowWhileIdle: true,
-      payload: 'addTransaction',
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.dateAndTime,
-
-      // If exact time was used, need USE_EXACT_ALARM and SCHEDULE_EXACT_ALARM permissions
-      // which are only meant for calendar/reminder based applications
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-    );
-    print("Notification " +
-        chosenMessage +
-        " scheduled for " +
-        dateTime.toString() +
-        " with id " +
-        i.toString());
-  }
-
-  // final List<PendingNotificationRequest> pendingNotificationRequests =
-  //     await flutterLocalNotificationsPlugin.pendingNotificationRequests();
-
-  return true;
+  // 已隐藏"添加交易提醒"功能，此函数不再执行任何操作
+  return false;
 }
 
 Future<bool> cancelDailyNotification() async {
-  // Need to cancel all, including the one at 0 - even if it does not exist
-  for (int i = 0; i <= 14; i++) {
-    await flutterLocalNotificationsPlugin.cancel(i);
-  }
-  print("Cancelled notifications for daily reminder");
+  // 已隐藏"添加交易提醒"功能，此函数不再执行任何操作
   return true;
 }
 
@@ -526,12 +463,27 @@ Future<bool> checkNotificationsPermissionIOS() async {
 }
 
 Future<bool> checkNotificationsPermissionAndroid() async {
-  bool? result = await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.requestNotificationsPermission();
-  if (result != true) return false;
-  return true;
+  try {
+    // 获取Android版本信息
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    int sdkInt = androidInfo.version.sdkInt;
+    
+    if (sdkInt >= 33) {
+      // Android 13+ 处理 POST_NOTIFICATIONS 权限
+      bool? result = await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestNotificationsPermission();
+      return result ?? false;
+    } else {
+      // 旧版Android不需要单独请求通知权限
+      return true;
+    }
+  } catch (e) {
+    print("Error checking Android notification permission: $e");
+    return false;
+  }
 }
 
 Future<bool> checkNotificationsPermissionAll() async {
