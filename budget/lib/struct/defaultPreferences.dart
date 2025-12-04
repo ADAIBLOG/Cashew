@@ -149,6 +149,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "notificationHour": 20,
     "notificationMinute": 0,
     "notificationsUpcomingTransactions": true,
+    "notificationsReminderType": ReminderNotificationType.IfAppNotOpened.index,
     "appOpenedHour": DateTime.now().hour,
     "appOpenedMinute": DateTime.now().minute,
     "materialYou": supportsSystemColor(),
@@ -197,7 +198,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "showMethodAdded": false,
     "showBackupLimit": false,
     "outlinedIcons": false,
-    "previewDemo": false,
+
     "showAccountLabelTagInTransactionEntry": false,
     "showCurrencyLabel": false,
     "showTransactionsMonthlySpendingSummary": true,
