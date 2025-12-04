@@ -6,6 +6,7 @@ import 'package:budget/pages/subscriptionsPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/navigationFramework.dart';
+import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/widgets/restartApp.dart';
@@ -26,6 +27,7 @@ import 'package:universal_html/html.dart' as html;
 import 'package:budget/struct/settings.dart';
 import 'package:budget/struct/currencyFunctions.dart';
 import 'package:budget/struct/randomConstants.dart';
+import 'package:budget/widgets/framework/popupFramework.dart';
 
 extension CapExtension on String {
   String get capitalizeFirst =>
@@ -36,6 +38,97 @@ extension CapExtension on String {
       .split(" ")
       .map((str) => str.capitalizeFirst)
       .join(" ");
+}
+
+// 数字选择弹窗
+Future<int?> openNumberPickerPopup(
+  BuildContext context,
+  {
+    required String title,
+    required int initialValue,
+    required int minValue,
+    required int maxValue,
+    required int step
+  }
+) async {
+  int selectedValue = initialValue;
+  bool confirmed = false;
+  
+  await openBottomSheet(
+    context,
+    fullSnap: true,
+    PopupFramework(
+      title: title,
+      underTitleSpace: false,
+      child: Column(
+        children: [
+          SelectAmountValue(
+            enableDecimal: false,
+            amountPassed: selectedValue.toString(),
+            setSelectedAmount: (amount, amountString) {
+              selectedValue = amount.toInt();
+              if (selectedValue < minValue) {
+                selectedValue = minValue;
+              } else if (selectedValue > maxValue) {
+                selectedValue = maxValue;
+              }
+            },
+            next: () {
+              confirmed = true;
+              popRoute(context);
+            },
+            nextLabel: "set-amount".tr(),
+          ),
+        ],
+      ),
+    ),
+  );
+  
+  return confirmed ? selectedValue : null;
+}
+
+// 金额选择弹窗
+Future<double?> openAmountPickerPopup(
+  BuildContext context,
+  {
+    required String title,
+    required double initialValue,
+    required String currencyKey,
+    required int decimals
+  }
+) async {
+  double selectedValue = initialValue;
+  bool confirmed = false;
+  
+  await openBottomSheet(
+    context,
+    fullSnap: true,
+    PopupFramework(
+      title: title,
+      underTitleSpace: false,
+      child: Column(
+        children: [
+          SelectAmount(
+            currencyKey: currencyKey,
+            decimals: decimals,
+            amountPassed: selectedValue.toString(),
+            setSelectedAmount: (amount, amountString) {
+              selectedValue = amount;
+            },
+            next: () {
+              confirmed = true;
+              popRoute(context);
+            },
+            nextLabel: "set-amount".tr(),
+            popWithAmount: false,
+            allowZero: true,
+          ),
+        ],
+      ),
+    ),
+  );
+  
+  return confirmed ? selectedValue : null;
 }
 
 extension DateUtils on DateTime {
