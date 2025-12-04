@@ -47,12 +47,5 @@ TransactionWallet defaultWallet() {
     dateTimeModified: null,
     decimals: 2,
     homePageWidgetDisplay: defaultWalletHomePageWidgetDisplay,
-    // 信用卡相关字段默认值
-    isCreditCard: false,
-    billingDay: null,
-    paymentDay: null,
-    creditLimit: null,
-    currentBalance: 0.0,
-    lastBillingDate: null,
   );
 }
