@@ -64,7 +64,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
             duration: Duration(milliseconds: 300),
             child: Column(
               children: [
-                DailyNotificationsSettings(),
+                // DailyNotificationsSettings(), // 已隐藏"添加交易提醒"功能
                 UpcomingTransactionsNotificationsSettings()
               ],
             ),
