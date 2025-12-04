@@ -66,14 +66,6 @@ class _AddWalletPageState extends State<AddWalletPage> {
       getDevicesDefaultCurrencyCode(); //if no currency selected use empty string
   int selectedDecimals = 2;
   FocusNode _titleFocusNode = FocusNode();
-  
-  // 信用卡相关状态
-  bool isCreditCard = false;
-  int? billingDay;
-  int? paymentDay;
-  double? creditLimit;
-  double currentBalance = 0.0;
-  DateTime? lastBillingDate;
 
   void setSelectedTitle(String title) {
     setState(() {
@@ -135,13 +127,6 @@ class _AddWalletPageState extends State<AddWalletPage> {
       homePageWidgetDisplay: widget.wallet != null
           ? widget.wallet!.homePageWidgetDisplay
           : defaultWalletHomePageWidgetDisplay,
-      // 信用卡相关字段
-      isCreditCard: isCreditCard,
-      billingDay: billingDay,
-      paymentDay: paymentDay,
-      creditLimit: creditLimit,
-      currentBalance: currentBalance,
-      lastBillingDate: lastBillingDate,
     );
   }
 
@@ -181,14 +166,6 @@ class _AddWalletPageState extends State<AddWalletPage> {
           : HexColor(widget.wallet!.colour);
       selectedCurrency = widget.wallet!.currency ?? "usd";
       selectedDecimals = widget.wallet!.decimals;
-      
-      // 加载信用卡相关数据
-      isCreditCard = widget.wallet!.isCreditCard ?? false;
-      billingDay = widget.wallet!.billingDay;
-      paymentDay = widget.wallet!.paymentDay;
-      creditLimit = widget.wallet!.creditLimit;
-      currentBalance = widget.wallet!.currentBalance ?? 0.0;
-      lastBillingDate = widget.wallet!.lastBillingDate;
     }
     populateCurrencies();
     Future.delayed(Duration.zero, () async {
@@ -705,159 +682,6 @@ class _AddWalletPageState extends State<AddWalletPage> {
                 ),
               ),
             ),
-          SliverToBoxAdapter(child: SizedBox(height: 10)),
-          // 信用卡设置
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsetsDirectional.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 信用卡开关
-                  SettingsContainerSwitch(
-                    title: "credit-card".tr(),
-                    description: "credit-card-description".tr(),
-                    onSwitched: (value) {
-                      setState(() {
-                        isCreditCard = value;
-                      });
-                    },
-                    initialValue: isCreditCard,
-                    icon: appStateSettings["outlinedIcons"]
-                        ? Icons.credit_card_outlined
-                        : Icons.credit_card_rounded,
-                  ),
-                  SizedBox(height: 10),
-                  
-                  // 信用卡相关字段，仅在开关开启时显示
-                  AnimatedExpanded(
-                    expand: isCreditCard,
-                    child: Column(
-                      children: [
-                        // 记账日
-                        SettingsContainer(
-                          title: "billing-day".tr(),
-                          description: "billing-day-description".tr(),
-                          onTap: () async {
-                            int? selectedDay = await openNumberPickerPopup(
-                              context,
-                              title: "billing-day".tr(),
-                              initialValue: billingDay ?? 1,
-                              minValue: 1,
-                              maxValue: 31,
-                              step: 1,
-                              nextLabel: "set-date",
-                            );
-                            if (selectedDay != null) {
-                              setState(() {
-                                billingDay = selectedDay;
-                              });
-                            }
-                          },
-                          afterWidget: Container(
-                            padding: EdgeInsetsDirectional.symmetric(
-                                horizontal: 16, vertical: 10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Theme.of(context).colorScheme.secondaryContainer,
-                            ),
-                            child: TextFont(
-                              text: billingDay?.toString() ?? "",
-                              fontSize: 14,
-                            ),
-                          ),
-                          icon: appStateSettings["outlinedIcons"]
-                              ? Icons.calendar_today_outlined
-                              : Icons.calendar_today_rounded,
-                        ),
-                        SizedBox(height: 10),
-                        
-                        // 还款日
-                        SettingsContainer(
-                          title: "payment-day".tr(),
-                          description: "payment-day-description".tr(),
-                          onTap: () async {
-                            int? selectedDay = await openNumberPickerPopup(
-                              context,
-                              title: "payment-day".tr(),
-                              initialValue: paymentDay ?? 1,
-                              minValue: 1,
-                              maxValue: 31,
-                              step: 1,
-                              nextLabel: "set-date",
-                            );
-                            if (selectedDay != null) {
-                              setState(() {
-                                paymentDay = selectedDay;
-                              });
-                            }
-                          },
-                          afterWidget: Container(
-                            padding: EdgeInsetsDirectional.symmetric(
-                                horizontal: 16, vertical: 10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Theme.of(context).colorScheme.secondaryContainer,
-                            ),
-                            child: TextFont(
-                              text: paymentDay?.toString() ?? "",
-                              fontSize: 14,
-                            ),
-                          ),
-                          icon: appStateSettings["outlinedIcons"]
-                              ? Icons.payment_outlined
-                              : Icons.payment_rounded,
-                        ),
-                        SizedBox(height: 10),
-                        
-                        // 信用额度
-                        SettingsContainer(
-                          title: "credit-limit".tr(),
-                          description: "credit-limit-description".tr(),
-                          onTap: () async {
-                            double? amount = await openAmountPickerPopup(
-                              context,
-                              title: "credit-limit".tr(),
-                              initialValue: creditLimit ?? 0,
-                              currencyKey: selectedCurrency,
-                              decimals: selectedDecimals,
-                            );
-                            if (amount != null) {
-                              setState(() {
-                                creditLimit = amount;
-                              });
-                            }
-                          },
-                          afterWidget: Container(
-                            padding: EdgeInsetsDirectional.symmetric(
-                                horizontal: 16, vertical: 10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Theme.of(context).colorScheme.secondaryContainer,
-                            ),
-                            child: TextFont(
-                              text: creditLimit != null
-                                  ? convertToMoney(
-                                      Provider.of<AllWallets>(context),
-                                      creditLimit!,
-                                      currencyKey: selectedCurrency,
-                                      decimals: selectedDecimals,
-                                    )
-                                  : "",
-                              fontSize: 14,
-                            ),
-                          ),
-                          icon: appStateSettings["outlinedIcons"]
-                              ? Icons.credit_score_outlined
-                              : Icons.credit_score_rounded,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
           SliverToBoxAdapter(child: SizedBox(height: 10)),
           CurrencyPicker(
             showExchangeRateInfoNotice: true,
