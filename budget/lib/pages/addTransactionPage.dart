@@ -1748,41 +1748,82 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                 children: [
                   Flexible(
                     flex: 2,
-                    child: IncomeExpenseTabSelector(
-                      hasBorderRadius: false,
-                      onTabChanged: setSelectedIncome,
-                      initialTabIsIncome: selectedIncome,
-                      syncWithInitial: true,
-                      color: categoryColor,
-                      unselectedColor: Colors.black.withOpacity(0.2),
-                      unselectedLabelColor: Colors.white.withOpacity(0.3),
-                      incomeLabel: isAddedToLoanObjective
-                          ? "collected".tr()
-                          : selectedType == TransactionSpecialType.debt ||
-                                  selectedType == TransactionSpecialType.credit
-                              ? "borrowed".tr()
-                              : selectedCategory?.categoryPk == "0"
-                                  ? "transfer-in".tr()
-                                  : null,
-                      incomeIconColor: isAddedToLoanObjective ||
-                              selectedType == TransactionSpecialType.debt ||
-                              selectedType == TransactionSpecialType.credit
-                          ? getColor(context, "unPaidOverdue")
+                    child: StreamBuilder<List<Objective>>(stream: database.watchAllObjectives(objectiveType: ObjectiveType.loan), builder: (context, snapshot) {
+                      String incomeLabel = "collected".tr();
+                      String expenseLabel = "paid".tr();
+                      
+                      if (snapshot.hasData && isAddedToLoanObjective && selectedObjectiveLoanPk != null) {
+                        // Find the loan objective
+                        Objective? loanObjective;
+                        try {
+                          loanObjective = snapshot.data!.firstWhere((obj) => obj.objectivePk == selectedObjectiveLoanPk);
+                        } catch (e) {
+                          // If not found, use default
+                        }
+                        
+                        if (loanObjective != null) {
+                          bool isDifferenceMode = loanObjective.amount == -1 && appStateSettings["longTermLoansDifferenceFeature"] == true;
+                          
+                          // 已收款状态 (incomeLabel)
+                          if (isDifferenceMode) {
+                            incomeLabel = "借入";
+                          } else if (loanObjective.income == false) {
+                            // 借出
+                            incomeLabel = "收款";
+                          } else {
+                            // 借入
+                            incomeLabel = "借入";
+                          }
+                          
+                          // 已支付状态 (expenseLabel)
+                          if (isDifferenceMode) {
+                            expenseLabel = "借出";
+                          } else if (loanObjective.income == false) {
+                            // 借出
+                            expenseLabel = "借出";
+                          } else {
+                            // 借入
+                            expenseLabel = "还账";
+                          }
+                        }
+                      }
+                      
+                      return IncomeExpenseTabSelector(
+                        hasBorderRadius: false,
+                        onTabChanged: setSelectedIncome,
+                        initialTabIsIncome: selectedIncome,
+                        syncWithInitial: true,
+                        color: categoryColor,
+                        unselectedColor: Colors.black.withOpacity(0.2),
+                        unselectedLabelColor: Colors.white.withOpacity(0.3),
+                        incomeLabel: isAddedToLoanObjective
+                            ? incomeLabel
+                            : selectedType == TransactionSpecialType.debt ||
+                                    selectedType == TransactionSpecialType.credit
+                                ? "borrowed".tr()
+                                : selectedCategory?.categoryPk == "0"
+                                    ? "transfer-in".tr()
+                                    : null,
+                        incomeIconColor: isAddedToLoanObjective ||
+                                selectedType == TransactionSpecialType.debt ||
+                                selectedType == TransactionSpecialType.credit
+                            ? getColor(context, "unPaidOverdue")
+                            : null,
+                        expenseLabel: isAddedToLoanObjective
+                            ? expenseLabel
+                            : selectedType == TransactionSpecialType.debt ||
+                                    selectedType == TransactionSpecialType.credit
+                                ? "lent".tr()
+                                : selectedCategory?.categoryPk == "0"
+                                    ? "transfer-out".tr()
+                                    : null,
+                        expenseIconColor: isAddedToLoanObjective ||
+                                selectedType == TransactionSpecialType.debt ||
+                                selectedType == TransactionSpecialType.credit
+                            ? getColor(context, "unPaidUpcoming")
                           : null,
-                      expenseLabel: isAddedToLoanObjective
-                          ? "paid".tr()
-                          : selectedType == TransactionSpecialType.debt ||
-                                  selectedType == TransactionSpecialType.credit
-                              ? "lent".tr()
-                              : selectedCategory?.categoryPk == "0"
-                                  ? "transfer-out".tr()
-                                  : null,
-                      expenseIconColor: isAddedToLoanObjective ||
-                              selectedType == TransactionSpecialType.debt ||
-                              selectedType == TransactionSpecialType.credit
-                          ? getColor(context, "unPaidUpcoming")
-                          : null,
-                    ),
+                      );
+                    }),
                   ),
                   if (appStateSettings["showTransactionsBalanceTransferTab"] ==
                           true &&
