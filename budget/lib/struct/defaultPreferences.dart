@@ -225,7 +225,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "loansLastPage": 0, //index of the last tab on the loans page
     // "loansUseDifferenceInsteadOfTotalGoal": false,
     // "loansHideDate": false,
-    "longTermLoansDifferenceFeature": false,
+    "longTermLoansDifferenceFeature": true,
     // *********************************************************** //
     // For showing information within a certain cycle for all spending wallet details page
     // cycleSettingsExtension = ""
