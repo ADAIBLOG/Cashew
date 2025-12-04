@@ -237,12 +237,15 @@ Future<Map<String, dynamic>> getUserSettings() async {
 
     //Set to defaults if a new setting is added, but no entry saved
     userPreferencesDefault.forEach((key, value) {
-      userSettingsJSON =
+      userSettingsJSON = 
           attemptToMigrateCyclePreferences(userSettingsJSON, key);
       if (userSettingsJSON[key] == null) {
         userSettingsJSON[key] = userPreferencesDefault[key];
       }
     });
+    
+    // Ensure difference loan feature is enabled
+    userSettingsJSON["longTermLoansDifferenceFeature"] = true;
     
     
     return userSettingsJSON;
