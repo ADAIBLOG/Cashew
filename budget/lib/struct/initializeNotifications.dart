@@ -67,11 +67,25 @@ Future<bool> runNotificationPayLoads(context) async {
   print("Notification payload: " + notificationPayload.toString());
   if (kIsWeb) return false;
   if (notificationPayload == null) return false;
+  
+  // 添加导航前的状态检查，确保上下文可用
+  if (context == null && navigatorKey.currentContext == null) {
+    print("Cannot navigate: No context available");
+    return false;
+  }
+  
+  // 使用可用的上下文
+  final navigationContext = context ?? navigatorKey.currentContext;
+  if (navigationContext == null) {
+    print("Cannot navigate: No valid context available");
+    return false;
+  }
+  
   // 处理新的JSON格式的payload
-  if (notificationPayload != null && notificationPayload?.contains('"type":"addTransaction"') == true) {
+  if (notificationPayload.contains('"type":"addTransaction"')) {
     try {
       // 解析JSON payload
-      Map<String, dynamic> payloadData = jsonDecode(notificationPayload!);
+      Map<String, dynamic> payloadData = jsonDecode(notificationPayload);
       if (payloadData["type"] == "addTransaction") {
         // 提取交易信息
         double? amount = payloadData["amount"] != null ? double.tryParse(payloadData["amount"]) : null;
@@ -113,10 +127,12 @@ Future<bool> runNotificationPayLoads(context) async {
           }
         }
         
-        // 添加延迟让键盘能够正确聚焦
-        await Future.delayed(Duration(milliseconds: 50), () async {
+        // 使用addPostFrameCallback确保在正确的时机执行导航
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          // 添加延迟让键盘能够正确聚焦
+          await Future.delayed(Duration(milliseconds: 50));
           pushRoute(
-            context,
+            navigationContext,
             AddTransactionPage(
               routesToPopAfterDelete: RoutesToPopAfterDelete.None,
               selectedAmount: amount,
@@ -139,10 +155,12 @@ Future<bool> runNotificationPayLoads(context) async {
   
   // 保持对旧格式的兼容
   if (notificationPayload == "addTransaction") {
-    // Add a delay so the keyboard can focus
-    await Future.delayed(Duration(milliseconds: 50), () async {
+    // 使用addPostFrameCallback确保在正确的时机执行导航
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 添加延迟让键盘能够正确聚焦
+      await Future.delayed(Duration(milliseconds: 50));
       pushRoute(
-        context,
+        navigationContext,
         AddTransactionPage(
           routesToPopAfterDelete: RoutesToPopAfterDelete.None,
         ),
@@ -150,57 +168,42 @@ Future<bool> runNotificationPayLoads(context) async {
     });
     return true;
   } else if (notificationPayload == "upcomingTransaction") {
-    // When the notification comes in, the transaction is past due!
-    pushRoute(
-      context,
-      UpcomingOverdueTransactions(overdueTransactions: null),
-    );
+    // 使用addPostFrameCallback确保在正确的时机执行导航
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // When the notification comes in, the transaction is past due!
+      pushRoute(
+        navigationContext,
+        UpcomingOverdueTransactions(overdueTransactions: null),
+      );
+    });
     return true;
-  } else if (notificationPayload?.split("?")[0] == "openTransaction") {
-    Uri notificationPayloadUri = Uri.parse(notificationPayload ?? "");
+  } else if (notificationPayload.split("?")[0] == "openTransaction") {
+    Uri notificationPayloadUri = Uri.parse(notificationPayload);
     if (notificationPayloadUri.queryParameters["transactionPk"] == null)
       return false;
-    String transactionPk =
-        notificationPayloadUri.queryParameters["transactionPk"] ?? "";
-    Transaction? transaction =
-        await database.getTransactionFromPk(transactionPk);
-    pushRoute(
-      context,
-      AddTransactionPage(
-        transaction: transaction,
-        routesToPopAfterDelete: RoutesToPopAfterDelete.One,
-      ),
-    );
+    String transactionPk = notificationPayloadUri.queryParameters["transactionPk"] ?? "";
+    Transaction? transaction = await database.getTransactionFromPk(transactionPk);
+    
+    // 使用addPostFrameCallback确保在正确的时机执行导航
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      pushRoute(
+        navigationContext,
+        AddTransactionPage(
+          transaction: transaction,
+          routesToPopAfterDelete: RoutesToPopAfterDelete.One,
+        ),
+      );
+    });
     return true;
   }
+  
   notificationPayload = "";
   return false;
 }
 
 Future<void> setDailyNotifications(context) async {
-  if (kIsWeb) return;
-  bool notificationsEnabled = appStateSettings["notifications"] == true;
-
-  if (notificationsEnabled) {
-    try {
-      TimeOfDay timeOfDay = TimeOfDay(
-          hour: appStateSettings["notificationHour"],
-          minute: appStateSettings["notificationMinute"]);
-      if (ReminderNotificationType
-              .values[appStateSettings["notificationsReminderType"]] ==
-          ReminderNotificationType.DayFromOpen) {
-        timeOfDay = TimeOfDay(
-            hour: appStateSettings["appOpenedHour"],
-            minute: appStateSettings["appOpenedMinute"]);
-      }
-      await scheduleDailyNotification(context, timeOfDay);
-    } catch (e) {
-      print(e.toString() +
-          " Error setting up notifications for upcoming transactions");
-    }
-  } else {
-    await cancelDailyNotification();
-  }
+  // 已隐藏"添加交易提醒"功能，此函数不再执行任何操作
+  return;
 }
 
 Future<void> setUpcomingNotifications(context) async {
@@ -214,8 +217,6 @@ Future<void> setUpcomingNotifications(context) async {
       print(e.toString() +
           " Error setting up notifications for upcoming transactions");
     }
-  } else {
-    await cancelUpcomingTransactionsNotification();
   }
   return;
 }
