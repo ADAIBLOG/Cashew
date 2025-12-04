@@ -746,6 +746,7 @@ class _AddWalletPageState extends State<AddWalletPage> {
                               minValue: 1,
                               maxValue: 31,
                               step: 1,
+                              nextLabel: "set-date",
                             );
                             if (selectedDay != null) {
                               setState(() {
@@ -783,6 +784,7 @@ class _AddWalletPageState extends State<AddWalletPage> {
                               minValue: 1,
                               maxValue: 31,
                               step: 1,
+                              nextLabel: "set-date",
                             );
                             if (selectedDay != null) {
                               setState(() {
