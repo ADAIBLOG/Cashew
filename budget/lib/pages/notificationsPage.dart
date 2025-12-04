@@ -62,12 +62,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           AnimatedOpacity(
             opacity: notificationsEnabled ? 1 : 0.5,
             duration: Duration(milliseconds: 300),
-            child: Column(
-              children: [
-                DailyNotificationsSettings(),
-                UpcomingTransactionsNotificationsSettings()
-              ],
-            ),
+            child: UpcomingTransactionsNotificationsSettings(),
           )
         ],
       ),
