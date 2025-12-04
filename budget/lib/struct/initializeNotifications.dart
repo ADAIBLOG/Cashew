@@ -68,135 +68,31 @@ Future<bool> runNotificationPayLoads(context) async {
   if (kIsWeb) return false;
   if (notificationPayload == null) return false;
   
-  // 添加导航前的状态检查，确保上下文可用
-  if (context == null && navigatorKey.currentContext == null) {
-    print("Cannot navigate: No context available");
-    return false;
-  }
-  
-  // 使用可用的上下文
-  final navigationContext = context ?? navigatorKey.currentContext;
-  if (navigationContext == null) {
-    print("Cannot navigate: No valid context available");
-    return false;
-  }
-  
-  // 处理新的JSON格式的payload
-  if (notificationPayload.contains('"type":"addTransaction"')) {
-    try {
-      // 解析JSON payload
-      Map<String, dynamic> payloadData = jsonDecode(notificationPayload);
-      if (payloadData["type"] == "addTransaction") {
-        // 提取交易信息
-        double? amount = payloadData["amount"] != null ? double.tryParse(payloadData["amount"]) : null;
-        String? templatePk = payloadData["templatePk"];
-        String? title = payloadData["title"];
-        DateTime? date;
-        if (payloadData["date"] != null) {
-          try {
-            date = DateTime.parse(payloadData["date"]);
-          } catch (e) {
-            // 日期解析失败，使用当前日期
-          }
-        }
-        
-        // 获取账户和类别实例
-        TransactionWallet? selectedWallet;
-        TransactionCategory? selectedCategory;
-        
-        // 优先从模板获取钱包和类别信息
-        if (templatePk != null) {
-          ScannerTemplate? template = await database.getScannerTemplateInstance(templatePk);
-          if (template != null) {
-            // 获取钱包信息
-            if (template.walletFk != "-1") {
-              selectedWallet = await database.getWalletInstanceOrNull(template.walletFk);
-            }
-            
-            // 获取默认类别
-            selectedCategory = await database.getCategoryInstanceOrNull(template.defaultCategoryFk);
-          }
-        }
-        
-        // 如果有标题，可以尝试找到关联的类别（优先级高于模板默认类别）
-        if (title != null) {
-          TransactionAssociatedTitleWithCategory? foundTitle = 
-              (await database.getSimilarAssociatedTitles(title: title, limit: 1)).firstOrNull;
-          if (foundTitle?.category != null) {
-            selectedCategory = foundTitle?.category;
-          }
-        }
-        
-        // 使用addPostFrameCallback确保在正确的时机执行导航
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          // 添加延迟让键盘能够正确聚焦
-          await Future.delayed(Duration(milliseconds: 50));
-          pushRoute(
-            navigationContext,
-            AddTransactionPage(
-              routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-              selectedAmount: amount,
-              selectedTitle: title,
-              selectedCategory: selectedCategory,
-              selectedWallet: selectedWallet,
-              selectedDate: date,
-              startInitialAddTransactionSequence: false,
-              templatePk: templatePk, // 传递模板PK以便在页面中使用
-            ),
-          );
-        });
-        return true;
-      }
-    } catch (e) {
-      // JSON解析失败，回退到旧的处理方式
-      print("Failed to parse notification payload: $e");
-    }
-  }
-  
-  // 保持对旧格式的兼容
-  if (notificationPayload == "addTransaction") {
-    // 使用addPostFrameCallback确保在正确的时机执行导航
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // 添加延迟让键盘能够正确聚焦
-      await Future.delayed(Duration(milliseconds: 50));
-      pushRoute(
-        navigationContext,
-        AddTransactionPage(
-          routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-        ),
-      );
-    });
+  // 处理即将到来的交易通知
+  if (notificationPayload == "upcomingTransaction") {
+    // When the notification comes in, the transaction is past due!
+    pushRoute(
+      context,
+      UpcomingOverdueTransactions(overdueTransactions: null),
+    );
     return true;
-  } else if (notificationPayload == "upcomingTransaction") {
-    // 使用addPostFrameCallback确保在正确的时机执行导航
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // When the notification comes in, the transaction is past due!
-      pushRoute(
-        navigationContext,
-        UpcomingOverdueTransactions(overdueTransactions: null),
-      );
-    });
-    return true;
-  } else if (notificationPayload.split("?")[0] == "openTransaction") {
-    Uri notificationPayloadUri = Uri.parse(notificationPayload);
+  } else if (notificationPayload?.split("?")[0] == "openTransaction") {
+    Uri notificationPayloadUri = Uri.parse(notificationPayload ?? "");
     if (notificationPayloadUri.queryParameters["transactionPk"] == null)
       return false;
-    String transactionPk = notificationPayloadUri.queryParameters["transactionPk"] ?? "";
-    Transaction? transaction = await database.getTransactionFromPk(transactionPk);
-    
-    // 使用addPostFrameCallback确保在正确的时机执行导航
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      pushRoute(
-        navigationContext,
-        AddTransactionPage(
-          transaction: transaction,
-          routesToPopAfterDelete: RoutesToPopAfterDelete.One,
-        ),
-      );
-    });
+    String transactionPk = 
+        notificationPayloadUri.queryParameters["transactionPk"] ?? "";
+    Transaction? transaction = 
+        await database.getTransactionFromPk(transactionPk);
+    pushRoute(
+      context,
+      AddTransactionPage(
+        transaction: transaction,
+        routesToPopAfterDelete: RoutesToPopAfterDelete.One,
+      ),
+    );
     return true;
   }
-  
   notificationPayload = "";
   return false;
 }
