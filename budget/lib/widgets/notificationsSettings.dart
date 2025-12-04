@@ -17,7 +17,6 @@ import 'package:budget/widgets/radioItems.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/widgets/transactionEntry/transactionLabel.dart';
 import 'package:budget/widgets/util/showTimePicker.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
@@ -165,6 +164,8 @@ class _UpcomingTransactionsNotificationsSettingsState
   }
 }
 
+
+
 Future<bool> scheduleUpcomingTransactionsNotification(context) async {
   await cancelUpcomingTransactionsNotification();
 
@@ -257,6 +258,21 @@ Future<bool> cancelUpcomingTransactionsNotification() async {
   return true;
 }
 
+tz.TZDateTime _nextInstanceOfSetTime(TimeOfDay timeOfDay, {int dayOffset = 0}) {
+  final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+  // tz.TZDateTime scheduledDate = tz.TZDateTime(
+  //     tz.local, now.year, now.month, now.day, timeOfDay.hour, timeOfDay.minute);
+  // if (scheduledDate.isBefore(now)) {
+  //   scheduledDate = scheduledDate.add(const Duration(days: 1));
+  // }
+
+  // add one to current day (if app wasn't opened, it will notify)
+  tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month,
+      now.day + dayOffset, timeOfDay.hour, timeOfDay.minute);
+
+  return scheduledDate;
+}
+
 Future<bool> initializeNotificationsPlatform() async {
   if (kIsWeb || Platform.isLinux) {
     return false;
@@ -284,27 +300,12 @@ Future<bool> checkNotificationsPermissionIOS() async {
 }
 
 Future<bool> checkNotificationsPermissionAndroid() async {
-  try {
-    // 获取Android版本信息
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    int sdkInt = androidInfo.version.sdkInt;
-    
-    if (sdkInt >= 33) {
-      // Android 13+ 处理 POST_NOTIFICATIONS 权限
-      bool? result = await flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.requestNotificationsPermission();
-      return result ?? false;
-    } else {
-      // 旧版Android不需要单独请求通知权限
-      return true;
-    }
-  } catch (e) {
-    print("Error checking Android notification permission: $e");
-    return false;
-  }
+  bool? result = await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.requestNotificationsPermission();
+  if (result != true) return false;
+  return true;
 }
 
 Future<bool> checkNotificationsPermissionAll() async {
