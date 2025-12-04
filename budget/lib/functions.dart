@@ -48,7 +48,8 @@ Future<int?> openNumberPickerPopup(
     required int initialValue,
     required int minValue,
     required int maxValue,
-    required int step
+    required int step,
+    String nextLabel = "set-amount"
   }
 ) async {
   int selectedValue = initialValue;
@@ -77,7 +78,7 @@ Future<int?> openNumberPickerPopup(
               confirmed = true;
               popRoute(context);
             },
-            nextLabel: "set-amount".tr(),
+            nextLabel: nextLabel.tr(),
           ),
         ],
       ),
@@ -94,7 +95,8 @@ Future<double?> openAmountPickerPopup(
     required String title,
     required double initialValue,
     required String currencyKey,
-    required int decimals
+    required int decimals,
+    String nextLabel = "set-amount"
   }
 ) async {
   double selectedValue = initialValue;
@@ -119,7 +121,7 @@ Future<double?> openAmountPickerPopup(
               confirmed = true;
               popRoute(context);
             },
-            nextLabel: "set-amount".tr(),
+            nextLabel: nextLabel.tr(),
             popWithAmount: false,
             allowZero: true,
           ),
