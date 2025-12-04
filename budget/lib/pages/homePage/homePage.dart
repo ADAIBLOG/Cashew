@@ -1,5 +1,5 @@
 import 'package:budget/colors.dart';
-import 'package:budget/database/generatePreviewData.dart';
+
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/pages/homePage/homePageHeatmap.dart';
@@ -256,7 +256,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 child: ListView(
                   controller: _scrollController,
                   children: [
-                    PreviewDemoWarning(),
+
                     if (useSmallBanner) SizedBox(height: 13),
                     Row(
                       mainAxisSize: MainAxisSize.min,
