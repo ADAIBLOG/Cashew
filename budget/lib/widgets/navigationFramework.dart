@@ -377,6 +377,7 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
       // 移除评价功能相关代码
       bool isRatingPopupShown = false; // 保持变量以避免破坏其他逻辑
 
+      await setDailyNotifications(context);
       await initializeDefaultDatabase();
       runNotificationPayLoads(context);
       runQuickActionsPayLoads(context);
