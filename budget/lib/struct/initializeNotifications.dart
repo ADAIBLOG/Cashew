@@ -201,10 +201,7 @@ Future<bool> runNotificationPayLoads(context) async {
   return false;
 }
 
-Future<void> setDailyNotifications(context) async {
-  // 已隐藏"添加交易提醒"功能，此函数不再执行任何操作
-  return;
-}
+
 
 Future<void> setUpcomingNotifications(context) async {
   if (kIsWeb) return;
