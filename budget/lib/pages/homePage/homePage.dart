@@ -255,7 +255,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 child: ListView(
                   controller: _scrollController,
                   children: [
-                    PreviewDemoWarning(),
                     if (useSmallBanner) SizedBox(height: 13),
                     Row(
                       mainAxisSize: MainAxisSize.min,
