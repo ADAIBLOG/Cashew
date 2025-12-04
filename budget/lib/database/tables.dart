@@ -262,14 +262,6 @@ class Wallets extends Table {
       .nullable()
       .withDefault(const Constant(null))
       .map(const HomePageWidgetDisplayListInColumnConverter())();
-  
-  // 信用卡相关字段
-  BoolColumn get isCreditCard => boolean().withDefault(const Constant(false))();
-  IntColumn get billingDay => integer().nullable()(); // 记账日（1-31）
-  IntColumn get paymentDay => integer().nullable()(); // 还款日（1-31）
-  RealColumn get creditLimit => real().nullable()(); // 信用额度
-  RealColumn get currentBalance => real().withDefault(const Constant(0.0))(); // 当前欠款
-  DateTimeColumn get lastBillingDate => dateTime().nullable()(); // 最后记账日
 
   @override
   Set<Column> get primaryKey => {walletPk};
