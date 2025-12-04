@@ -66,6 +66,13 @@ class _AddWalletPageState extends State<AddWalletPage> {
       getDevicesDefaultCurrencyCode(); //if no currency selected use empty string
   int selectedDecimals = 2;
   FocusNode _titleFocusNode = FocusNode();
+  
+  // Credit card specific fields
+  bool isCreditCard = false;
+  int billingDay = 1;
+  int paymentDay = 5;
+  double creditLimit = 0;
+  double currentBalance = 0;
 
   void setSelectedTitle(String title) {
     setState(() {
@@ -127,6 +134,11 @@ class _AddWalletPageState extends State<AddWalletPage> {
       homePageWidgetDisplay: widget.wallet != null
           ? widget.wallet!.homePageWidgetDisplay
           : defaultWalletHomePageWidgetDisplay,
+      isCreditCard: isCreditCard,
+      billingDay: isCreditCard ? billingDay : null,
+      paymentDay: isCreditCard ? paymentDay : null,
+      creditLimit: isCreditCard ? creditLimit : null,
+      currentBalance: currentBalance,
     );
   }
 
@@ -166,6 +178,13 @@ class _AddWalletPageState extends State<AddWalletPage> {
           : HexColor(widget.wallet!.colour);
       selectedCurrency = widget.wallet!.currency ?? "usd";
       selectedDecimals = widget.wallet!.decimals;
+      
+      // Initialize credit card fields if this is a credit card
+      isCreditCard = widget.wallet!.isCreditCard ?? false;
+      billingDay = widget.wallet!.billingDay ?? 1;
+      paymentDay = widget.wallet!.paymentDay ?? 5;
+      creditLimit = widget.wallet!.creditLimit ?? 0;
+      currentBalance = widget.wallet!.currentBalance ?? 0;
     }
     populateCurrencies();
     Future.delayed(Duration.zero, () async {
@@ -694,6 +713,200 @@ class _AddWalletPageState extends State<AddWalletPage> {
               // });
             },
           ),
+          
+          // Credit Card Section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(
+                start: 20,
+                end: 20,
+                top: 10,
+                bottom: 10,
+              ),
+              child: SettingsContainerSwitch(
+                title: "credit-card".tr(),
+                onSwitched: (value) {
+                  setState(() {
+                    isCreditCard = value;
+                  });
+                },
+                enableBorderRadius: true,
+                initialValue: isCreditCard,
+                syncWithInitialValue: false,
+                runOnSwitchedInitially: true,
+                icon: Icons.credit_card,
+              ),
+            ),
+          ),
+          
+          // Credit Card Specific Fields
+          if (isCreditCard)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(
+                  start: 20,
+                  end: 20,
+                  bottom: 10,
+                ),
+                child: Column(
+                  children: [
+                    // Billing Day
+                    SettingsContainer(
+                      isOutlined: true,
+                      title: "billing-day".tr(),
+                      description: billingDay.toString(),
+                      onTap: () async {
+                        await openBottomSheet(
+                          context,
+                          PopupFramework(
+                            title: "billing-day".tr(),
+                            subtitle: "select-billing-day".tr(),
+                            child: SelectAmountValue(
+                              enableDecimal: false,
+                              amountPassed: billingDay.toString(),
+                              setSelectedAmount: (amount, amountString) {
+                                if (amountString == "") amount = 1;
+                                billingDay = amount.toInt();
+                                if (billingDay > 31) {
+                                  billingDay = 31;
+                                } else if (billingDay < 1) {
+                                  billingDay = 1;
+                                }
+                                setState(() {});
+                              },
+                              next: () async {
+                                popRoute(context);
+                              },
+                              nextLabel: "set-billing-day".tr(),
+                            ),
+                          ),
+                        );
+                      },
+                      icon: Icons.calendar_today,
+                      isWideOutlined: true,
+                    ),
+                    SizedBox(height: 10),
+                    
+                    // Payment Day
+                    SettingsContainer(
+                      isOutlined: true,
+                      title: "payment-day".tr(),
+                      description: paymentDay.toString(),
+                      onTap: () async {
+                        await openBottomSheet(
+                          context,
+                          PopupFramework(
+                            title: "payment-day".tr(),
+                            subtitle: "select-payment-day".tr(),
+                            child: SelectAmountValue(
+                              enableDecimal: false,
+                              amountPassed: paymentDay.toString(),
+                              setSelectedAmount: (amount, amountString) {
+                                if (amountString == "") amount = 5;
+                                paymentDay = amount.toInt();
+                                if (paymentDay > 31) {
+                                  paymentDay = 31;
+                                } else if (paymentDay < 1) {
+                                  paymentDay = 1;
+                                }
+                                setState(() {});
+                              },
+                              next: () async {
+                                popRoute(context);
+                              },
+                              nextLabel: "set-payment-day".tr(),
+                            ),
+                          ),
+                        );
+                      },
+                      icon: Icons.payment,
+                      isWideOutlined: true,
+                    ),
+                    SizedBox(height: 10),
+                    
+                    // Credit Limit
+                    SettingsContainer(
+                      isOutlined: true,
+                      title: "credit-limit".tr(),
+                      description: convertToMoney(
+                        Provider.of<AllWallets>(context),
+                        currencyKey: selectedCurrency,
+                        creditLimit,
+                        decimals: selectedDecimals,
+                      ),
+                      onTap: () {
+                        openBottomSheet(
+                          context,
+                          fullSnap: true,
+                          PopupFramework(
+                            title: "credit-limit".tr(),
+                            subtitle: selectedTitle ?? "",
+                            underTitleSpace: false,
+                            child: SelectAmount(
+                              amountPassed: creditLimit.toString(),
+                              setSelectedAmount: (amount, amountString) {
+                                creditLimit = amount;
+                                setState(() {});
+                              },
+                              next: () async {
+                                popRoute(context);
+                              },
+                              nextLabel: "set-credit-limit".tr(),
+                              currencyKey: selectedCurrency,
+                              allowZero: true,
+                              decimals: selectedDecimals == 2 ? null : selectedDecimals,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: Icons.attach_money,
+                      isWideOutlined: true,
+                    ),
+                    SizedBox(height: 10),
+                    
+                    // Current Balance
+                    SettingsContainer(
+                      isOutlined: true,
+                      title: "current-balance".tr(),
+                      description: convertToMoney(
+                        Provider.of<AllWallets>(context),
+                        currencyKey: selectedCurrency,
+                        currentBalance,
+                        decimals: selectedDecimals,
+                      ),
+                      onTap: () {
+                        openBottomSheet(
+                          context,
+                          fullSnap: true,
+                          PopupFramework(
+                            title: "current-balance".tr(),
+                            subtitle: selectedTitle ?? "",
+                            underTitleSpace: false,
+                            child: SelectAmount(
+                              amountPassed: currentBalance.toString(),
+                              setSelectedAmount: (amount, amountString) {
+                                currentBalance = amount;
+                                setState(() {});
+                              },
+                              next: () async {
+                                popRoute(context);
+                              },
+                              nextLabel: "set-current-balance".tr(),
+                              currencyKey: selectedCurrency,
+                              allowZero: true,
+                              decimals: selectedDecimals == 2 ? null : selectedDecimals,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: Icons.account_balance_wallet,
+                      isWideOutlined: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          
           SliverToBoxAdapter(child: SizedBox(height: 65)),
           // SliverToBoxAdapter(
           //   child: KeyboardHeightAreaAnimated(),
