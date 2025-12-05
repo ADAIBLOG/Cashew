@@ -465,14 +465,19 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
             end: 15,
           ),
           child: AnimateFAB(
-            key: ValueKey(1),
+            key: ValueKey(currentPage),
             fab: AddFAB(
-              tooltip: "add-transaction".tr(),
-              openPage: AddTransactionPage(
-                routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-              ),
+              tooltip: currentPage == 14 ? "add-goal".tr() : "add-transaction".tr(),
+              openPage: currentPage == 14
+                  ? AddObjectivePage(
+                      routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+                    )
+                  : AddTransactionPage(
+                      routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+                    ),
             ),
             condition: [0, 1, 2, 14].contains(currentPage),
+            currentPage: currentPage,
           ),
         ),
       ),
@@ -930,10 +935,11 @@ class AddThing extends StatelessWidget {
 }
 
 class AnimateFAB extends StatelessWidget {
-  const AnimateFAB({required this.condition, required this.fab, super.key});
+  const AnimateFAB({required this.condition, required this.fab, this.currentPage, super.key});
 
   final bool condition;
   final Widget fab;
+  final int? currentPage;
 
   @override
   Widget build(BuildContext context) {
@@ -962,7 +968,10 @@ class AnimateFAB extends StatelessWidget {
         );
       },
       child: condition
-          ? fab
+          ? KeyedSubtree(
+              key: ValueKey(currentPage),
+              child: fab,
+            )
           : Container(
               key: ValueKey(1),
               width: 50,
