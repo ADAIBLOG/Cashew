@@ -43,7 +43,7 @@ class _AboutPageState extends State<AboutPage> {
                 ),
                 SizedBox(height: 10),
                 TextFont(
-                  text: "2.0.1",
+                  text: "2.0.11",
                   fontSize: 16,
                 ),
               ],
