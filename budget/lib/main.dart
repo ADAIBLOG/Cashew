@@ -160,12 +160,14 @@ class App extends StatelessWidget {
           onAppResume: () async {
             await setHighRefreshRate();
           },
-          child: InitializeBiometrics(
-            child: InitializeAppLinks(
-              child: WatchForDayChange(
-                child: WatchSelectedWalletPk(
-                  child: WatchAllWallets(
-                    child: child ?? SizedBox.shrink(),
+          child: InitializeNotificationService(
+            child: InitializeBiometrics(
+              child: InitializeAppLinks(
+                child: WatchForDayChange(
+                  child: WatchSelectedWalletPk(
+                    child: WatchAllWallets(
+                      child: child ?? SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),
