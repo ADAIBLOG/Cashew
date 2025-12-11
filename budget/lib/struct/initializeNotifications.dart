@@ -92,6 +92,63 @@ Future<bool> runNotificationPayLoads(context) async {
       ),
     );
     return true;
+  } else {
+    // 处理自动交易通知，payload是JSON格式
+    try {
+      Map<String, dynamic> payloadData = jsonDecode(notificationPayload!);
+      if (payloadData["type"] == "addTransaction") {
+        double amount = double.parse(payloadData["amount"] ?? "0");
+        String? title = payloadData["title"];
+        String? templatePk = payloadData["templatePk"];
+        String? dateStr = payloadData["date"];
+        DateTime? selectedDate = dateStr != null ? DateTime.parse(dateStr) : null;
+        
+        // 获取模板信息
+        ScannerTemplate? template;
+        if (templatePk != null) {
+          try {
+            template = await database.getScannerTemplateInstance(templatePk);
+          } catch (e) {
+            print("Error getting scanner template: " + e.toString());
+          }
+        }
+        
+        // 获取钱包信息
+        TransactionWallet? wallet;
+        if (template != null && template.walletFk != "-1") {
+          wallet = await database.getWalletInstanceOrNull(template.walletFk);
+        }
+        
+        // 获取类别信息
+        TransactionCategory? category;
+        if (title != null) {
+          TransactionAssociatedTitleWithCategory? foundTitle = 
+              (await database.getSimilarAssociatedTitles(title: title, limit: 1)).firstOrNull;
+          category = foundTitle?.category;
+        }
+        
+        if (category == null && template != null) {
+          category = await database.getCategoryInstanceOrNull(template.defaultCategoryFk);
+        }
+        
+        pushRoute(
+          context,
+          AddTransactionPage(
+            useCategorySelectedIncome: true,
+            routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+            selectedAmount: amount,
+            selectedTitle: title,
+            selectedCategory: category,
+            startInitialAddTransactionSequence: false,
+            selectedWallet: wallet,
+            selectedDate: selectedDate,
+          ),
+        );
+        return true;
+      }
+    } catch (e) {
+      print("Error parsing notification payload: " + e.toString());
+    }
   }
   notificationPayload = "";
   return false;
