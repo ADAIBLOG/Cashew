@@ -95,6 +95,7 @@ class _InitializeNotificationServiceState
 }
 
 // 用于跟踪最近的通知，防止重复
+// 使用更可靠的唯一标识符，包含秒数和更详细的消息特征
 Map<String, DateTime> _recentNotifications = {};
 
 Future queueTransactionFromMessage(String messageString, {bool willPushRoute = true, DateTime? dateTime}) async {
@@ -126,12 +127,20 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
 
   if (templateFound == null || amountDouble == null) return false;
   
+  // 提取消息的关键特征，用于生成更可靠的唯一标识符
+  // 1. 提取消息的哈希值，考虑整个消息内容
+  int messageHash = messageString.hashCode;
+  // 2. 使用完整的时间戳（包括秒），而不仅仅是分钟
+  String timestamp = DateTime.now().toString().substring(0, 19); // 格式：YYYY-MM-DD HH:mm:ss
+  
   // 生成唯一标识符用于防止重复通知
-  String notificationId = "${templateFound.scannerTemplatePk}_${amountDouble.toString()}_${DateTime.now().minute}";
+  // 包含：模板ID、金额、消息哈希和时间戳（精确到秒）
+  String notificationId = "${templateFound.scannerTemplatePk}_${amountDouble.toStringAsFixed(2)}_${messageHash}_${timestamp.substring(11, 19)}";
   DateTime now = DateTime.now();
   
-  // 清除旧的通知记录
-  _recentNotifications.removeWhere((key, value) => now.difference(value).inMinutes > 5);
+  // 清除旧的通知记录，延长到10分钟，减少重复的可能性
+  // 10分钟足够覆盖同一笔交易可能产生的所有相关通知
+  _recentNotifications.removeWhere((key, value) => now.difference(value).inMinutes > 10);
   
   // 检查是否在短时间内发送过相同的通知
   if (_recentNotifications.containsKey(notificationId)) {
@@ -198,7 +207,7 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
       await flutterLocalNotificationsPlugin.show(
         notificationIdentifier,
         '检测到交易信息',
-        '发现一笔金额为${amountDouble.toStringAsFixed(2)}的交易，点击查看',
+        '发现一笔金额为${amountDouble.toStringAsFixed(2)}的交易，点击添加',
         notificationDetails,
         payload: jsonEncode({
           "type": "addTransaction",
