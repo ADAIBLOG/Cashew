@@ -41,20 +41,30 @@ class _SwipeToSelectTransactionsState extends State<SwipeToSelectTransactions> {
                 return;
               }
               if (target.transactionKey != null) {
+                // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+                Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+                
+                // 确保对应的listID键存在
+                if (newSelectedID[widget.listID] == null) {
+                  newSelectedID[widget.listID] = [];
+                }
+                
                 if (selectingTransactionsActive == 1) {
-                  if (!globalSelectedID.value[widget.listID]!
+                  if (!newSelectedID[widget.listID]!
                       .contains(target.transactionKey!)) {
-                    globalSelectedID.value[widget.listID]!
+                    newSelectedID[widget.listID]!
                         .add(target.transactionKey!);
-                    globalSelectedID.notifyListeners();
+                    // 修改value属性，ValueNotifier会自动触发notifyListeners
+                    globalSelectedID.value = newSelectedID;
                     HapticFeedback.selectionClick();
                   }
                 } else if (selectingTransactionsActive == -1) {
-                  if (globalSelectedID.value[widget.listID]!
+                  if (newSelectedID[widget.listID]!
                       .contains(target.transactionKey!)) {
-                    globalSelectedID.value[widget.listID]!
+                    newSelectedID[widget.listID]!
                         .remove(target.transactionKey);
-                    globalSelectedID.notifyListeners();
+                    // 修改value属性，ValueNotifier会自动触发notifyListeners
+                    globalSelectedID.value = newSelectedID;
                     HapticFeedback.selectionClick();
                   }
                 }
