@@ -9,7 +9,6 @@ import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/struct/notificationsGlobal.dart';
 import 'package:budget/widgets/button.dart';
-import 'package:budget/widgets/categoryIcon.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/openContainerNavigation.dart';
@@ -41,11 +40,14 @@ Future initNotificationScanning() async {
   notificationListenerSubscription?.cancel();
   if (appStateSettings["notificationScanning"] != true) return;
 
-  // 先检查权限是否已经授予，只有在已经授予的情况下才初始化扫描
+  // 检查权限是否已经授予
   bool status = await NotificationListenerService.isPermissionGranted();
   if (status == true) {
     notificationListenerSubscription =
         NotificationListenerService.notificationsStream.listen(onNotification);
+  } else {
+    // 如果设置为true但实际没有权限，自动将设置更新为false
+    await updateSettings("notificationScanning", false, updateGlobalState: false);
   }
 }
 
@@ -56,6 +58,7 @@ Future<bool> requestReadNotificationPermission() async {
     // 当用户从系统设置页面返回时，重新检查权限状态
     await NotificationListenerService.requestPermission();
     // 重新检查权限状态，因为用户可能在系统设置中手动授予或拒绝了权限
+    // 即使权限请求被取消或用户点击返回，也需要重新检查当前的权限状态
     status = await NotificationListenerService.isPermissionGranted();
   }
   return status;
@@ -283,17 +286,18 @@ class _AutoTransactionsPageEmailState extends State<AutoTransactionsPageEmail> {
         ),
         SettingsContainerSwitch(
           onSwitched: (value) async {
-            await updateSettings("notificationScanning", value,
-                updateGlobalState: false);
             if (value == true) {
+              // 先请求权限，只有权限授予后才更新设置
               bool status = await requestReadNotificationPermission();
-              if (status == false) {
-                await updateSettings("notificationScanning", false,
+              if (status == true) {
+                await updateSettings("notificationScanning", true,
                     updateGlobalState: false);
-              } else {
                 initNotificationScanning();
               }
+              // 如果权限被拒绝，不更新设置，保持为false
             } else {
+              await updateSettings("notificationScanning", false,
+                  updateGlobalState: false);
               notificationListenerSubscription?.cancel();
             }
           },
