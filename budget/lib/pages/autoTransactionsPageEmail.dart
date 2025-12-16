@@ -41,8 +41,8 @@ Future initNotificationScanning() async {
   notificationListenerSubscription?.cancel();
   if (appStateSettings["notificationScanning"] != true) return;
 
-  bool status = await requestReadNotificationPermission();
-
+  // 先检查权限是否已经授予，只有在已经授予的情况下才初始化扫描
+  bool status = await NotificationListenerService.isPermissionGranted();
   if (status == true) {
     notificationListenerSubscription =
         NotificationListenerService.notificationsStream.listen(onNotification);
@@ -52,7 +52,11 @@ Future initNotificationScanning() async {
 Future<bool> requestReadNotificationPermission() async {
   bool status = await NotificationListenerService.isPermissionGranted();
   if (status != true) {
-    status = await NotificationListenerService.requestPermission();
+    // 请求权限，用户可能会被引导到系统设置页面
+    // 当用户从系统设置页面返回时，重新检查权限状态
+    await NotificationListenerService.requestPermission();
+    // 重新检查权限状态，因为用户可能在系统设置中手动授予或拒绝了权限
+    status = await NotificationListenerService.isPermissionGranted();
   }
   return status;
 }
