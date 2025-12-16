@@ -75,8 +75,8 @@ class _EditAssociatedTitlesPageState extends State<EditAssociatedTitlesPage> {
             onTap: () {
               openBottomSheet(
                 context,
-                AddAssociatedTitlePage(),
                 popupWithKeyboard: true,
+                AddAssociatedTitlePage(),
               );
             },
           ),
@@ -95,8 +95,8 @@ class _EditAssociatedTitlesPageState extends State<EditAssociatedTitlesPage> {
                 action: () {
                   openBottomSheet(
                     context,
-                    AddAssociatedTitlePage(),
                     popupWithKeyboard: true,
+                    AddAssociatedTitlePage(),
                   );
                 },
               ),
@@ -187,12 +187,12 @@ class _EditAssociatedTitlesPageState extends State<EditAssociatedTitlesPage> {
                         titles[index].title;
                     VoidCallback onTap = () {
                       openBottomSheet(
-                    context,
-                    AddAssociatedTitlePage(
-                      associatedTitle: associatedTitle,
-                    ),
-                    popupWithKeyboard: true,
-                  );
+                        context,
+                        popupWithKeyboard: true,
+                        AddAssociatedTitlePage(
+                          associatedTitle: associatedTitle,
+                        ),
+                      );
                     };
                     return EditRowEntry(
                       canReorder: searchValue == "" &&
