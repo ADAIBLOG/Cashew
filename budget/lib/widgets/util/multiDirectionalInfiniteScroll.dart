@@ -89,8 +89,7 @@ class MultiDirectionalInfiniteScrollState
 
     if (_scrollController.position.minScrollExtent == clampedPosition ||
         _scrollController.position.maxScrollExtent == clampedPosition) {
-      // Update the scroll position for the possibility of a new item being added
-      _scrollController.notifyListeners();
+      // 移除直接调用notifyListeners的代码，ScrollController会自动处理滚动事件
       Future.delayed(Duration(milliseconds: 1), () {
         clampedPosition = positionToScroll.clamp(
             _scrollController.position.minScrollExtent,
@@ -158,12 +157,12 @@ class MultiDirectionalInfiniteScrollState
   Widget build(BuildContext context) {
     return MouseRegion(
       onEnter: (_) {
+        // 修改value属性，ValueNotifier会自动触发notifyListeners
         cancelParentScroll.value = true;
-        cancelParentScroll.notifyListeners();
       },
       onExit: (_) {
+        // 修改value属性，ValueNotifier会自动触发notifyListeners
         cancelParentScroll.value = false;
-        cancelParentScroll.notifyListeners();
       },
       child: Listener(
         onPointerSignal: (event) {
