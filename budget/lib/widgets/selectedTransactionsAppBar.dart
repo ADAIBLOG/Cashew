@@ -122,8 +122,12 @@ class SelectedTransactionsAppBar extends StatelessWidget {
                           color: Theme.of(context).colorScheme.secondary,
                         ),
                         onPressed: () {
-                          globalSelectedID.value[pageID] = [];
-                          globalSelectedID.notifyListeners();
+                          // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+                          Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+                          newSelectedID[pageID] = [];
+                          
+                          // 修改value属性，ValueNotifier会自动触发notifyListeners
+                          globalSelectedID.value = newSelectedID;
                         },
                       ),
                       Expanded(
@@ -302,8 +306,12 @@ class SelectedTransactionsAppBarMenu extends StatelessWidget {
         );
       }
     }
-    globalSelectedID.value[pageID] = [];
-    globalSelectedID.notifyListeners();
+    // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+    Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+    newSelectedID[pageID] = [];
+    
+    // 修改value属性，ValueNotifier会自动触发notifyListeners
+    globalSelectedID.value = newSelectedID;
   }
 
   @override
@@ -348,8 +356,12 @@ class SelectedTransactionsAppBarMenu extends StatelessWidget {
                           routesToPopAfterDelete: RoutesToPopAfterDelete.None,
                         );
                         if (result == DeletePopupAction.Delete) {
-                          globalSelectedID.value[pageID] = [];
-                          globalSelectedID.notifyListeners();
+                          // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+                          Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+                          newSelectedID[pageID] = [];
+                          
+                          // 修改value属性，ValueNotifier会自动触发notifyListeners
+                          globalSelectedID.value = newSelectedID;
                         }
                       },
                     ),
@@ -380,8 +392,12 @@ class SelectedTransactionsAppBarMenu extends StatelessWidget {
                                       "transactions".tr().toLowerCase(),
                             ),
                           );
-                          globalSelectedID.value[pageID] = [];
-                          globalSelectedID.notifyListeners();
+                          // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+                          Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+                          newSelectedID[pageID] = [];
+                          
+                          // 修改value属性，ValueNotifier会自动触发notifyListeners
+                          globalSelectedID.value = newSelectedID;
                         },
                       ),
                     if (globalTransactionsListedOnPageID[pageID] != null)
@@ -410,9 +426,12 @@ class SelectedTransactionsAppBarMenu extends StatelessWidget {
                               ),
                             );
                           }
-                          globalSelectedID.value[pageID] =
-                              globalTransactionsListedOnPageID[pageID] ?? [];
-                          globalSelectedID.notifyListeners();
+                          // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+                          Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+                          newSelectedID[pageID] = globalTransactionsListedOnPageID[pageID] ?? [];
+                          
+                          // 修改value属性，ValueNotifier会自动触发notifyListeners
+                          globalSelectedID.value = newSelectedID;
                         },
                       ),
                     if (enableDuplicate)
@@ -473,8 +492,12 @@ class SelectedTransactionsAppBarMenu extends StatelessWidget {
                                           : "transactions".tr().toLowerCase()),
                                 ),
                               );
-                              globalSelectedID.value[pageID] = [];
-                              globalSelectedID.notifyListeners();
+                              // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+                              Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+                              newSelectedID[pageID] = [];
+                              
+                              // 修改value属性，ValueNotifier会自动触发notifyListeners
+                              globalSelectedID.value = newSelectedID;
                             },
                           ),
                           EditSelectedTransactionsContainer(
@@ -556,8 +579,12 @@ class SelectedTransactionsAppBarMenu extends StatelessWidget {
                                 ),
                               );
 
-                              globalSelectedID.value[pageID] = [];
-                              globalSelectedID.notifyListeners();
+                              // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+                              Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+                              newSelectedID[pageID] = [];
+                              
+                              // 修改value属性，ValueNotifier会自动触发notifyListeners
+                              globalSelectedID.value = newSelectedID;
                             },
                           ),
                           EditSelectedTransactionsContainer(
@@ -607,8 +634,12 @@ class SelectedTransactionsAppBarMenu extends StatelessWidget {
                                           : "transactions".tr().toLowerCase()),
                                 ),
                               );
-                              globalSelectedID.value[pageID] = [];
-                              globalSelectedID.notifyListeners();
+                              // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+                              Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+                              newSelectedID[pageID] = [];
+                              
+                              // 修改value属性，ValueNotifier会自动触发notifyListeners
+                              globalSelectedID.value = newSelectedID;
                             },
                           ),
                           if (enableWalletSelection)
@@ -651,8 +682,12 @@ class SelectedTransactionsAppBarMenu extends StatelessWidget {
                                                 .toLowerCase()),
                                   ),
                                 );
-                                globalSelectedID.value[pageID] = [];
-                                globalSelectedID.notifyListeners();
+                                // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+                                Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+                                newSelectedID[pageID] = [];
+                                
+                                // 修改value属性，ValueNotifier会自动触发notifyListeners
+                                globalSelectedID.value = newSelectedID;
                               },
                             ),
                           if (enableAddableBudgetSelection)
@@ -707,8 +742,12 @@ class SelectedTransactionsAppBarMenu extends StatelessWidget {
                                   ),
                                 );
 
-                                globalSelectedID.value[pageID] = [];
-                                globalSelectedID.notifyListeners();
+                                // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+                                Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+                                newSelectedID[pageID] = [];
+                                
+                                // 修改value属性，ValueNotifier会自动触发notifyListeners
+                                globalSelectedID.value = newSelectedID;
                               },
                             ),
                           if (enableObjectiveSelection)
@@ -759,8 +798,12 @@ class SelectedTransactionsAppBarMenu extends StatelessWidget {
                                   ),
                                 );
 
-                                globalSelectedID.value[pageID] = [];
-                                globalSelectedID.notifyListeners();
+                                // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+                                Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+                                newSelectedID[pageID] = [];
+                                
+                                // 修改value属性，ValueNotifier会自动触发notifyListeners
+                                globalSelectedID.value = newSelectedID;
                               },
                             ),
                           if (enableObjectiveLoansSection)
@@ -809,8 +852,12 @@ class SelectedTransactionsAppBarMenu extends StatelessWidget {
                                   ),
                                 );
 
-                                globalSelectedID.value[pageID] = [];
-                                globalSelectedID.notifyListeners();
+                                // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+                                Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+                                newSelectedID[pageID] = [];
+                                
+                                // 修改value属性，ValueNotifier会自动触发notifyListeners
+                                globalSelectedID.value = newSelectedID;
                               },
                             ),
                         ];
