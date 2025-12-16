@@ -50,12 +50,18 @@ class RecentlyAddedTransactionInfo {
   bool isRunningAnimation = false;
 
   void triggerAnimation() {
-    shouldAnimate = false;
-    isRunningAnimation = true;
-    recentlyAddedTransactionInfo.notifyListeners();
+    // 创建一个新的实例来更新value，这样ValueNotifier才会检测到变化
+    recentlyAddedTransactionInfo.value = RecentlyAddedTransactionInfo(
+      transactionPk,
+      false, // shouldAnimate
+    );
+    
     Future.delayed(Duration(milliseconds: 100), () {
-      isRunningAnimation = false;
-      recentlyAddedTransactionInfo.notifyListeners();
+      // 创建一个新的实例来更新value，这样ValueNotifier才会检测到变化
+      recentlyAddedTransactionInfo.value = RecentlyAddedTransactionInfo(
+        transactionPk,
+        false, // shouldAnimate
+      );
     });
   }
 }
@@ -143,14 +149,24 @@ class TransactionEntry extends StatelessWidget {
   void selectTransaction(
       Transaction transaction, bool selected, bool isSwiping) {
     if (allowSelect == false) return;
+    // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+    Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+    
+    // 确保对应的listID键存在
+    if (newSelectedID[listID ?? "0"] == null) {
+      newSelectedID[listID ?? "0"] = [];
+    }
+    
     if (!selected) {
-      globalSelectedID.value[listID ?? "0"]!.add(transaction.transactionPk);
+      newSelectedID[listID ?? "0"]!.add(transaction.transactionPk);
       if (isSwiping) selectingTransactionsActive = 1;
     } else {
-      globalSelectedID.value[listID ?? "0"]!.remove(transaction.transactionPk);
+      newSelectedID[listID ?? "0"]!.remove(transaction.transactionPk);
       if (isSwiping) selectingTransactionsActive = -1;
     }
-    globalSelectedID.notifyListeners();
+    
+    // 修改value属性，ValueNotifier会自动触发notifyListeners
+    globalSelectedID.value = newSelectedID;
 
     if (onSelected != null) onSelected!(transaction, selected);
   }
@@ -800,18 +816,28 @@ class CollapseFutureTransactions extends StatelessWidget {
 }
 
 void toggleFutureTransactionsSection(String? listID) {
-  globalCollapsedFutureID.value[listID ?? "0"] =
-      !(globalCollapsedFutureID.value[listID ?? "0"] ?? false);
-  globalCollapsedFutureID.notifyListeners();
+  // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+  Map<String, bool> newCollapsedFutureID = Map.from(globalCollapsedFutureID.value);
+  newCollapsedFutureID[listID ?? "0"] = !(newCollapsedFutureID[listID ?? "0"] ?? false);
+  
+  // 修改value属性，ValueNotifier会自动触发notifyListeners
+  globalCollapsedFutureID.value = newCollapsedFutureID;
+  
   sharedPreferences.setString(
       "globalCollapsedFutureID", jsonEncode(globalCollapsedFutureID.value));
 }
 
 void flashTransaction(String transactionPk, {int flashCount = 5}) {
-  recentlyAddedTransactionInfo.value.shouldAnimate = true;
-  recentlyAddedTransactionInfo.value.transactionPk = transactionPk;
-  recentlyAddedTransactionInfo.value.loopCount = flashCount;
-  recentlyAddedTransactionInfo.notifyListeners();
+  // 创建一个新的实例，设置所有需要的属性
+  // 这样ValueNotifier才会检测到变化并自动触发notifyListeners
+  RecentlyAddedTransactionInfo newInfo = RecentlyAddedTransactionInfo(
+    transactionPk,
+    true, // shouldAnimate
+  );
+  // 直接修改实例属性
+  newInfo.loopCount = flashCount;
+  // 赋值给value，触发通知
+  recentlyAddedTransactionInfo.value = newInfo;
 }
 
 class FlashingContainer extends StatefulWidget {
