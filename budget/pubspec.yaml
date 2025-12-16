@@ -83,7 +83,7 @@ dependencies:
   confetti: ^0.7.0
   image_picker: ^1.1.2
   flutter_displaymode: ^0.6.0
-  notification_listener_service: ^0.3.4
+  notification_listener_service: ^0.3.5
   home_widget: ^0.7.0
   material_symbols_icons: ^4.2768.0
   app_links: ^6.1.4
