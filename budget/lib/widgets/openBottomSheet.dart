@@ -69,8 +69,8 @@ SheetController? bottomSheetControllerGlobalCustomAssigned;
 late SheetController bottomSheetControllerGlobal;
 // Set snap to false if there is a keyboard
 Future openBottomSheet(
-  BuildContext context,
-  Widget child, {
+  context,
+  child, {
   bool maxHeight = true,
   bool snap = true,
   bool resizeForKeyboard = true,
