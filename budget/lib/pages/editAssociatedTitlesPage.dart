@@ -75,7 +75,7 @@ class _EditAssociatedTitlesPageState extends State<EditAssociatedTitlesPage> {
             onTap: () {
               openBottomSheet(
                 context,
-                child: AddAssociatedTitlePage(),
+                AddAssociatedTitlePage(),
                 popupWithKeyboard: true,
               );
             },
@@ -95,7 +95,7 @@ class _EditAssociatedTitlesPageState extends State<EditAssociatedTitlesPage> {
                 action: () {
                   openBottomSheet(
                     context,
-                    child: AddAssociatedTitlePage(),
+                    AddAssociatedTitlePage(),
                     popupWithKeyboard: true,
                   );
                 },
@@ -188,7 +188,7 @@ class _EditAssociatedTitlesPageState extends State<EditAssociatedTitlesPage> {
                     VoidCallback onTap = () {
                       openBottomSheet(
                     context,
-                    child: AddAssociatedTitlePage(
+                    AddAssociatedTitlePage(
                       associatedTitle: associatedTitle,
                     ),
                     popupWithKeyboard: true,
