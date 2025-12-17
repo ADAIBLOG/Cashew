@@ -94,9 +94,12 @@ Future<T?> openPopup<T extends Object?>(
               amount: 0.25,
             )
           : Theme.of(context).colorScheme.onSecondaryContainer;
-      return WillPopScope(
+      return PopScope(
         //Stop back button
-        onWillPop: () async => barrierDismissible,
+        canPop: barrierDismissible,
+        onPopInvoked: (bool didPop) async {
+          if (didPop) return;
+        },
         child: Center(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: getWidthBottomSheet(context)),
@@ -122,8 +125,7 @@ Future<T?> openPopup<T extends Object?>(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Padding(
-                        padding:
-                            EdgeInsetsDirectional.symmetric(horizontal: 25),
+                        padding: EdgeInsetsDirectional.symmetric(horizontal: 25),
                         child: Column(
                           children: [
                             SizedBox(height: 17),
@@ -377,9 +379,12 @@ Future<T?> openPopupCustom<T extends Object?>(
     },
     transitionDuration: Duration(milliseconds: 200),
     pageBuilder: (_, __, ___) {
-      return WillPopScope(
+      return PopScope(
         //Stop back button
-        onWillPop: () async => barrierDismissible,
+        canPop: barrierDismissible,
+        onPopInvoked: (bool didPop) async {
+          if (didPop) return;
+        },
         child: Center(
           child: Container(
             margin: EdgeInsetsDirectional.only(
@@ -453,9 +458,12 @@ Future<T?> openLoadingPopup<T extends Object?>(BuildContext context) {
     },
     transitionDuration: Duration(milliseconds: 200),
     pageBuilder: (_, __, ___) {
-      return WillPopScope(
+      return PopScope(
         //Stop back button
-        onWillPop: () async => false,
+        canPop: false,
+        onPopInvoked: (bool didPop) async {
+          if (didPop) return;
+        },
         child: Center(
           child: Container(
             padding:
