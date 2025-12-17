@@ -51,7 +51,10 @@
   <meta property="twitter:description" content="A budget and financial tracking application designed for you" />
   <meta property="twitter:image" content="https://cashewapp.web.app/assets/preview.png" />
 
-  
+  <script>
+    // The value below is injected by flutter build, do not touch.
+    var serviceWorkerVersion = null;
+  </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
 </head>
@@ -159,9 +162,9 @@
     window.addEventListener('load', function(ev) {
       var loading = document.querySelector('#loading');
       // Download main.dart.js
-      _flutter.loader.load({
+      _flutter.loader.loadEntrypoint({
         serviceWorker: {
-          serviceWorkerVersion: "{{flutter_service_worker_version}}",
+          serviceWorkerVersion: serviceWorkerVersion,
         }
       }).then(function(engineInitializer) {
         loading.classList.add('main_done');
