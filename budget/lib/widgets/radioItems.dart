@@ -220,6 +220,7 @@ class _CheckItemsState<T> extends State<CheckItems<T>> {
   }
 
   void didUpdateWidget(oldWidget) {
+    super.didUpdateWidget(oldWidget);
     if (oldWidget != widget && widget.syncWithInitial) {
       setState(() {
         currentValues = widget.initial ?? [];
