@@ -393,7 +393,7 @@ ColorScheme getColorScheme(Brightness brightness) {
     return ColorScheme.fromSeed(
       seedColor: getSettingConstants(appStateSettings)["accentColor"],
       brightness: Brightness.light,
-      background: appStateSettings["materialYou"]
+      surface: appStateSettings["materialYou"]
           ? lightenPastel(getSettingConstants(appStateSettings)["accentColor"],
               amount: 0.91)
           : Colors.white,
@@ -402,7 +402,7 @@ ColorScheme getColorScheme(Brightness brightness) {
     return ColorScheme.fromSeed(
       seedColor: getSettingConstants(appStateSettings)["accentColor"],
       brightness: Brightness.dark,
-      background: appStateSettings["forceFullDarkBackground"] == true
+      surface: appStateSettings["forceFullDarkBackground"] == true
           ? Colors.black
           : appStateSettings["materialYou"]
               ? darkenPastel(
@@ -433,11 +433,9 @@ ColorScheme getGrayScaleColorScheme(Brightness brightness) {
       onError: Colors.white,
       errorContainer: Colors.red[100],
       onErrorContainer: Colors.black,
-      surface: Colors.grey[200]!,
-      onSurface: Colors.black,
-      background:
+      surface:
           appStateSettings["materialYou"] ? Colors.blueGrey[50]! : Colors.white,
-      onBackground: Colors.black,
+      onSurface: Colors.black,
       surfaceVariant: Colors.grey[100]!,
       onSurfaceVariant: Colors.black,
       outline: Colors.grey[500]!,
@@ -468,14 +466,12 @@ ColorScheme getGrayScaleColorScheme(Brightness brightness) {
       onError: Colors.black,
       errorContainer: Colors.red[900],
       onErrorContainer: Colors.white,
-      surface: Colors.grey[900]!,
-      onSurface: Colors.white,
-      background: appStateSettings["forceFullDarkBackground"] == true
+      surface: appStateSettings["forceFullDarkBackground"] == true
           ? Colors.black
           : appStateSettings["materialYou"]
               ? Color(0xFF0F0F0F)
               : Colors.black,
-      onBackground: Colors.white,
+      onSurface: Colors.white,
       surfaceVariant: Colors.grey[800]!,
       onSurfaceVariant: Colors.white,
       outline: Colors.grey[600]!,
@@ -568,7 +564,7 @@ class CustomColorTheme extends StatelessWidget {
     ColorScheme colorScheme = ColorScheme.fromSeed(
       seedColor: accentColor!,
       brightness: determineBrightnessTheme(context),
-      background: determineBrightnessTheme(context) == Brightness.dark
+      surface: determineBrightnessTheme(context) == Brightness.dark
           ? (appStateSettings["forceFullDarkBackground"] == true
               ? Colors.black
               : appStateSettings["materialYou"]
