@@ -211,34 +211,41 @@ class HandleWillPopScope extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
+    return PopScope(
       child: child,
-      onWillPop: () async {
+      canPop: false,
+      onPopInvoked: (bool didPop) async {
+        if (didPop) return;
+        
         bool popResult = await maybePopRoute(navigatorKey.currentContext);
-        if (popResult == true) return false;
+        if (popResult == true) return;
 
         // Deselect selected transactions
         int notEmpty = 0;
-        for (String key in globalSelectedID.value.keys) {
-          if (globalSelectedID.value[key]?.isNotEmpty == true) notEmpty++;
-          globalSelectedID.value[key] = [];
+        // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+        Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+        for (String key in newSelectedID.keys) {
+          if (newSelectedID[key]?.isNotEmpty == true) notEmpty++;
+          newSelectedID[key] = [];
         }
-        globalSelectedID.notifyListeners();
+        // 修改value属性，ValueNotifier会自动触发notifyListeners
+        globalSelectedID.value = newSelectedID;
 
         // Allow the back button to exit the app when on home
         if (notEmpty <= 0) {
           if (pageNavigationFrameworkKey.currentState?.currentPage == 0) {
-            return true;
+            // Exit the app
+            SystemNavigator.pop();
           } else {
             // Allow back button deselect a selected category first on All Spending page
             if (pageNavigationFrameworkKey.currentState?.currentPage == 7 &&
                 categoryIsSelectedOnAllSpending) {
-              return true;
+              navigatorKey.currentState?.pop();
+            } else {
+              pageNavigationFrameworkKey.currentState?.changePage(0);
             }
-            pageNavigationFrameworkKey.currentState?.changePage(0);
           }
         }
-        return false;
       },
     );
   }
@@ -467,14 +474,18 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
           child: AnimateFAB(
             key: ValueKey(currentPage),
             fab: AddFAB(
-              tooltip: currentPage == 14 ? "add-goal".tr() : "add-transaction".tr(),
-              openPage: currentPage == 14
-                  ? AddObjectivePage(
+              tooltip: currentPage == 2 ? "add-budget".tr() : currentPage == 14 ? "add-goal".tr() : "add-transaction".tr(),
+              openPage: currentPage == 2
+                  ? AddBudgetPage(
                       routesToPopAfterDelete: RoutesToPopAfterDelete.None,
                     )
-                  : AddTransactionPage(
-                      routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-                    ),
+                  : currentPage == 14
+                      ? AddObjectivePage(
+                          routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+                        )
+                      : AddTransactionPage(
+                          routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+                        ),
             ),
             condition: [0, 1, 2, 14].contains(currentPage),
             currentPage: currentPage,
