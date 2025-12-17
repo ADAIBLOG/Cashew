@@ -334,7 +334,6 @@ class PageFrameworkState extends State<PageFramework>
 
         if (totalDragX > 20) {
           isSwipingToDismissPageDown.value = true;
-          isSwipingToDismissPageDown.notifyListeners();
         }
       }
       if (swipeDownToDismiss && widget.dragDownToDismissEnabled) {
@@ -350,7 +349,6 @@ class PageFrameworkState extends State<PageFramework>
 
         if (totalDragY > 20) {
           isSwipingToDismissPageDown.value = true;
-          isSwipingToDismissPageDown.notifyListeners();
         }
       }
       _animationControllerDragY.value =
@@ -384,7 +382,6 @@ class PageFrameworkState extends State<PageFramework>
       isBackSideSwiping = false;
       _animationControllerDragY.reverse();
       isSwipingToDismissPageDown.value = false;
-      isSwipingToDismissPageDown.notifyListeners();
     }
   }
 
