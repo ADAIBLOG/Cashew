@@ -393,7 +393,7 @@ ColorScheme getColorScheme(Brightness brightness) {
     return ColorScheme.fromSeed(
       seedColor: getSettingConstants(appStateSettings)["accentColor"],
       brightness: Brightness.light,
-      surface: appStateSettings["materialYou"]
+      background: appStateSettings["materialYou"]
           ? lightenPastel(getSettingConstants(appStateSettings)["accentColor"],
               amount: 0.91)
           : Colors.white,
@@ -402,7 +402,7 @@ ColorScheme getColorScheme(Brightness brightness) {
     return ColorScheme.fromSeed(
       seedColor: getSettingConstants(appStateSettings)["accentColor"],
       brightness: Brightness.dark,
-      surface: appStateSettings["forceFullDarkBackground"] == true
+      background: appStateSettings["forceFullDarkBackground"] == true
           ? Colors.black
           : appStateSettings["materialYou"]
               ? darkenPastel(
@@ -433,6 +433,8 @@ ColorScheme getGrayScaleColorScheme(Brightness brightness) {
       onError: Colors.white,
       errorContainer: Colors.red[100],
       onErrorContainer: Colors.black,
+      background: Colors.grey[200]!,
+      onBackground: Colors.black,
       surface:
           appStateSettings["materialYou"] ? Colors.blueGrey[50]! : Colors.white,
       onSurface: Colors.black,
@@ -466,6 +468,8 @@ ColorScheme getGrayScaleColorScheme(Brightness brightness) {
       onError: Colors.black,
       errorContainer: Colors.red[900],
       onErrorContainer: Colors.white,
+      background: Colors.grey[900]!,
+      onBackground: Colors.white,
       surface: appStateSettings["forceFullDarkBackground"] == true
           ? Colors.black
           : appStateSettings["materialYou"]
@@ -564,7 +568,7 @@ class CustomColorTheme extends StatelessWidget {
     ColorScheme colorScheme = ColorScheme.fromSeed(
       seedColor: accentColor!,
       brightness: determineBrightnessTheme(context),
-      surface: determineBrightnessTheme(context) == Brightness.dark
+      background: determineBrightnessTheme(context) == Brightness.dark
           ? (appStateSettings["forceFullDarkBackground"] == true
               ? Colors.black
               : appStateSettings["materialYou"]
