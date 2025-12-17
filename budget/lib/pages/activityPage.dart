@@ -21,6 +21,7 @@ import 'package:budget/widgets/transactionEntry/transactionLabel.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/functions.dart';
+import 'package:budget/widgets/navigationFramework.dart';
 
 List<MapEntry<String, Transaction>> recentlyDeletedTransactions = [];
 
@@ -150,14 +151,20 @@ class ActivityPageState extends State<ActivityPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) async {
+        if (didPop) return;
+        
         if ((globalSelectedID.value[pageId] ?? []).length > 0) {
-          globalSelectedID.value[pageId] = [];
-          globalSelectedID.notifyListeners();
-          return false;
+          // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
+          Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
+          newSelectedID[pageId] = [];
+          // 修改value属性，ValueNotifier会自动触发notifyListeners
+          globalSelectedID.value = newSelectedID;
         } else {
-          return true;
+          // 允许返回
+          navigatorKey.currentState?.pop();
         }
       },
       child: PageFramework(
