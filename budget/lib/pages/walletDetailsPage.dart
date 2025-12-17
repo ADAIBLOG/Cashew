@@ -1209,8 +1209,11 @@ class WalletDetailsPageState extends State<WalletDetailsPage>
       SliverToBoxAdapter(child: SizedBox(height: 40)),
     ];
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) async {
+        if (didPop) return;
+        
         if ((globalSelectedID.value[listID] ?? []).length > 0) {
           // 创建一个新的Map副本，修改后再赋值给value，这样ValueNotifier才会检测到变化
           Map<String, List<String>> newSelectedID = Map.from(globalSelectedID.value);
@@ -1218,9 +1221,9 @@ class WalletDetailsPageState extends State<WalletDetailsPage>
           
           // 修改value属性，ValueNotifier会自动触发notifyListeners
           globalSelectedID.value = newSelectedID;
-          return false;
         } else {
-          return true;
+          // 允许返回
+          navigatorKey.currentState?.pop();
         }
       },
       child: PageFramework(
