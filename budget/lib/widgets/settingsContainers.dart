@@ -73,7 +73,8 @@ class _SettingsContainerSwitchState extends State<SettingsContainerSwitch> {
   }
 
   @override
-  void didUpdateWidget(Widget oldWidget) {
+  void didUpdateWidget(SettingsContainerSwitch oldWidget) {
+    super.didUpdateWidget(oldWidget);
     if (widget.initialValue != value && widget.syncWithInitialValue) {
       setState(() {
         value = widget.initialValue;
