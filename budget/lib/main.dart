@@ -8,6 +8,9 @@ import 'package:budget/struct/logging.dart';
 import 'package:budget/widgets/fadeIn.dart';
 import 'package:budget/struct/languageMap.dart';
 import 'package:budget/struct/initializeBiometrics.dart';
+import 'package:home_widget/home_widget.dart';
+import 'package:flutter/foundation.dart';
+import 'package:budget/widgets/util/checkWidgetLaunch.dart';
 
 import 'package:budget/widgets/util/onAppResume.dart';
 import 'package:budget/widgets/util/watchForDayChange.dart';
@@ -159,6 +162,10 @@ class App extends StatelessWidget {
           updateGlobalAppLifecycleState: true,
           onAppResume: () async {
             await setHighRefreshRate();
+            // 当应用从后台恢复时，更新桌面组件的主题
+            if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid) {
+              await updateWidgetColorsAndText(context);
+            }
           },
           child: InitializeNotificationService(
             child: InitializeBiometrics(
