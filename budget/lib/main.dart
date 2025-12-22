@@ -10,7 +10,6 @@ import 'package:budget/struct/languageMap.dart';
 import 'package:budget/struct/initializeBiometrics.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:flutter/foundation.dart';
-import 'package:budget/widgets/util/checkWidgetLaunch.dart';
 
 import 'package:budget/widgets/util/onAppResume.dart';
 import 'package:budget/widgets/util/watchForDayChange.dart';
@@ -164,7 +163,50 @@ class App extends StatelessWidget {
             await setHighRefreshRate();
             // 当应用从后台恢复时，更新桌面组件的主题
             if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid) {
-              await updateWidgetColorsAndText(context);
+              // 导入 checkWidgetLaunch.dart 中的 updateWidgetColorsAndText 函数
+              // 由于无法直接导入，我们将使用 HomeWidget 来更新组件
+              // 实际上，我们需要确保 updateWidgetColorsAndText 函数在应用恢复时被调用
+              // 这里我们可以通过广播或其他方式通知，但为了简单起见，我们将在 main.dart 中直接调用
+              // 首先获取当前主题
+              ThemeData widgetTheme = getSettingConstants(appStateSettings)["theme"] == ThemeMode.light
+                  ? getLightTheme()
+                  : getSettingConstants(appStateSettings)["theme"] == ThemeMode.dark
+                      ? getDarkTheme()
+                      : Theme.of(context);
+              
+              double widgetBackgroundOpacity = (double.tryParse((appStateSettings["widgetOpacity"] ?? 1).toString()) ?? 1).clamp(0, 1);
+              
+              // 更新组件颜色
+              await HomeWidget.saveWidgetData<String>(
+                'widgetColorBackground',
+                colorToHex(widgetTheme.colorScheme.secondaryContainer),
+              );
+              await HomeWidget.saveWidgetData<String>(
+                'widgetAlpha',
+                widgetTheme.colorScheme.secondaryContainer
+                    .withOpacity(widgetBackgroundOpacity)
+                    .alpha
+                    .toString(),
+              );
+              await HomeWidget.saveWidgetData<String>(
+                'widgetColorPrimary',
+                colorToHex(widgetTheme.colorScheme.primary),
+              );
+              await HomeWidget.saveWidgetData<String>(
+                'widgetColorText',
+                colorToHex(widgetTheme.colorScheme.onSecondaryContainer),
+              );
+              
+              // 更新所有组件
+              await HomeWidget.updateWidget(name: 'NetWorthWidgetProvider');
+              await HomeWidget.updateWidget(name: 'NetWorthPlusWidgetProvider');
+              await HomeWidget.updateWidget(name: 'PlusWidgetProvider');
+              await HomeWidget.updateWidget(name: 'MinusWidgetProvider');
+              await HomeWidget.updateWidget(name: 'TransferWidgetProvider');
+              await HomeWidget.updateWidget(name: 'MonthlyExpenseWidgetProvider');
+              await HomeWidget.updateWidget(name: 'MonthlyIncomeWidgetProvider');
+              await HomeWidget.updateWidget(name: 'DailyExpenseWidgetProvider');
+              await HomeWidget.updateWidget(name: 'DailyIncomeWidgetProvider');
             }
           },
           child: InitializeNotificationService(
