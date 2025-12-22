@@ -207,12 +207,24 @@ Future updateWidgetColorsAndText(BuildContext context) async {
 }
 
 class RenderHomePageWidgetsState extends State<RenderHomePageWidgets> {
+  Brightness? _previousBrightness;
+  
   @override
   void initState() {
     super.initState();
     Future.delayed(Duration.zero, () async {
       updateWidgetColorsAndText(context);
     });
+    // 监听系统主题变化
+    _previousBrightness = MediaQuery.platformBrightnessOf(context);
+    WidgetsBinding.instance.platformDispatcher.onPlatformBrightnessChanged = () {
+      if (!mounted) return;
+      final currentBrightness = MediaQuery.platformBrightnessOf(context);
+      if (currentBrightness != _previousBrightness) {
+        _previousBrightness = currentBrightness;
+        updateWidgetColorsAndText(context);
+      }
+    };
   }
 
   void refreshState() {
@@ -221,6 +233,15 @@ class RenderHomePageWidgetsState extends State<RenderHomePageWidgets> {
 
   @override
   Widget build(BuildContext context) {
+    // 当主题变化时重新更新组件
+    final currentBrightness = MediaQuery.platformBrightnessOf(context);
+    if (currentBrightness != _previousBrightness) {
+      _previousBrightness = currentBrightness;
+      Future.delayed(Duration.zero, () async {
+        updateWidgetColorsAndText(context);
+      });
+    }
+    
     return StreamBuilder<List<TransactionWallet>>(
       stream: database.getAllPinnedWallets(HomePageWidgetDisplay.NetWorth).$1,
       builder: (context, snapshot) {
