@@ -141,86 +141,80 @@ class RenderHomePageWidgets extends StatefulWidget {
 
 Future updateWidgetColorsAndText(BuildContext context) async {
   if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return;
-  
-  // Remove delay to ensure immediate updates when theme changes
-  double widgetBackgroundOpacity = 
-      (double.tryParse((appStateSettings["widgetOpacity"] ?? 1).toString()) ?? 1)
-          .clamp(0, 1);
-  
-  // Ensure widgetTheme correctly reflects the current brightness
-  // especially when app theme is set to "system"
-  ThemeData widgetTheme;
-  if (appStateSettings["widgetTheme"] == "light") {
-    widgetTheme = getLightTheme();
-  } else if (appStateSettings["widgetTheme"] == "dark") {
-    widgetTheme = getDarkTheme();
-  } else {
-    // For "app" theme, use the current context's theme which already reflects system changes
-    widgetTheme = Theme.of(context);
-  }
+  await Future.delayed(Duration(milliseconds: 500), () async {
+    double widgetBackgroundOpacity =
+        (double.tryParse((appStateSettings["widgetOpacity"] ?? 1).toString()) ??
+                1)
+            .clamp(0, 1);
+    ThemeData widgetTheme = appStateSettings["widgetTheme"] == "light"
+        ? getLightTheme()
+        : appStateSettings["widgetTheme"] == "dark"
+            ? getDarkTheme()
+            : Theme.of(context);
 
-  // Debug logging to track theme and color changes
-  print("Updating widget colors - Theme brightness: ${widgetTheme.brightness}");
-  print("Widget text color: ${widgetTheme.colorScheme.onSecondaryContainer}");
-  print("Widget background color: ${widgetTheme.colorScheme.secondaryContainer}");
+    // 获取用户设置的强调色
+    Color accentColor = getSettingConstants(appStateSettings)["accentColor"];
 
-  await HomeWidget.saveWidgetData<String>('netWorthTitle', "net-worth".tr());
-  await HomeWidget.saveWidgetData<String>('monthlyExpenseTitle', "monthly-expense".tr());
-  await HomeWidget.saveWidgetData<String>('monthlyIncomeTitle', "monthly-income".tr());
-  await HomeWidget.saveWidgetData<String>(
-    'widgetColorBackground',
-    colorToHex(widgetTheme.colorScheme.secondaryContainer),
-  );
-  await HomeWidget.saveWidgetData<String>(
-    'widgetAlpha',
-    widgetTheme.colorScheme.secondaryContainer
-        .withOpacity(widgetBackgroundOpacity)
-        .alpha
-        .toString(),
-  );
-  await HomeWidget.saveWidgetData<String>(
-    'widgetColorPrimary',
-    colorToHex(widgetTheme.colorScheme.primary),
-  );
-  await HomeWidget.saveWidgetData<String>(
-    'widgetColorText',
-    colorToHex(widgetTheme.colorScheme.onSecondaryContainer),
-  );
-  
-  // Update all widgets to ensure consistent color across all widgets
-  List<String> widgetProviders = [
-    'NetWorthWidgetProvider',
-    'NetWorthPlusWidgetProvider',
-    'PlusWidgetProvider',
-    'MinusWidgetProvider',
-    'TransferWidgetProvider',
-    'MonthlyExpenseWidgetProvider',
-    'MonthlyIncomeWidgetProvider',
-    'DailyExpenseWidgetProvider',
-    'DailyIncomeWidgetProvider',
-  ];
-  
-  for (String widgetName in widgetProviders) {
-    await HomeWidget.updateWidget(name: widgetName);
-  }
-  
+    await HomeWidget.saveWidgetData<String>('netWorthTitle', "net-worth".tr());
+    await HomeWidget.saveWidgetData<String>('monthlyExpenseTitle', "monthly-expense".tr());
+    await HomeWidget.saveWidgetData<String>('monthlyIncomeTitle', "monthly-income".tr());
+    await HomeWidget.saveWidgetData<String>(
+      'widgetColorBackground',
+      colorToHex(widgetTheme.colorScheme.secondaryContainer),
+    );
+    await HomeWidget.saveWidgetData<String>(
+      'widgetAlpha',
+      widgetTheme.colorScheme.secondaryContainer
+          .withOpacity(widgetBackgroundOpacity)
+          .alpha
+          .toString(),
+    );
+    await HomeWidget.saveWidgetData<String>(
+      'widgetColorPrimary',
+      colorToHex(accentColor),
+    );
+    await HomeWidget.saveWidgetData<String>(
+      'widgetColorText',
+      colorToHex(accentColor),
+    );
+    await HomeWidget.updateWidget(
+      name: 'NetWorthWidgetProvider',
+    );
+    await HomeWidget.updateWidget(
+      name: 'NetWorthPlusWidgetProvider',
+    );
+    await HomeWidget.updateWidget(
+      name: 'PlusWidgetProvider',
+    );
+    await HomeWidget.updateWidget(
+      name: 'MinusWidgetProvider',
+    );
+    await HomeWidget.updateWidget(
+      name: 'TransferWidgetProvider',
+    );
+    await HomeWidget.updateWidget(
+      name: 'MonthlyExpenseWidgetProvider',
+    );
+    await HomeWidget.updateWidget(
+      name: 'MonthlyIncomeWidgetProvider',
+    );
+    await HomeWidget.updateWidget(
+      name: 'DailyExpenseWidgetProvider',
+    );
+    await HomeWidget.updateWidget(
+      name: 'DailyIncomeWidgetProvider',
+    );
+  });
+
   return;
 }
 
 class RenderHomePageWidgetsState extends State<RenderHomePageWidgets> {
-  // Track the current brightness to detect changes
-  Brightness? currentBrightness;
-  // Track the current theme setting to detect changes
-  String? currentThemeSetting;
-
   @override
   void initState() {
     super.initState();
     Future.delayed(Duration.zero, () async {
       updateWidgetColorsAndText(context);
-      // Initialize current brightness and theme setting
-      currentBrightness = Theme.of(context).brightness;
-      currentThemeSetting = appStateSettings["theme"];
     });
   }
 
@@ -230,17 +224,6 @@ class RenderHomePageWidgetsState extends State<RenderHomePageWidgets> {
 
   @override
   Widget build(BuildContext context) {
-    // Check if theme or brightness has changed
-    bool hasThemeChanged = currentThemeSetting != appStateSettings["theme"];
-    bool hasBrightnessChanged = currentBrightness != Theme.of(context).brightness;
-    
-    if (hasThemeChanged || hasBrightnessChanged) {
-      // Update current values
-      currentThemeSetting = appStateSettings["theme"];
-      currentBrightness = Theme.of(context).brightness;
-      // Update widget colors when theme or brightness changes
-      updateWidgetColorsAndText(context);
-    }
     return StreamBuilder<List<TransactionWallet>>(
       stream: database.getAllPinnedWallets(HomePageWidgetDisplay.NetWorth).$1,
       builder: (context, snapshot) {
