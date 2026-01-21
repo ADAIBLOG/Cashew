@@ -10,7 +10,7 @@
 
 ## 声明
 
-本版本基于开源项目 [Cashew](https://github.com/jameskokoska/Cashew) 通过Trae进行二次修改，仅用于个人学习参考，不涉及商业用途，原项目的开源协议及相关权利归属原作者所有。
+本版本基于开源项目 [Cashew](https://github.com/jameskokoska/Cashew) 通过AI进行二次修改，仅用于个人学习参考，不涉及商业用途，原项目的开源协议及相关权利归属原作者所有。
 本人并非程序编程相关人员，所以代码都是通过AI进行完成，可读性极差。
 
 ## 主要修改内容
