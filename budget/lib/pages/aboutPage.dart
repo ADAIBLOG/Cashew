@@ -18,6 +18,7 @@ class _AboutPageState extends State<AboutPage> {
   @override
   Widget build(BuildContext context) {
     String pageId = "About";
+    String version = packageInfoGlobal?.version ?? "2.1.2";
 
     return PageFramework(
       listID: pageId,
@@ -43,7 +44,7 @@ class _AboutPageState extends State<AboutPage> {
                 ),
                 SizedBox(height: 10),
                 TextFont(
-                  text: "2.1.0",
+                  text: version,
                   fontSize: 16,
                 ),
               ],
