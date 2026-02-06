@@ -22,6 +22,7 @@ import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'package:budget/functions.dart';
 import 'package:notification_listener_service/notification_event.dart';
@@ -92,13 +93,29 @@ class InitializeNotificationService extends StatefulWidget {
 }
 
 class _InitializeNotificationServiceState
-    extends State<InitializeNotificationService> {
+    extends State<InitializeNotificationService> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     Future.delayed(Duration.zero, () async {
       initNotificationScanning();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      Future.delayed(Duration.zero, () async {
+        initNotificationScanning();
+      });
+    }
   }
 
   @override
