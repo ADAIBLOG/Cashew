@@ -31,24 +31,86 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'addButton.dart';
 
 StreamSubscription<ServiceNotificationEvent>? notificationListenerSubscription;
-// 限制捕获的通知数量，避免内存占用过大
+Timer? _notificationHealthCheckTimer;
+int _notificationIdCounter = 0;
+
 final int maxCapturedNotifications = 20;
 List<String> recentCapturedNotifications = [];
 
 Future initNotificationScanning() async {
   if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return;
   notificationListenerSubscription?.cancel();
-  if (appStateSettings["notificationScanning"] != true) return;
+  if (appStateSettings["notificationScanning"] != true) {
+    _stopHealthCheck();
+    return;
+  }
 
-  // 检查权限是否已经授予
   bool status = await NotificationListenerService.isPermissionGranted();
   if (status == true) {
-    notificationListenerSubscription =
-        NotificationListenerService.notificationsStream.listen(onNotification);
+    try {
+      notificationListenerSubscription =
+          NotificationListenerService.notificationsStream.listen(
+            onNotification,
+            onError: _onNotificationStreamError,
+            cancelOnError: false,
+          );
+    } catch (e) {
+      _scheduleReconnect();
+    }
   } else {
-    // 如果设置为true但实际没有权限，自动将设置更新为false
     await updateSettings("notificationScanning", false, updateGlobalState: false);
+    _stopHealthCheck();
+    return;
   }
+
+  _startHealthCheck();
+}
+
+void _onNotificationStreamError(Object error) {
+  notificationListenerSubscription?.cancel();
+  notificationListenerSubscription = null;
+  _scheduleReconnect();
+}
+
+void _scheduleReconnect() {
+  _stopHealthCheck();
+  Future.delayed(const Duration(seconds: 30), () {
+    if (appStateSettings["notificationScanning"] == true) {
+      initNotificationScanning();
+    }
+  });
+}
+
+void _startHealthCheck() {
+  _stopHealthCheck();
+  if (appStateSettings["notificationScanning"] != true) return;
+
+  _notificationHealthCheckTimer = Timer.periodic(
+    const Duration(minutes: 5),
+    (_) async {
+      if (appStateSettings["notificationScanning"] != true ||
+          getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) {
+        _stopHealthCheck();
+        return;
+      }
+
+      bool hasPermission = await NotificationListenerService.isPermissionGranted();
+      if (!hasPermission) {
+        await updateSettings("notificationScanning", false, updateGlobalState: false);
+        _stopHealthCheck();
+        return;
+      }
+
+      if (notificationListenerSubscription == null) {
+        initNotificationScanning();
+      }
+    },
+  );
+}
+
+void _stopHealthCheck() {
+  _notificationHealthCheckTimer?.cancel();
+  _notificationHealthCheckTimer = null;
 }
 
 Future<bool> requestReadNotificationPermission() async {
@@ -92,13 +154,30 @@ class InitializeNotificationService extends StatefulWidget {
 }
 
 class _InitializeNotificationServiceState
-    extends State<InitializeNotificationService> {
+    extends State<InitializeNotificationService> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     Future.delayed(Duration.zero, () async {
       initNotificationScanning();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (appStateSettings["notificationScanning"] == true &&
+          notificationListenerSubscription == null) {
+        initNotificationScanning();
+      }
+    }
   }
 
   @override
@@ -215,7 +294,7 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
       _recentNotifications[notificationId] = now;
       
       // 使用notificationId的哈希值作为通知标识符，确保唯一性且长度适中
-      int notificationIdentifier = notificationId.hashCode.abs();
+      int notificationIdentifier = ++_notificationIdCounter;
       
       await flutterLocalNotificationsPlugin.show(
         notificationIdentifier,
