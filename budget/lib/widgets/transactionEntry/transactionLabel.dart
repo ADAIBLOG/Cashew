@@ -9,11 +9,13 @@ class TransactionLabel extends StatelessWidget {
   const TransactionLabel({
     required this.transaction,
     this.category,
+    this.subCategory,
     required this.fontSize,
     super.key,
   });
   final Transaction transaction;
   final TransactionCategory? category;
+  final TransactionCategory? subCategory;
   final double fontSize;
 
   @override
@@ -22,7 +24,10 @@ class TransactionLabel extends StatelessWidget {
         ? TransactionTitleNameLabel(
             transaction: transaction, fontSize: fontSize)
         : TransactionCategoryNameLabel(
-            transaction: transaction, fontSize: fontSize);
+            transaction: transaction,
+            category: category,
+            subCategory: subCategory,
+            fontSize: fontSize);
   }
 }
 
@@ -53,46 +58,48 @@ class TransactionCategoryNameLabel extends StatelessWidget {
   const TransactionCategoryNameLabel({
     required this.transaction,
     this.category,
+    this.subCategory,
     required this.fontSize,
     super.key,
   });
   final Transaction transaction;
   final TransactionCategory? category;
+  final TransactionCategory? subCategory;
   final double fontSize;
 
   @override
   Widget build(BuildContext context) {
-    return category == null
-        ? StreamBuilder<TransactionCategory>(
-            stream: database.getCategory(transaction.categoryFk).$1,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return TextFont(
-                  text: snapshot.data!.name,
-                  fontSize: fontSize,
-                  maxLines:
-                      appStateSettings["fadeTransactionNameOverflows"] == false
-                          ? null
-                          : 1,
-                  overflow:
-                      appStateSettings["fadeTransactionNameOverflows"] == false
-                          ? null
-                          : TextOverflow.fade,
-                  softWrap:
-                      appStateSettings["fadeTransactionNameOverflows"] == false
-                          ? null
-                          : false,
-                );
-              }
-              return SizedBox.shrink();
-            },
-          )
-        : TextFont(
-            text: category!.name,
+    TransactionCategory? displayCategory = subCategory ?? category;
+
+    if (displayCategory != null) {
+      return TextFont(
+        text: displayCategory.name,
+        fontSize: fontSize,
+        maxLines: appStateSettings["fadeTransactionNameOverflows"] == false
+            ? null
+            : 1,
+        overflow: appStateSettings["fadeTransactionNameOverflows"] == false
+            ? null
+            : TextOverflow.fade,
+        softWrap: appStateSettings["fadeTransactionNameOverflows"] == false
+            ? null
+            : false,
+      );
+    }
+
+    return StreamBuilder<TransactionCategory>(
+      stream: database.getCategory(
+        transaction.subCategoryFk ?? transaction.categoryFk,
+      ).$1,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return TextFont(
+            text: snapshot.data!.name,
             fontSize: fontSize,
-            maxLines: appStateSettings["fadeTransactionNameOverflows"] == false
-                ? null
-                : 1,
+            maxLines:
+                appStateSettings["fadeTransactionNameOverflows"] == false
+                    ? null
+                    : 1,
             overflow: appStateSettings["fadeTransactionNameOverflows"] == false
                 ? null
                 : TextOverflow.fade,
@@ -100,6 +107,10 @@ class TransactionCategoryNameLabel extends StatelessWidget {
                 ? null
                 : false,
           );
+        }
+        return SizedBox.shrink();
+      },
+    );
   }
 }
 
