@@ -155,6 +155,8 @@ class InitializeNotificationService extends StatefulWidget {
 
 class _InitializeNotificationServiceState
     extends State<InitializeNotificationService> with WidgetsBindingObserver {
+  AppLifecycleState? _lastState;
+
   @override
   void initState() {
     super.initState();
@@ -172,12 +174,19 @@ class _InitializeNotificationServiceState
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      if (appStateSettings["notificationScanning"] == true &&
-          notificationListenerSubscription == null) {
+    if (_lastState == null) {
+      _lastState = state;
+    }
+
+    if (state == AppLifecycleState.resumed &&
+        (_lastState == AppLifecycleState.paused ||
+            _lastState == AppLifecycleState.inactive)) {
+      if (appStateSettings["notificationScanning"] == true) {
         initNotificationScanning();
       }
     }
+
+    _lastState = state;
   }
 
   @override
