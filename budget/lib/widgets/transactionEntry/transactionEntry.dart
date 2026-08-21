@@ -396,6 +396,7 @@ class TransactionEntry extends StatelessWidget {
         fontSize: fontSize,
         transaction: transaction,
         category: category,
+        subCategory: subCategory,
       );
       Widget transactionName = TransactionTitleNameLabel(
         transaction: transaction,
