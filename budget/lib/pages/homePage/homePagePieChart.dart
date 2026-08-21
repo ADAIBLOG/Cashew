@@ -350,18 +350,14 @@ class _PieChartHomeAndCategorySummaryState
                                   dateTimeRange:
                                       getDateTimeRangeForPassedSearchFilters(
                                           cycleSettingsExtension: "PieChart"),
-                                  categoryPks: selectedCategory
-                                              ?.mainCategoryPk !=
-                                          null
-                                      ? [selectedCategory!.mainCategoryPk ?? ""]
-                                      : selectedCategory == null
-                                          ? null
-                                          : [selectedCategory!.categoryPk],
-                                  subcategoryPks: selectedCategory != null &&
-                                          selectedCategory?.mainCategoryPk !=
-                                              null
-                                      ? [selectedCategory!.categoryPk]
-                                      : null,
+                                  categoryPks: [
+                                    tappedCategory.mainCategoryPk ??
+                                        tappedCategory.categoryPk
+                                  ],
+                                  subcategoryPks:
+                                      tappedCategory.mainCategoryPk != null
+                                          ? [tappedCategory.categoryPk]
+                                          : null,
                                   positiveCashFlow: appStateSettings[
                                               "pieChartIncomeAndExpenseOnly"] ==
                                           true
@@ -419,7 +415,6 @@ class _PieChartHomeAndCategorySummaryState
                                                       .category.mainCategoryPk ==
                                                   null)
                                               .toList(),
-                                          totalSpent: s.totalSpent,
                                         ),
                                       ),
                                     ),
@@ -567,9 +562,8 @@ class _PieChartHomeAndCategorySummaryState
 
 class TopCategoriesSpentLegend extends StatelessWidget {
   const TopCategoriesSpentLegend(
-      {required this.categoriesWithTotal, required this.totalSpent, super.key});
+      {required this.categoriesWithTotal, super.key});
   final List<CategoryWithTotal> categoriesWithTotal;
-  final double totalSpent;
 
   @override
   Widget build(BuildContext context) {
@@ -592,27 +586,10 @@ class TopCategoriesSpentLegend extends StatelessWidget {
                 ),
                 SizedBox(width: 5),
                 Flexible(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: TextFont(
-                          text: categoryWithTotal.category.name,
-                          fontSize: 15,
-                          maxLines: 2,
-                        ),
-                      ),
-                      SizedBox(width: 6),
-                      TextFont(
-                        text: convertToPercent(totalSpent == 0
-                            ? 0
-                            : (categoryWithTotal.total.abs() /
-                                totalSpent *
-                                100)),
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ],
+                  child: TextFont(
+                    text: categoryWithTotal.category.name,
+                    fontSize: 15,
+                    maxLines: 2,
                   ),
                 ),
               ],
