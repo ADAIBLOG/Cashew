@@ -150,6 +150,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "appOpenedMinute": DateTime.now().minute,
     "materialYou": supportsSystemColor(),
     "colorTintCategoryIcon": false,
+    "subcategoryColorFollowsMain": false,
     "sendTransactionsToServerQueue": {},
     "currentUserEmail": "",
     "usersNicknames": {},
