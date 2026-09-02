@@ -632,6 +632,8 @@ class MoreOptionsPagePreferences extends StatelessWidget {
         BudgetSettings(),
         SettingsHeader(title: "goals".tr()),
         ObjectiveSettings(),
+        SettingsHeader(title: "categories".tr()),
+        SubcategoryColorFollowsMainSetting(),
         SettingsHeader(title: "titles".tr()),
         TitlesSettings(),
         SettingsHeader(title: "widgets".tr()),
@@ -986,6 +988,26 @@ class IncreaseTextContrastSetting extends StatelessWidget {
       descriptionColor: appStateSettings["increaseTextContrast"]
           ? getColor(context, "black").withOpacity(0.84)
           : Theme.of(context).colorScheme.secondary.withOpacity(0.45),
+    );
+  }
+}
+
+class SubcategoryColorFollowsMainSetting extends StatelessWidget {
+  const SubcategoryColorFollowsMainSetting({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsContainerSwitch(
+      title: "subcategory-color-follows-main".tr(),
+      description: "subcategory-color-follows-main-description".tr(),
+      onSwitched: (value) async {
+        await updateSettings("subcategoryColorFollowsMain", value,
+            updateGlobalState: false);
+      },
+      initialValue: appStateSettings["subcategoryColorFollowsMain"] == true,
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.palette_outlined
+          : Icons.palette_rounded,
     );
   }
 }
