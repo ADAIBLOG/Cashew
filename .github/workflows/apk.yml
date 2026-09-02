@@ -7,12 +7,6 @@ on:
         description: '构建原因'
         required: false
         default: '手动构建签名APK'
-  push:
-    branches: [ main, master ]
-    paths:
-      - 'budget/lib/**'
-      - 'budget/android/**'
-      - 'budget/pubspec.yaml'
 
 jobs:
   build:
