@@ -70,6 +70,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
   bool? canAddCategory;
   TransactionCategory? widgetCategory;
   List<String>? selectedMembers;
+  Color? mainCategoryColorForSubcategory;
   TextEditingController _titleController = TextEditingController();
   bool userAttemptedToChangeTitle = false;
   FocusNode _titleFocusNode = FocusNode();
@@ -232,6 +233,31 @@ class _AddCategoryPageState extends State<AddCategoryPage>
         isSubCategory == false;
   }
 
+  String? get parentMainCategoryPk =>
+      widget.mainCategoryPkWhenSubCategory ??
+      widget.category?.mainCategoryPk ??
+      mainCategoryPkForSubcategoryWhenCreating;
+
+  Future<void> loadMainCategoryColorForSubcategory() async {
+    String? parentPk = parentMainCategoryPk;
+    if (parentPk == null) {
+      if (mounted) {
+        setState(() {
+          mainCategoryColorForSubcategory = null;
+        });
+      }
+      return;
+    }
+    TransactionCategory parentCategory =
+        await database.getCategoryInstance(parentPk);
+    if (!mounted) return;
+    setState(() {
+      mainCategoryColorForSubcategory = parentCategory.colour == null
+          ? null
+          : HexColor(parentCategory.colour);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -274,6 +300,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
         categoryInitial = await createTransactionCategory();
       });
     }
+    loadMainCategoryColorForSubcategory();
   }
 
   bool dragDownToDismissEnabled = true;
@@ -288,6 +315,12 @@ class _AddCategoryPageState extends State<AddCategoryPage>
 
   @override
   Widget build(BuildContext context) {
+    List<Color>? subcategoryColorList;
+    if (appStateSettings["subcategoryColorFollowsMain"] == true &&
+        mainCategoryColorForSubcategory != null) {
+      subcategoryColorList =
+          generateSubCategoryColors(mainCategoryColorForSubcategory!);
+    }
     Widget balanceCorrectionCategorySettings = Padding(
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 15),
       child: Column(
@@ -601,9 +634,15 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                 Container(
                   height: 65,
                   child: SelectColor(
+                    key: ValueKey("subcategory-color-" +
+                        (parentMainCategoryPk ?? "none") +
+                        "-" +
+                        (mainCategoryColorForSubcategory?.toString() ??
+                            "default")),
                     horizontalList: true,
                     selectedColor: selectedColor,
                     setSelectedColor: setSelectedColor,
+                    selectableColorsList: subcategoryColorList,
                     previewBuilder: (color) => IconPreview(
                       selectedImage: selectedImage,
                       selectedEmoji: selectedEmoji,
@@ -717,6 +756,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                 },
                 setMainCategoryPkForSubcategoryWhenCreating: (value) {
                   mainCategoryPkForSubcategoryWhenCreating = value;
+                  loadMainCategoryColorForSubcategory();
                 },
               ),
             )),
