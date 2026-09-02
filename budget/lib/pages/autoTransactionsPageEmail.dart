@@ -22,6 +22,7 @@ import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:budget/functions.dart';
 import 'package:notification_listener_service/notification_event.dart';
@@ -36,6 +37,19 @@ int _notificationIdCounter = 0;
 
 final int maxCapturedNotifications = 20;
 List<String> recentCapturedNotifications = [];
+
+const MethodChannel _notificationListenerNativeChannel =
+    MethodChannel('com.budget.tracker_app/notification_listener');
+
+Future<bool> forceRestartNotificationListenerService() async {
+  try {
+    return await _notificationListenerNativeChannel
+            .invokeMethod<bool>('forceRestartNotificationListener') ??
+        false;
+  } catch (e) {
+    return false;
+  }
+}
 
 Future initNotificationScanning() async {
   if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return;
@@ -181,12 +195,18 @@ class _InitializeNotificationServiceState
     if (state == AppLifecycleState.resumed &&
         (_lastState == AppLifecycleState.paused ||
             _lastState == AppLifecycleState.inactive)) {
-      if (appStateSettings["notificationScanning"] == true) {
-        initNotificationScanning();
-      }
+      _onAppResumed();
     }
 
     _lastState = state;
+  }
+
+  Future<void> _onAppResumed() async {
+    if (appStateSettings["notificationScanning"] != true) return;
+    // 国产 ROM（如小米 HyperOS）进入极限模式后会把通知监听服务解绑，
+    // 退出后系统不会自动重绑。这里先强制重启监听服务，再重新订阅。
+    await forceRestartNotificationListenerService();
+    initNotificationScanning();
   }
 
   @override
