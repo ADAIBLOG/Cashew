@@ -301,88 +301,116 @@ class _PieChartHomeAndCategorySummaryState
 
                 List<Widget> categoryEntries = [];
                 double totalSpentPercent = 45 / 360;
-                snapshot.data!.asMap().forEach(
-                  (index, category) {
-                    if (selectedCategory?.categoryPk ==
-                            category.category.categoryPk ||
-                        selectedCategory?.mainCategoryPk ==
-                            category.category.categoryPk)
-                      categoryEntries.add(
-                        CategoryEntry(
-                          percentageOffset: totalSpentPercent,
-                          getPercentageAfterText: (double categorySpent) {
-                            return "of-total".tr().toLowerCase();
-                          },
-                          useHorizontalPaddingConstrained: false,
-                          expandSubcategories: showAllSubcategories ||
-                              category.category.categoryPk ==
+
+                void addCategoryEntry(CategoryWithTotal categoryWithTotal,
+                    {required bool isSubcategorySelection}) {
+                  final TransactionCategory category =
+                      categoryWithTotal.category;
+                  categoryEntries.add(
+                    CategoryEntry(
+                      percentageOffset: totalSpentPercent,
+                      getPercentageAfterText: (double categorySpent) {
+                        return "of-total".tr().toLowerCase();
+                      },
+                      useHorizontalPaddingConstrained: false,
+                      expandSubcategories: isSubcategorySelection == false &&
+                          (showAllSubcategories ||
+                              category.categoryPk ==
                                   selectedCategory?.categoryPk ||
-                              category.category.categoryPk ==
-                                  selectedCategory?.mainCategoryPk,
-                          subcategoriesWithTotalMap:
-                              s.subCategorySpendingIndexedByMainCategoryPk,
-                          todayPercent: 0,
-                          overSpentColor: category.total > 0
-                              ? getColor(context, "incomeAmount")
-                              : getColor(context, "expenseAmount"),
-                          showIncomeExpenseIcons: true,
-                          onLongPress: (TransactionCategory category,
-                              CategoryBudgetLimit? categoryBudgetLimit) {
-                            pushRoute(
-                              context,
-                              AddCategoryPage(
-                                routesToPopAfterDelete:
-                                    RoutesToPopAfterDelete.One,
-                                category: category,
-                              ),
-                            );
-                          },
-                          categoryBudgetLimit: category.categoryBudgetLimit,
-                          category: category.category,
-                          totalSpent: s.totalSpent,
-                          transactionCount: category.transactionCount,
-                          categorySpent: category.total,
-                          onTap: (TransactionCategory tappedCategory, _) {
-                            pushRoute(
-                              context,
-                              TransactionsSearchPage(
-                                initialFilters: SearchFilters().copyWith(
-                                  dateTimeRange:
-                                      getDateTimeRangeForPassedSearchFilters(
-                                          cycleSettingsExtension: "PieChart"),
-                                  categoryPks: [
-                                    tappedCategory.mainCategoryPk ??
-                                        tappedCategory.categoryPk
-                                  ],
-                                  subcategoryPks:
-                                      tappedCategory.mainCategoryPk != null
-                                          ? [tappedCategory.categoryPk]
-                                          : null,
-                                  positiveCashFlow: appStateSettings[
-                                              "pieChartIncomeAndExpenseOnly"] ==
-                                          true
-                                      ? null
-                                      : widget.isIncome,
-                                  expenseIncome: [
-                                    if (appStateSettings[
-                                            "pieChartIncomeAndExpenseOnly"] ==
-                                        true)
-                                      (widget.isIncome == true
-                                          ? ExpenseIncome.income
-                                          : ExpenseIncome.expense)
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                          selected: false,
-                          allSelected: true,
-                        ),
-                      );
-                    if (s.totalSpent != 0)
-                      totalSpentPercent += category.total.abs() / s.totalSpent;
-                  },
-                );
+                              category.categoryPk ==
+                                  selectedCategory?.mainCategoryPk),
+                      subcategoriesWithTotalMap: isSubcategorySelection
+                          ? null
+                          : s.subCategorySpendingIndexedByMainCategoryPk,
+                      todayPercent: 0,
+                      overSpentColor: categoryWithTotal.total > 0
+                          ? getColor(context, "incomeAmount")
+                          : getColor(context, "expenseAmount"),
+                      showIncomeExpenseIcons: true,
+                      onLongPress: (TransactionCategory category,
+                          CategoryBudgetLimit? categoryBudgetLimit) {
+                        pushRoute(
+                          context,
+                          AddCategoryPage(
+                            routesToPopAfterDelete:
+                                RoutesToPopAfterDelete.One,
+                            category: category,
+                          ),
+                        );
+                      },
+                      categoryBudgetLimit:
+                          categoryWithTotal.categoryBudgetLimit,
+                      category: category,
+                      totalSpent: s.totalSpent,
+                      transactionCount: categoryWithTotal.transactionCount,
+                      categorySpent: categoryWithTotal.total,
+                      onTap: (TransactionCategory tappedCategory, _) {
+                        pushRoute(
+                          context,
+                          TransactionsSearchPage(
+                            initialFilters: SearchFilters().copyWith(
+                              dateTimeRange:
+                                  getDateTimeRangeForPassedSearchFilters(
+                                      cycleSettingsExtension: "PieChart"),
+                              categoryPks: [
+                                tappedCategory.mainCategoryPk ??
+                                    tappedCategory.categoryPk
+                              ],
+                              subcategoryPks:
+                                  tappedCategory.mainCategoryPk != null
+                                      ? [tappedCategory.categoryPk]
+                                      : null,
+                              positiveCashFlow: appStateSettings[
+                                          "pieChartIncomeAndExpenseOnly"] ==
+                                      true
+                                  ? null
+                                  : widget.isIncome,
+                              expenseIncome: [
+                                if (appStateSettings[
+                                        "pieChartIncomeAndExpenseOnly"] ==
+                                    true)
+                                  (widget.isIncome == true
+                                      ? ExpenseIncome.income
+                                      : ExpenseIncome.expense)
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                      selected: false,
+                      allSelected: true,
+                    ),
+                  );
+                  if (s.totalSpent != 0)
+                    totalSpentPercent +=
+                        categoryWithTotal.total.abs() / s.totalSpent;
+                }
+
+                if (selectedCategory != null &&
+                    selectedCategory!.mainCategoryPk != null) {
+                  // 选中的是小分类：直接展示该小分类自身的占比与记录
+                  CategoryWithTotal? subcategoryWithTotal;
+                  for (CategoryWithTotal categoryWithTotal in snapshot.data!) {
+                    if (categoryWithTotal.category.categoryPk ==
+                        selectedCategory!.categoryPk) {
+                      subcategoryWithTotal = categoryWithTotal;
+                      break;
+                    }
+                  }
+                  if (subcategoryWithTotal != null) {
+                    addCategoryEntry(subcategoryWithTotal,
+                        isSubcategorySelection: true);
+                  }
+                } else {
+                  // 选中的是大分类：展示大分类及其子分类
+                  for (CategoryWithTotal categoryWithTotal in snapshot.data!) {
+                    if (selectedCategory?.categoryPk ==
+                        categoryWithTotal.category.categoryPk) {
+                      addCategoryEntry(categoryWithTotal,
+                          isSubcategorySelection: false);
+                    }
+                  }
+                }
 
                 return Column(
                   children: [
