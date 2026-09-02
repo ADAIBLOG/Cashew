@@ -825,6 +825,8 @@
   "multiplier": "倍率",
   "bill-splitter-multiplier-description": "输入应用于分摊账单中所有物品的倍率数值。对所有物品都有税金的情况有用。",
   "more-options": "更多选项",
+  "subcategory-color-follows-main": "子类别颜色跟随主类别",
+  "subcategory-color-follows-main-description": "开启后，子类别的颜色选项将根据主类别颜色生成同色不同饱和度的选项（自定义颜色选项仍会保留）。",
   "cannot-display-graph-for-current-time-period": "无法显示当前时间周期的图表。",
   "exclude-from-budget": "从预算中排除",
   "erase-synced-data-and-cloud-backups": "清除已同步的数据和云端备份",
