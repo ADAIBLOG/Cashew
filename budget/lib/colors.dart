@@ -313,6 +313,22 @@ List<Color> selectableAccentColors(context) {
   ];
 }
 
+// Generate subcategory color choices that follow the main category color:
+// same hue with different saturations. The main color itself is included so it
+// can still be picked directly. The custom color option is added separately by
+// SelectColor.
+List<Color> generateSubCategoryColors(Color mainColor) {
+  final HSVColor base = HSVColor.fromColor(mainColor);
+  final double hue = base.hue;
+  final double value = base.value.clamp(0.45, 0.95).toDouble();
+
+  return <Color>[
+    mainColor,
+    for (final double saturation in <double>[0.2, 0.35, 0.5, 0.65, 0.8, 1.0])
+      HSVColor.fromAHSV(1, hue, saturation, value).toColor(),
+  ].toSet().toList();
+}
+
 const ColorFilter greyScale = ColorFilter.matrix(<double>[
   0.2126,
   0.7152,
