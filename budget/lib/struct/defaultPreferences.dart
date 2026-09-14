@@ -115,6 +115,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "ignorePastAmountSpent": false,
     "askForTransactionTitle": true,
     "askForTransactionNoteWithTitle": false,
+    "stayAfterSettingAmount": false,
     "automaticallyPayUpcoming": true,
     "automaticallyPayRepetitive": true,
     "automaticallyPaySubscriptions": true,
