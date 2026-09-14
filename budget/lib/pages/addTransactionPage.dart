@@ -930,14 +930,23 @@ class _AddTransactionPageState extends State<AddTransactionPage>
 
     if (mainAndSubcategory.main != null &&
         mainAndSubcategory.ignoredSubcategorySelection == false) {
-      selectAmountPopup(
-        next: () async {
-          await addTransaction();
-          popRoute(context);
-          popRoute(context);
-        },
-        nextLabel: textAddTransaction,
-      );
+      bool stayAfterAmount =
+          appStateSettings["askForTransactionTitle"] == false &&
+          appStateSettings["stayAfterSettingAmount"] == true;
+
+      if (stayAfterAmount) {
+        // 金额按钮显示“设定金额”，设置完只关闭弹窗、停留在添加交易页
+        selectAmountPopup();
+      } else {
+        selectAmountPopup(
+          next: () async {
+            await addTransaction();
+            popRoute(context);
+            popRoute(context);
+          },
+          nextLabel: textAddTransaction,
+        );
+      }
     }
   }
 
