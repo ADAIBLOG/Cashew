@@ -364,7 +364,35 @@ class _AskForTitlesToggleState extends State<AskForTitlesToggle> {
               appStateSettings["askForTransactionTitle"] == true,
           child: AskForNotesToggle(),
         ),
+        AnimatedExpanded(
+          expand: getIsFullScreen(context) == false &&
+              appStateSettings["askForTransactionTitle"] == false,
+          child: StayAfterAmountToggle(),
+        ),
       ],
+    );
+  }
+}
+
+class StayAfterAmountToggle extends StatelessWidget {
+  const StayAfterAmountToggle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsContainerSwitch(
+      title: "stay-after-setting-amount".tr(),
+      description: "stay-after-setting-amount-description".tr(),
+      onSwitched: (value) {
+        updateSettings(
+          "stayAfterSettingAmount",
+          value,
+          updateGlobalState: false,
+        );
+      },
+      initialValue: appStateSettings["stayAfterSettingAmount"],
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.pause_circle_outline
+          : Icons.pause_circle_rounded,
     );
   }
 }
