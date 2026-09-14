@@ -145,6 +145,8 @@
   "search-currencies-placeholder": "搜索貨幣...",
   "ask-for-transaction-title": "請求交易標題",
   "ask-for-transaction-title-description": "添加交易時",
+  "stay-after-setting-amount": "金額設定後停留",
+  "stay-after-setting-amount-description": "關閉請求交易標題時，設定金額後停留在新增交易頁面，手動確認後再完成交易。",
   "auto-add-titles": "自動添加標題",
   "auto-add-titles-description": "創建交易時",
   "select-categories": "選擇類別",
