@@ -189,6 +189,8 @@
   "search-currencies-placeholder": "搜索货币...",
   "ask-for-transaction-title": "请求交易标题",
   "ask-for-transaction-title-description": "添加交易时",
+  "stay-after-setting-amount": "金额设置后停留",
+  "stay-after-setting-amount-description": "关闭请求交易标题时，设置金额后停留在添加交易页面，手动确认后再完成交易。",
   "auto-add-titles": "自动添加标题",
   "auto-add-titles-description": "创建交易时",
   "select-categories": "选择类别",
