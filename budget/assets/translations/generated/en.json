@@ -154,6 +154,8 @@
   "search-currencies-placeholder": "Search currencies...",
   "ask-for-transaction-title": "Ask For Transaction Title",
   "ask-for-transaction-title-description": "When adding a transaction",
+  "stay-after-setting-amount": "Stay After Setting Amount",
+  "stay-after-setting-amount-description": "When asking for a transaction title is off, stay on the add transaction page after setting the amount so you can review before saving.",
   "auto-add-titles": "Automatically Add Titles",
   "auto-add-titles-description": "When a transaction is created",
   "select-categories": "Select Categories",
