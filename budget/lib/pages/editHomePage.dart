@@ -373,6 +373,21 @@ class _EditHomePageState extends State<EditHomePage> {
               openPieChartHomePageBottomSheetSettings(context);
             },
           ),
+          "categorySpendingList": EditHomePageItem(
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.format_list_numbered_outlined
+                : Icons.format_list_numbered_rounded,
+            name: "category-spending-list".tr(),
+            isEnabled:
+                isHomeScreenSectionEnabled(context, "showCategorySpendingList"),
+            onSwitched: (value) {
+              switchHomeScreenSection(context, "showCategorySpendingList", value);
+            },
+            extraWidgetsBelow: [],
+            onTap: () {
+              openCategorySpendingListSettings(context);
+            },
+          ),
           "heatMap": EditHomePageItem(
             icon: appStateSettings["outlinedIcons"]
                 ? Icons.grid_on_outlined
@@ -814,6 +829,37 @@ Future openPieChartHomePageBottomSheetSettings(BuildContext context) async {
       //     ),
       //   ],
       // ),
+    ),
+  );
+}
+
+Future openCategorySpendingListSettings(BuildContext context) async {
+  await openBottomSheet(
+    context,
+    PopupFramework(
+      title: "category-spending-list".tr(),
+      subtitle: "applies-to-homepage".tr(),
+      child: Column(
+        children: [
+          WalletPickerPeriodCycle(
+            allWalletsSettingKey: "pieChartAllWallets",
+            cycleSettingsExtension: "PieChart",
+            homePageWidgetDisplay: HomePageWidgetDisplay.PieChart,
+          ),
+          HorizontalBreakAbove(
+            padding: EdgeInsetsDirectional.symmetric(vertical: 15),
+            child: IncomeAndExpenseOnlyPicker(
+              initialValue:
+                  appStateSettings["pieChartIncomeAndExpenseOnly"] == true,
+              onChanged: (value) {
+                updateSettings("pieChartIncomeAndExpenseOnly", value,
+                    updateGlobalState: false);
+              },
+            ),
+          ),
+          SizedBox(height: 10),
+        ],
+      ),
     ),
   );
 }
