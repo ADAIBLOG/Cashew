@@ -842,17 +842,19 @@ Future openCategorySpendingListSettings(BuildContext context) async {
       child: Column(
         children: [
           WalletPickerPeriodCycle(
-            allWalletsSettingKey: "pieChartAllWallets",
-            cycleSettingsExtension: "PieChart",
-            homePageWidgetDisplay: HomePageWidgetDisplay.PieChart,
+            allWalletsSettingKey: "categorySpendingListAllWallets",
+            cycleSettingsExtension: "CategorySpendingList",
+            homePageWidgetDisplay: HomePageWidgetDisplay.CategorySpendingList,
           ),
           HorizontalBreakAbove(
             padding: EdgeInsetsDirectional.symmetric(vertical: 15),
             child: IncomeAndExpenseOnlyPicker(
-              initialValue:
-                  appStateSettings["pieChartIncomeAndExpenseOnly"] == true,
+              initialValue: appStateSettings[
+                      "categorySpendingListIncomeAndExpenseOnly"] ==
+                  true,
               onChanged: (value) {
-                updateSettings("pieChartIncomeAndExpenseOnly", value,
+                updateSettings("categorySpendingListIncomeAndExpenseOnly",
+                    value,
                     updateGlobalState: false);
               },
             ),
