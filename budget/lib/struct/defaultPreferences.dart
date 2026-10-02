@@ -169,6 +169,8 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "pieChartIncomeAndExpenseOnly": true,
     "pieChartAllWallets": true,
     "showTodayPieChart": false,
+    "categorySpendingListIncomeAndExpenseOnly": true,
+    "categorySpendingListAllWallets": true,
     "netWorthAllWallets": true,
     "walletsListCurrencyBreakdown": false,
     "allSpendingSummaryAllWallets": true,
@@ -253,6 +255,18 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
         DateTime.now().firstDayOfMonth().toString(),
     "customPeriodEndDatePieChart": null,
     "customPeriodPastDaysPieChart": 30,
+    // For showing information within a certain cycle for category spending list
+    // cycleSettingsExtension = "CategorySpendingList"
+    "selectedPeriodCycleTypeCategorySpendingList": CycleType.allTime.index,
+    "cyclePeriodLengthCategorySpendingList": 1,
+    "cycleReoccurrenceCategorySpendingList":
+        BudgetReoccurence.monthly.index,
+    "cycleStartDateCategorySpendingList":
+        DateTime.now().firstDayOfMonth().toString(),
+    "customPeriodStartDateCategorySpendingList":
+        DateTime.now().firstDayOfMonth().toString(),
+    "customPeriodEndDateCategorySpendingList": null,
+    "customPeriodPastDaysCategorySpendingList": 30,
     // For showing information within a certain cycle for net worth
     // cycleSettingsExtension = "NetWorth"
     "selectedPeriodCycleTypeNetWorth": CycleType.allTime.index,
