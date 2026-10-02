@@ -719,6 +719,7 @@
   "pie-chart": "饼图",
   "show-today-pie-chart": "显示今日饼图",
   "show-today-pie-chart-description": "在饼图中增加“今日”与所选周期的切换按钮。",
+  "category-spending-list": "类别消费明细",
   "select-type": "选择类型",
   "create-budget": "创建预算",
   "no-goals-found": "找不到目标。",
