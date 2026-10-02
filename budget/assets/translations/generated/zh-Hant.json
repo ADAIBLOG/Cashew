@@ -676,6 +676,8 @@
   "show-today-pie-chart": "顯示今日圓餅圖",
   "show-today-pie-chart-description": "在圓餅圖中新增「今日」與所選週期的切換按鈕。",
   "category-spending-list": "類別消費明細",
+  "show-today-category-spending-list": "顯示今日類別消費明細",
+  "show-today-category-spending-list-description": "在類別消費明細中新增「今日」與所選週期的切換按鈕。",
   "select-type": "選擇類型",
   "create-budget": "建立預算",
   "no-goals-found": "找不到目標。",
