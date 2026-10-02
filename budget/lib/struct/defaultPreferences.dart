@@ -171,6 +171,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "showTodayPieChart": false,
     "categorySpendingListIncomeAndExpenseOnly": true,
     "categorySpendingListAllWallets": true,
+    "showTodayCategorySpendingList": false,
     "netWorthAllWallets": true,
     "walletsListCurrencyBreakdown": false,
     "allSpendingSummaryAllWallets": true,
