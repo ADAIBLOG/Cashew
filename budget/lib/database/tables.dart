@@ -86,6 +86,7 @@ enum HomePageWidgetDisplay {
   NetWorth,
   AllSpendingSummary, //Income/Expense homescreen
   PieChart,
+  CategorySpendingList,
 }
 
 List<HomePageWidgetDisplay> defaultWalletHomePageWidgetDisplay = [
