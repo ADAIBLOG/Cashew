@@ -2,6 +2,7 @@ import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/pages/editHomePage.dart';
+import 'package:budget/pages/homePage/homePagePieChart.dart';
 import 'package:budget/pages/transactionFilters.dart';
 import 'package:budget/pages/transactionsSearchPage.dart';
 import 'package:budget/pages/walletDetailsPage.dart';
@@ -28,6 +29,7 @@ class HomePageCategorySpendingList extends StatefulWidget {
 class _HomePageCategorySpendingListState
     extends State<HomePageCategorySpendingList> {
   bool isIncome = false;
+  bool showToday = true;
 
   void openSettings() async {
     await openCategorySpendingListSettings(context);
@@ -36,6 +38,11 @@ class _HomePageCategorySpendingListState
 
   @override
   Widget build(BuildContext context) {
+    final bool showTodayActive = appStateSettings[
+            "showTodayCategorySpendingList"] ==
+        true && showToday;
+    final bool showTodayCategorySpendingList =
+        appStateSettings["showTodayCategorySpendingList"] == true;
     const double borderRadius = 15;
     return KeepAliveClientMixin(
       child: Padding(
@@ -55,6 +62,16 @@ class _HomePageCategorySpendingListState
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (showTodayCategorySpendingList)
+                    TodayPeriodPieChartSelector(
+                      showToday: showToday,
+                      cycleSettingsExtension: "CategorySpendingList",
+                      onChanged: (value) {
+                        setState(() {
+                          showToday = value;
+                        });
+                      },
+                    ),
                   Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
                         13, 13, 13, 5),
@@ -68,7 +85,8 @@ class _HomePageCategorySpendingListState
                       },
                     ),
                   ),
-                  CategorySpendingTextList(isIncome: isIncome),
+                  CategorySpendingTextList(
+                      isIncome: isIncome, showToday: showTodayActive),
                   SizedBox(height: 10),
                 ],
               ),
@@ -81,8 +99,10 @@ class _HomePageCategorySpendingListState
 }
 
 class CategorySpendingTextList extends StatelessWidget {
-  const CategorySpendingTextList({required this.isIncome, super.key});
+  const CategorySpendingTextList(
+      {required this.isIncome, required this.showToday, super.key});
   final bool isIncome;
+  final bool showToday;
 
   @override
   Widget build(BuildContext context) {
@@ -106,10 +126,10 @@ class CategorySpendingTextList extends StatelessWidget {
               categoryFksExclude: null,
               budgetTransactionFilters: null,
               memberTransactionFilters: null,
-              allTime: true,
+              allTime: showToday ? false : true,
               walletPks: walletPks,
               isIncome: isIncome,
-              followCustomPeriodCycle: true,
+              followCustomPeriodCycle: showToday ? false : true,
               cycleSettingsExtension: "CategorySpendingList",
               countUnassignedTransactions: true,
               includeAllSubCategories: true,
@@ -162,6 +182,7 @@ class CategorySpendingTextList extends StatelessWidget {
                         totalSpent: s.totalSpent,
                         allWallets: allWallets,
                         isIncome: isIncome,
+                        showToday: showToday,
                       ),
                   ],
                 );
@@ -182,12 +203,14 @@ class CategorySpendingRow extends StatelessWidget {
     required this.totalSpent,
     required this.allWallets,
     required this.isIncome,
+    required this.showToday,
     super.key,
   });
   final CategoryWithTotal categoryWithTotal;
   final double totalSpent;
   final AllWallets allWallets;
   final bool isIncome;
+  final bool showToday;
 
   @override
   Widget build(BuildContext context) {
@@ -204,8 +227,15 @@ class CategorySpendingRow extends StatelessWidget {
           context,
           TransactionsSearchPage(
             initialFilters: SearchFilters().copyWith(
-              dateTimeRange: getDateTimeRangeForPassedSearchFilters(
-                  cycleSettingsExtension: "CategorySpendingList"),
+              dateTimeRange: showToday
+                  ? DateTimeRange(
+                      start: DateTime.now().justDay(),
+                      end: DateTime.now()
+                          .justDay(dayOffset: 1)
+                          .subtract(const Duration(milliseconds: 1)),
+                    )
+                  : getDateTimeRangeForPassedSearchFilters(
+                      cycleSettingsExtension: "CategorySpendingList"),
               categoryPks: [category.mainCategoryPk ?? category.categoryPk],
               positiveCashFlow: appStateSettings[
                           "categorySpendingListIncomeAndExpenseOnly"] ==
