@@ -88,14 +88,14 @@ class CategorySpendingTextList extends StatelessWidget {
   Widget build(BuildContext context) {
     AllWallets allWallets = Provider.of<AllWallets>(context);
     return StreamBuilder<List<TransactionWallet>>(
-      stream: database.getAllPinnedWallets(HomePageWidgetDisplay.PieChart).$1,
+      stream: database.getAllPinnedWallets(HomePageWidgetDisplay.CategorySpendingList).$1,
       builder: (context, snapshot) {
         if (snapshot.hasData ||
-            appStateSettings["pieChartAllWallets"] == true) {
+            appStateSettings["categorySpendingListAllWallets"] == true) {
           List<String>? walletPks =
               (snapshot.data ?? []).map((item) => item.walletPk).toList();
           if (walletPks.length <= 0 ||
-              appStateSettings["pieChartAllWallets"] == true) walletPks = null;
+              appStateSettings["categorySpendingListAllWallets"] == true) walletPks = null;
           return StreamBuilder<List<CategoryWithTotal>>(
             stream:
                 database.watchTotalSpentInEachCategoryInTimeRangeFromCategories(
@@ -110,11 +110,11 @@ class CategorySpendingTextList extends StatelessWidget {
               walletPks: walletPks,
               isIncome: isIncome,
               followCustomPeriodCycle: true,
-              cycleSettingsExtension: "PieChart",
+              cycleSettingsExtension: "CategorySpendingList",
               countUnassignedTransactions: true,
               includeAllSubCategories: true,
               searchFilters: SearchFilters(expenseIncome: [
-                if (appStateSettings["pieChartIncomeAndExpenseOnly"] == true)
+                if (appStateSettings["categorySpendingListIncomeAndExpenseOnly"] == true)
                   (isIncome == true
                       ? ExpenseIncome.income
                       : ExpenseIncome.expense)
@@ -138,12 +138,12 @@ class CategorySpendingTextList extends StatelessWidget {
                     child: TextFont(
                       text: isIncome
                           ? appStateSettings[
-                                      "pieChartIncomeAndExpenseOnly"] ==
+                                      "categorySpendingListIncomeAndExpenseOnly"] ==
                                   true
                               ? "no-income-within-period".tr()
                               : "no-incoming-within-period".tr()
                           : appStateSettings[
-                                      "pieChartIncomeAndExpenseOnly"] ==
+                                      "categorySpendingListIncomeAndExpenseOnly"] ==
                                   true
                               ? "no-expense-within-period".tr()
                               : "no-outgoing-within-period".tr(),
@@ -205,15 +205,15 @@ class CategorySpendingRow extends StatelessWidget {
           TransactionsSearchPage(
             initialFilters: SearchFilters().copyWith(
               dateTimeRange: getDateTimeRangeForPassedSearchFilters(
-                  cycleSettingsExtension: "PieChart"),
+                  cycleSettingsExtension: "CategorySpendingList"),
               categoryPks: [category.mainCategoryPk ?? category.categoryPk],
               positiveCashFlow: appStateSettings[
-                          "pieChartIncomeAndExpenseOnly"] ==
+                          "categorySpendingListIncomeAndExpenseOnly"] ==
                       true
                   ? null
                   : isIncome,
               expenseIncome: [
-                if (appStateSettings["pieChartIncomeAndExpenseOnly"] == true)
+                if (appStateSettings["categorySpendingListIncomeAndExpenseOnly"] == true)
                   (isIncome == true
                       ? ExpenseIncome.income
                       : ExpenseIncome.expense)
