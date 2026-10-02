@@ -68,8 +68,53 @@ class _AboutPageState extends State<AboutPage> {
           ),
         ),
 
+        SliverToBoxAdapter(
+          child: SettingsContainer(
+            title: "app-is-open-source".tr(namedArgs: {"app": "Cashew"}),
+            description: "https://github.com/jameskokoska/Cashew",
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.open_in_new_outlined
+                : Icons.open_in_new_rounded,
+            onTap: () {
+              openUrl("https://github.com/jameskokoska/Cashew");
+            },
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: SettingsContainer(
+            title: "view-licenses-and-legalese".tr(),
+            description: "GPL-3.0",
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.account_balance_outlined
+                : Icons.account_balance_rounded,
+            onTap: () {
+              openAboutLicensesPage(context);
+            },
+          ),
+        ),
         SliverToBoxAdapter(child: SizedBox(height: 55)),
       ],
     );
   }
+}
+
+void openAboutLicensesPage(BuildContext context) {
+  showLicensePage(
+    context: context,
+    applicationName: "Cashew",
+    applicationVersion: packageInfoGlobal?.version ?? "",
+    applicationLegalese:
+        "Copyright (C) 2023 James Kokoska\n\n"
+        "This program is free software: you can redistribute it and/or modify "
+        "it under the terms of the GNU General Public License as published by "
+        "the Free Software Foundation, either version 3 of the License, or "
+        "(at your option) any later version.\n\n"
+        "This program is distributed in the hope that it will be useful, "
+        "but WITHOUT ANY WARRANTY; without even the implied warranty of "
+        "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the "
+        "GNU General Public License for more details.\n\n"
+        "You should have received a copy of the GNU General Public License "
+        "along with this program.  If not, see <https://www.gnu.org/licenses/>.\n\n" +
+        "exchange-rate-notice-description".tr(),
+  );
 }
