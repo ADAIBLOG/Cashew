@@ -164,6 +164,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "pieChartTotal": "outgoing", // "outgoing", "incoming"
     "pieChartIncomeAndExpenseOnly": true,
     "pieChartAllWallets": true,
+    "showTodayPieChart": false,
     "netWorthAllWallets": true,
     "walletsListCurrencyBreakdown": false,
     "allSpendingSummaryAllWallets": true,
