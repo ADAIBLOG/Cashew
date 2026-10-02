@@ -258,7 +258,7 @@ class CategorySpendingRow extends StatelessWidget {
                 TextFont(
                   text: convertToPercent(percent),
                   fontSize: 12,
-                  color: Theme.of(context).colorScheme.secondary,
+                  textColor: Theme.of(context).colorScheme.secondary,
                   maxLines: 1,
                   textAlign: TextAlign.end,
                 ),
