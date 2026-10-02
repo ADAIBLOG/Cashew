@@ -769,6 +769,21 @@ Future openPieChartHomePageBottomSheetSettings(BuildContext context) async {
               },
             ),
           ),
+          HorizontalBreakAbove(
+            padding: EdgeInsetsDirectional.symmetric(vertical: 15),
+            child: SettingsContainerSwitch(
+              title: "show-today-pie-chart".tr(),
+              description: "show-today-pie-chart-description".tr(),
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.today_outlined
+                  : Icons.today_rounded,
+              onSwitched: (value) {
+                updateSettings("showTodayPieChart", value,
+                    updateGlobalState: false);
+              },
+              initialValue: appStateSettings["showTodayPieChart"],
+            ),
+          ),
           SizedBox(height: 10),
         ],
       ),
