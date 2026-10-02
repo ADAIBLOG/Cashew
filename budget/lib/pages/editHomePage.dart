@@ -859,6 +859,22 @@ Future openCategorySpendingListSettings(BuildContext context) async {
               },
             ),
           ),
+          HorizontalBreakAbove(
+            padding: EdgeInsetsDirectional.symmetric(vertical: 15),
+            child: SettingsContainerSwitch(
+              title: "show-today-category-spending-list".tr(),
+              description:
+                  "show-today-category-spending-list-description".tr(),
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.today_outlined
+                  : Icons.today_rounded,
+              onSwitched: (value) {
+                updateSettings("showTodayCategorySpendingList", value,
+                    updateGlobalState: false);
+              },
+              initialValue: appStateSettings["showTodayCategorySpendingList"],
+            ),
+          ),
           SizedBox(height: 10),
         ],
       ),
