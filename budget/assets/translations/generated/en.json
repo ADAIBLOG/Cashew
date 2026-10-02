@@ -682,6 +682,8 @@
   "close": "Close",
   "view-detailed-changelog": "View Detailed Changelog",
   "pie-chart": "Pie Chart",
+  "show-today-pie-chart": "Show Today Pie Chart",
+  "show-today-pie-chart-description": "Add \"Today\" and selected-period toggle buttons to the pie chart.",
   "select-type": "Select Type",
   "create-budget": "Create Budget",
   "no-goals-found": "No goals found.",
