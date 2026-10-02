@@ -16,6 +16,8 @@ import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/transactionEntry/incomeAmountArrow.dart';
 import 'package:budget/widgets/util/keepAliveClientMixin.dart';
+import 'package:budget/widgets/outlinedButtonStacked.dart';
+import 'package:budget/widgets/periodCyclePicker.dart';
 import 'package:budget/widgets/pieChart.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/viewAllTransactionsButton.dart';
@@ -39,11 +41,16 @@ class _HomePagePieChartState extends State<HomePagePieChart>
     homePageStateKey.currentState?.refreshState();
   }
 
+  bool showToday = true;
+
   @override
   Widget build(BuildContext context) {
     final PageController _pageController = PageController(
         initialPage: appStateSettings["pieChartTotal"] != "incoming" ? 0 : 1);
     TransactionCategory? selectedCategory;
+    final bool showTodayActive =
+        appStateSettings["showTodayPieChart"] == true && showToday;
+    final bool showTodayPieChart = appStateSettings["showTodayPieChart"] == true;
 
     const double borderRadius = 15;
     return KeepAliveClientMixin(
@@ -66,7 +73,19 @@ class _HomePagePieChartState extends State<HomePagePieChart>
                 });
               },
               color: getColor(context, "lightDarkAccentHeavyLight"),
-              child: LayoutBuilder(builder: (context, constraints) {
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (showTodayPieChart)
+                    TodayPeriodPieChartSelector(
+                      showToday: showToday,
+                      onChanged: (value) {
+                        setState(() {
+                          showToday = value;
+                        });
+                      },
+                    ),
+                  LayoutBuilder(builder: (context, constraints) {
                 if (constraints.maxWidth < 320 * 2 + 50) {
                   return Padding(
                     padding: const EdgeInsetsDirectional.only(bottom: 25),
@@ -90,9 +109,11 @@ class _HomePagePieChartState extends State<HomePagePieChart>
                           children: [
                             PieChartHomeAndCategorySummary(
                                 isIncome: false,
+                                showToday: showTodayActive,
                                 selectedCategory: selectedCategory),
                             PieChartHomeAndCategorySummary(
                                 isIncome: true,
+                                showToday: showTodayActive,
                                 selectedCategory: selectedCategory)
                           ],
                         ),
@@ -132,6 +153,7 @@ class _HomePagePieChartState extends State<HomePagePieChart>
                         child: PieChartHomeAndCategorySummary(
                           isIncome: false,
                           animatedSizeCategoryContainer: true,
+                          showToday: showTodayActive,
                           selectedCategory: selectedCategory,
                         ),
                       ),
@@ -139,6 +161,7 @@ class _HomePagePieChartState extends State<HomePagePieChart>
                         child: PieChartHomeAndCategorySummary(
                           isIncome: true,
                           animatedSizeCategoryContainer: true,
+                          showToday: showTodayActive,
                           selectedCategory: selectedCategory,
                         ),
                       )
@@ -146,6 +169,77 @@ class _HomePagePieChartState extends State<HomePagePieChart>
                   ),
                 );
               }),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class TodayPeriodPieChartSelector extends StatelessWidget {
+  const TodayPeriodPieChartSelector({
+    required this.showToday,
+    required this.onChanged,
+    super.key,
+  });
+  final bool showToday;
+  final Function(bool) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(13, 13, 13, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _selectorButton(
+            context,
+            label: "today".tr(),
+            selected: showToday,
+            onTap: () => onChanged(true),
+          ),
+          SizedBox(width: 8),
+          _selectorButton(
+            context,
+            label: getLabelOfSelectedCustomPeriod("PieChart"),
+            selected: !showToday,
+            onTap: () => onChanged(false),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _selectorButton(
+    BuildContext context, {
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 160),
+      child: ClipRRect(
+        borderRadius: BorderRadiusDirectional.circular(12),
+        child: Tappable(
+          onTap: onTap,
+          color: Colors.transparent,
+          child: OutlinedContainer(
+            filled: selected,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.symmetric(
+                  horizontal: 10, vertical: 6),
+              child: Center(
+                child: TextFont(
+                  text: label,
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ),
           ),
         ),
@@ -196,10 +290,12 @@ class PieChartHomeAndCategorySummary extends StatefulWidget {
   const PieChartHomeAndCategorySummary(
       {required this.isIncome,
       this.animatedSizeCategoryContainer = false,
+      this.showToday = false,
       this.selectedCategory,
       super.key});
   final bool isIncome;
   final bool animatedSizeCategoryContainer;
+  final bool showToday;
   final TransactionCategory? selectedCategory;
 
   @override
@@ -275,10 +371,10 @@ class _PieChartHomeAndCategorySummaryState
               categoryFksExclude: null,
               budgetTransactionFilters: null,
               memberTransactionFilters: null,
-              allTime: true,
+              allTime: widget.showToday ? false : true,
               walletPks: walletPks,
               isIncome: widget.isIncome,
-              followCustomPeriodCycle: true,
+              followCustomPeriodCycle: widget.showToday ? false : true,
               cycleSettingsExtension: "PieChart",
               countUnassignedTransactions: true,
               includeAllSubCategories: true,
@@ -350,8 +446,17 @@ class _PieChartHomeAndCategorySummaryState
                           TransactionsSearchPage(
                             initialFilters: SearchFilters().copyWith(
                               dateTimeRange:
-                                  getDateTimeRangeForPassedSearchFilters(
-                                      cycleSettingsExtension: "PieChart"),
+                                  widget.showToday
+                                      ? DateTimeRange(
+                                          start: DateTime.now().justDay(),
+                                          end: DateTime.now()
+                                              .justDay(dayOffset: 1)
+                                              .subtract(
+                                                  const Duration(
+                                                      milliseconds: 1)),
+                                        )
+                                      : getDateTimeRangeForPassedSearchFilters(
+                                          cycleSettingsExtension: "PieChart"),
                               categoryPks: [
                                 tappedCategory.mainCategoryPk ??
                                     tappedCategory.categoryPk
