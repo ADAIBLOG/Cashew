@@ -7,6 +7,7 @@ import 'package:budget/pages/homePage/homePageLineGraph.dart';
 import 'package:budget/pages/homePage/homePageNetWorth.dart';
 import 'package:budget/pages/homePage/homePageObjectives.dart';
 import 'package:budget/pages/homePage/homePagePieChart.dart';
+import 'package:budget/pages/homePage/homePageCategorySpendingList.dart';
 import 'package:budget/pages/homePage/homePageWalletList.dart';
 import 'package:budget/pages/homePage/homePageWalletSwitcher.dart';
 import 'package:budget/pages/homePage/homeTransactions.dart';
@@ -211,6 +212,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       "pieChart": isHomeScreenSectionEnabled(context, "showPieChart")
           ? HomePagePieChart()
           : null,
+      "categorySpendingList":
+          isHomeScreenSectionEnabled(context, "showCategorySpendingList")
+              ? HomePageCategorySpendingList()
+              : null,
       "heatMap": isHomeScreenSectionEnabled(context, "showHeatMap")
           ? HomePageHeatMap()
           : null,
