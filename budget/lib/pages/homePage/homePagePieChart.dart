@@ -183,10 +183,12 @@ class TodayPeriodPieChartSelector extends StatelessWidget {
   const TodayPeriodPieChartSelector({
     required this.showToday,
     required this.onChanged,
+    this.cycleSettingsExtension = "PieChart",
     super.key,
   });
   final bool showToday;
   final Function(bool) onChanged;
+  final String cycleSettingsExtension;
 
   @override
   Widget build(BuildContext context) {
@@ -204,7 +206,7 @@ class TodayPeriodPieChartSelector extends StatelessWidget {
           SizedBox(width: 8),
           _selectorButton(
             context,
-            label: getLabelOfSelectedCustomPeriod("PieChart"),
+            label: getLabelOfSelectedCustomPeriod(cycleSettingsExtension),
             selected: !showToday,
             onTap: () => onChanged(false),
           ),
