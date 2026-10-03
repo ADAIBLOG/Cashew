@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_add_income">新增收入</string>
+    <string name="widget_transfer">轉帳</string>
+    <string name="widget_net_worth_plus">淨資產（寬版）</string>
+    <string name="widget_net_worth">淨資產</string>
+    <string name="widget_monthly_expense">當月支出</string>
+    <string name="widget_daily_expense">當日支出</string>
+    <string name="widget_monthly_income">當月收入</string>
+    <string name="widget_daily_income">當日收入</string>
+    <string name="widget_add_expense">新增支出</string>
+</resources>
