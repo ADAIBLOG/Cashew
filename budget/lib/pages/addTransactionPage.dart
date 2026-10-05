@@ -716,10 +716,13 @@ class _AddTransactionPageState extends State<AddTransactionPage>
 
   late TextEditingController _titleInputController;
   late TextEditingController _noteInputController;
+  late final Stream<List<Objective>> _loanObjectivesStream;
 
   @override
   void initState() {
     super.initState();
+    _loanObjectivesStream =
+        database.watchAllObjectives(objectiveType: ObjectiveType.loan);
     templatePk = widget.templatePk;
     if (widget.transaction != null) {
       //We are editing a transaction
@@ -1760,7 +1763,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                 children: [
                   Flexible(
                     flex: 2,
-                    child: StreamBuilder<List<Objective>>(stream: database.watchAllObjectives(objectiveType: ObjectiveType.loan), builder: (context, snapshot) {
+                    child: StreamBuilder<List<Objective>>(stream: _loanObjectivesStream, builder: (context, snapshot) {
                       String incomeLabel = "collected".tr();
                       String expenseLabel = "paid".tr();
                       
