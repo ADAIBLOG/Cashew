@@ -417,7 +417,7 @@ class TransactionEntry extends StatelessWidget {
         showExcludedBudgetTag: showExcludedBudgetTag,
       );
       bool showTagOnRight =
-          appStateSettings["showTransactionEntryTagOnRight"] == true;
+          appStateSettings["transactionEntryTagPosition"] == "right";
       Widget noteIcon = TransactionEntryNote(
         transaction: transaction,
         iconColor: iconColor,
