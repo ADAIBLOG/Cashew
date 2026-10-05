@@ -606,22 +606,65 @@ Future<TransactionWallet?> selectWalletPopup(
   return null;
 }
 
-class ShowAccountLabelSettingToggle extends StatelessWidget {
+class ShowAccountLabelSettingToggle extends StatefulWidget {
   const ShowAccountLabelSettingToggle({super.key});
 
   @override
+  State<ShowAccountLabelSettingToggle> createState() =>
+      _ShowAccountLabelSettingToggleState();
+}
+
+class _ShowAccountLabelSettingToggleState
+    extends State<ShowAccountLabelSettingToggle> {
+  @override
   Widget build(BuildContext context) {
-    return SettingsContainerSwitch(
-      title: "account-label".tr(),
-      description: "account-label-description".tr(),
-      onSwitched: (value) {
-        updateSettings("showAccountLabelTagInTransactionEntry", value,
+    return Column(
+      children: [
+        SettingsContainerSwitch(
+          title: "account-label".tr(),
+          description: "account-label-description".tr(),
+          onSwitched: (value) {
+            updateSettings("showAccountLabelTagInTransactionEntry", value,
+                updateGlobalState: true);
+            setState(() {});
+          },
+          initialValue:
+              appStateSettings["showAccountLabelTagInTransactionEntry"],
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.label_outlined
+              : Icons.label_rounded,
+        ),
+        AnimatedExpanded(
+          expand: appStateSettings["showAccountLabelTagInTransactionEntry"] ==
+              true,
+          child: TransactionEntryTagPositionSetting(),
+        ),
+      ],
+    );
+  }
+}
+
+class TransactionEntryTagPositionSetting extends StatelessWidget {
+  const TransactionEntryTagPositionSetting({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsContainerDropdown(
+      title: "transaction-entry-tag-position".tr(),
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.sell_outlined
+          : Icons.sell_rounded,
+      initial: appStateSettings["transactionEntryTagPosition"].toString(),
+      items: ["left", "right"],
+      onChanged: (value) {
+        updateSettings("transactionEntryTagPosition", value,
             updateGlobalState: true);
       },
-      initialValue: appStateSettings["showAccountLabelTagInTransactionEntry"],
-      icon: appStateSettings["outlinedIcons"]
-          ? Icons.label_outlined
-          : Icons.label_rounded,
+      getLabel: (item) {
+        return item == "left"
+            ? "tag-position-left".tr()
+            : "tag-position-right".tr();
+      },
     );
   }
 }
