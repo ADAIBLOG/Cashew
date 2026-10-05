@@ -332,6 +332,7 @@ class TransactionsSettings extends StatelessWidget {
         ShowTransactionsMonthlySpendingSummarySettingToggle(),
         ShowTransactionsBalanceTransferTabSettingToggle(),
         ShowAllCategoriesWhenSelectingSettingToggle(),
+        ShowTransactionEntryTagOnRightSettingToggle(),
       ],
     );
   }
@@ -352,6 +353,26 @@ class ShowAllCategoriesWhenSelectingSettingToggle extends StatelessWidget {
       icon: appStateSettings["outlinedIcons"]
           ? Icons.grid_on_outlined
           : Icons.grid_on_rounded,
+    );
+  }
+}
+
+class ShowTransactionEntryTagOnRightSettingToggle extends StatelessWidget {
+  const ShowTransactionEntryTagOnRightSettingToggle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsContainerSwitch(
+      title: "transaction-entry-tag-on-right".tr(),
+      description: "transaction-entry-tag-on-right-description".tr(),
+      onSwitched: (value) {
+        updateSettings("showTransactionEntryTagOnRight", value,
+            updateGlobalState: true);
+      },
+      initialValue: appStateSettings["showTransactionEntryTagOnRight"],
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.sell_outlined
+          : Icons.sell_rounded,
     );
   }
 }
