@@ -206,6 +206,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "outlinedIcons": false,
 
     "showAccountLabelTagInTransactionEntry": false,
+    "showTransactionEntryTagOnRight": false,
     "showCurrencyLabel": false,
     "showTransactionsMonthlySpendingSummary": true,
     "showTransactionsBalanceTransferTab": true,
