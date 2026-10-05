@@ -20,6 +20,7 @@ class TransactionEntryTag extends StatelessWidget {
     this.objective,
     this.objectiveLoan,
     this.showExcludedBudgetTag,
+    this.showAccountTag = true,
     super.key,
   });
   final Transaction transaction;
@@ -29,6 +30,7 @@ class TransactionEntryTag extends StatelessWidget {
   final Objective? objective;
   final Objective? objectiveLoan;
   final bool Function(Transaction transaction)? showExcludedBudgetTag;
+  final bool showAccountTag;
 
   @override
   Widget build(BuildContext context) {
@@ -51,8 +53,8 @@ class TransactionEntryTag extends StatelessWidget {
         child: LayoutBuilder(builder: (context, constraints) {
           double maxWidth = constraints.maxWidth;
           List<bool> tagsToShow = [
-            appStateSettings["showAccountLabelTagInTransactionEntry"] ==
-                true, //0
+            appStateSettings["showAccountLabelTagInTransactionEntry"] == true &&
+                showAccountTag, //0
             transaction.subCategoryFk != null, //1
             transaction.sharedReferenceBudgetPk != null, //2
             transaction.objectiveLoanFk != null, //3
