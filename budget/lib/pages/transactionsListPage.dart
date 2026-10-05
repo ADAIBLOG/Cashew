@@ -331,7 +331,27 @@ class TransactionsSettings extends StatelessWidget {
         NetSpendingDayTotalSetting(),
         ShowTransactionsMonthlySpendingSummarySettingToggle(),
         ShowTransactionsBalanceTransferTabSettingToggle(),
+        ShowAllCategoriesWhenSelectingSettingToggle(),
       ],
+    );
+  }
+}
+
+class ShowAllCategoriesWhenSelectingSettingToggle extends StatelessWidget {
+  const ShowAllCategoriesWhenSelectingSettingToggle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsContainerSwitch(
+      title: "show-all-categories".tr(),
+      onSwitched: (value) {
+        updateSettings("showAllCategoriesWhenSelecting", value,
+            updateGlobalState: false);
+      },
+      initialValue: appStateSettings["showAllCategoriesWhenSelecting"],
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.grid_on_outlined
+          : Icons.grid_on_rounded,
     );
   }
 }
