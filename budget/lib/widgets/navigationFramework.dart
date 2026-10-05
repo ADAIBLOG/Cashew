@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:budget/colors.dart';
 import 'package:budget/database/initializeDefaultDatabase.dart';
 import 'package:budget/database/tables.dart';
