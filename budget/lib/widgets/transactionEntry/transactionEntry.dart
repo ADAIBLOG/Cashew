@@ -415,8 +415,9 @@ class TransactionEntry extends StatelessWidget {
         objective: objective,
         objectiveLoan: objectiveLoan,
         showExcludedBudgetTag: showExcludedBudgetTag,
-        showAccountTag: false,
       );
+      bool showTagOnRight =
+          appStateSettings["showTransactionEntryTagOnRight"] == true;
       Widget noteIcon = TransactionEntryNote(
         transaction: transaction,
         iconColor: iconColor,
@@ -444,31 +445,6 @@ class TransactionEntry extends StatelessWidget {
         transaction: transaction,
         showOtherCurrency: showOtherCurrency,
         unsetCustomCurrency: unsetCustomCurrency,
-      );
-      Widget accountTag = ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 200),
-        child: TransactionTag(
-          color: HexColor(
-              Provider.of<AllWallets>(context)
-                  .indexedByPk[transaction.walletFk]
-                  ?.colour,
-              defaultColor: Theme.of(context).colorScheme.primary),
-          name: getWalletStringName(
-              Provider.of<AllWallets>(context),
-              Provider.of<AllWallets>(context)
-                  .indexedByPk[transaction.walletFk]),
-          margin: const EdgeInsetsDirectional.only(top: 3),
-        ),
-      );
-      Widget amountColumn = Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          amount,
-          if (appStateSettings["showAccountLabelTagInTransactionEntry"] ==
-              true)
-            accountTag,
-        ],
       );
       Widget transactionActionLabelButton = TransactionEntryTypeButton(
         transaction: transaction,
@@ -529,7 +505,7 @@ class TransactionEntry extends StatelessWidget {
                                 ),
                                 if (getIsFullScreen(context))
                                   transactionActionLabelButton,
-                                amountColumn,
+                                amount,
                               ],
                             ),
                           ),
@@ -589,7 +565,7 @@ class TransactionEntry extends StatelessWidget {
                           padding: const EdgeInsetsDirectional.only(start: 3),
                           child: transactionLabel,
                         ),
-                        tags,
+                        if (!showTagOnRight) tags,
                       ],
                     ),
                   ),
@@ -597,8 +573,26 @@ class TransactionEntry extends StatelessWidget {
                     width: 7,
                   ),
                   if (getIsFullScreen(context)) transactionActionLabelButton,
-                  noteIcon,
-                  amountColumn,
+                  if (showTagOnRight)
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            noteIcon,
+                            amount,
+                          ],
+                        ),
+                        tags,
+                      ],
+                    )
+                  else ...[
+                    noteIcon,
+                    amount,
+                  ],
                 ],
               ),
             );
