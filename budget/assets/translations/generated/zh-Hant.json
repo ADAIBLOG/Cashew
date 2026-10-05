@@ -819,6 +819,8 @@
   "reorder-categories": "重新排序類別",
   "drag-and-drop-categories-to-rearrange": "將類別拖放到重新排列",
   "show-all-categories": "顯示所有類別",
+  "transaction-entry-tag-on-right": "標籤顯示在金額下方",
+  "transaction-entry-tag-on-right-description": "將帳戶、類別等標籤顯示在金額下方（右側）",
   "only-income-categories": "僅收入類別",
   "only-expense-categories": "僅支出類別",
   "transfer-in": "遷入",
