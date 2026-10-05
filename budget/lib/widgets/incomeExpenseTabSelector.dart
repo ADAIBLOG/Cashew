@@ -263,8 +263,9 @@ class ExpenseIncomeSelectorLabel extends StatelessWidget {
 
 class IncomeExpenseButtonSelector extends StatefulWidget {
   const IncomeExpenseButtonSelector(
-      {required this.setSelectedIncome, super.key});
+      {required this.setSelectedIncome, this.initialSelectedIncome, super.key});
   final Function(bool?) setSelectedIncome;
+  final bool? initialSelectedIncome;
 
   @override
   State<IncomeExpenseButtonSelector> createState() =>
@@ -274,6 +275,12 @@ class IncomeExpenseButtonSelector extends StatefulWidget {
 class _IncomeExpenseButtonSelectorState
     extends State<IncomeExpenseButtonSelector> {
   bool? selectedIncome;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedIncome = widget.initialSelectedIncome;
+  }
 
   @override
   Widget build(BuildContext context) {
