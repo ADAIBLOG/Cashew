@@ -908,7 +908,10 @@ class _AddTransactionPageState extends State<AddTransactionPage>
         setSelectedIncome(value == true, initiallySetting: value != null);
       },
       skipIfSet: true,
-      selectedIncomeInitial: null,
+      selectedIncomeInitial:
+          appStateSettings["showAllCategoriesWhenSelecting"] == true
+              ? null
+              : false,
       extraWidgetAfter: Column(
         children: [
           SelectAddedBudget(
@@ -4042,7 +4045,10 @@ class SelectCategoryWithIncomeExpenseSelector extends StatefulWidget {
 
 class _SelectCategoryWithIncomeExpenseSelectorState
     extends State<SelectCategoryWithIncomeExpenseSelector> {
-  late bool? selectedIncome = widget.selectedIncomeInitial; // 始终根据当前交易类型筛选类别
+  late bool? selectedIncome =
+      appStateSettings["showAllCategoriesWhenSelecting"] == true
+          ? null
+          : widget.selectedIncomeInitial;
 
   void setSelectedIncome(bool? value) {
     if (widget.setSelectedIncome != null) widget.setSelectedIncome!(value);
@@ -4110,9 +4116,12 @@ class _SelectCategoryWithIncomeExpenseSelectorState
         children: [
           if (widget.extraWidgetBefore != null) widget.extraWidgetBefore!,
           if (widget.setSelectedIncome != null)
-            IncomeExpenseButtonSelector(setSelectedIncome: (value) {
-              setSelectedIncome(value);
-            }),
+            IncomeExpenseButtonSelector(
+              setSelectedIncome: (value) {
+                setSelectedIncome(value);
+              },
+              initialSelectedIncome: selectedIncome,
+            ),
           Padding(
             padding: const EdgeInsetsDirectional.only(start: 18, end: 18),
             child: SelectCategory(
