@@ -415,6 +415,7 @@ class TransactionEntry extends StatelessWidget {
         objective: objective,
         objectiveLoan: objectiveLoan,
         showExcludedBudgetTag: showExcludedBudgetTag,
+        showAccountTag: false,
       );
       Widget noteIcon = TransactionEntryNote(
         transaction: transaction,
@@ -443,6 +444,31 @@ class TransactionEntry extends StatelessWidget {
         transaction: transaction,
         showOtherCurrency: showOtherCurrency,
         unsetCustomCurrency: unsetCustomCurrency,
+      );
+      Widget accountTag = ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 200),
+        child: TransactionTag(
+          color: HexColor(
+              Provider.of<AllWallets>(context)
+                  .indexedByPk[transaction.walletFk]
+                  ?.colour,
+              defaultColor: Theme.of(context).colorScheme.primary),
+          name: getWalletStringName(
+              Provider.of<AllWallets>(context),
+              Provider.of<AllWallets>(context)
+                  .indexedByPk[transaction.walletFk]),
+          margin: const EdgeInsetsDirectional.only(top: 3),
+        ),
+      );
+      Widget amountColumn = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          amount,
+          if (appStateSettings["showAccountLabelTagInTransactionEntry"] ==
+              true)
+            accountTag,
+        ],
       );
       Widget transactionActionLabelButton = TransactionEntryTypeButton(
         transaction: transaction,
@@ -503,7 +529,7 @@ class TransactionEntry extends StatelessWidget {
                                 ),
                                 if (getIsFullScreen(context))
                                   transactionActionLabelButton,
-                                amount,
+                                amountColumn,
                               ],
                             ),
                           ),
@@ -572,7 +598,7 @@ class TransactionEntry extends StatelessWidget {
                   ),
                   if (getIsFullScreen(context)) transactionActionLabelButton,
                   noteIcon,
-                  amount,
+                  amountColumn,
                 ],
               ),
             );
