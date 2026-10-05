@@ -54,16 +54,6 @@ void main() async {
     await loadLanguageNamesJSON();
     await initializeSettings();
     
-    // Ensure Chinese is set as default language if system is Chinese
-    String? userSettings = sharedPreferences.getString('userSettings');
-    if (userSettings == null) {
-      // First time launch, check if system is Chinese
-      final systemLocale = WidgetsBinding.instance.platformDispatcher.locale;
-      if (systemLocale.languageCode == 'zh') {
-        await updateSettings("locale", "zh", updateGlobalState: false);
-      }
-    }
-    
     tz.initializeTimeZones();
     final String? locationName = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(locationName ?? "America/New_York"));
