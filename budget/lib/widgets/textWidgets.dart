@@ -66,8 +66,11 @@ class TextFont extends StatelessWidget {
       letterSpacing: letterSpacing,
       fontWeight: this.fontWeight,
       fontSize: this.fontSize,
-      fontFamily: appStateSettings["font"],
-      fontFamilyFallback: ['Inter', 'DMSans'],
+      fontFamily: fallbackFontLocales.contains(appStateSettings["locale"]) &&
+              appStateSettings["font"] == "Avenir"
+          ? "DMSans"
+          : appStateSettings["font"],
+      fontFamilyFallback: ['Inter'],
       color: finalTextColor,
       decoration: TextDecoration.underline,
       decorationStyle: TextDecorationStyle.double,
