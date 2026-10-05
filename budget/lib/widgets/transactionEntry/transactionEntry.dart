@@ -49,10 +49,10 @@ class RecentlyAddedTransactionInfo {
 
   void triggerAnimation() {
     // 创建一个新的实例来更新value，这样ValueNotifier才会检测到变化
-    recentlyAddedTransactionInfo.value = RecentlyAddedTransactionInfo(
-      transactionPk,
-      false, // shouldAnimate
-    );
+    RecentlyAddedTransactionInfo startInfo =
+        RecentlyAddedTransactionInfo(transactionPk, false);
+    startInfo.isRunningAnimation = true;
+    recentlyAddedTransactionInfo.value = startInfo;
     
     Future.delayed(Duration(milliseconds: 100), () {
       // 创建一个新的实例来更新value，这样ValueNotifier才会检测到变化
