@@ -118,6 +118,14 @@ class _CountNumberState extends State<CountNumber> {
   late bool lazyFirstRender = widget.lazyFirstRender;
 
   @override
+  void didUpdateWidget(CountNumber oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.count != widget.count) {
+      previousAmount = oldWidget.count;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (appStateSettings["numberCountUpAnimation"] == false ||
         appStateSettings["batterySaver"] == true) {
@@ -176,7 +184,6 @@ class _CountNumberState extends State<CountNumber> {
       },
     );
 
-    previousAmount = widget.count;
     return builtWidget;
   }
 }
