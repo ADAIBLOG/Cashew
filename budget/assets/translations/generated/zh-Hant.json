@@ -597,6 +597,8 @@
   "correct-total-balance": "校正總餘額",
   "default-category-account-amount-balancing": "餘額校正",
   "negative-amount": "負數",
+  "correction-counted-in-statistics": "校正金額計入統計",
+  "correction-counted-in-statistics-description": "關閉後，餘額校正產生的差額不會計入收入/支出等數據統計",
   "update-total-balance": "更新總餘額",
   "updated-total-balance": "更新的總餘額",
   "merge-account": "合併帳戶",
