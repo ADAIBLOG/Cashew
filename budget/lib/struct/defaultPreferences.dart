@@ -208,6 +208,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "showAccountLabelTagInTransactionEntry": false,
     "transactionEntryTagPosition": "left",
     "showCurrencyLabel": false,
+    "correctionTransactionsCountedInStatistics": false,
     "showTransactionsMonthlySpendingSummary": true,
     "showTransactionsBalanceTransferTab": true,
     "balanceTransferAmountColor": "green-or-red", // "green-or-red", "no-color"
