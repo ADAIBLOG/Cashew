@@ -864,24 +864,48 @@ class _CorrectBalancePopupState extends State<CorrectBalancePopup> {
                 // Also render if no data, because that means the wallet is empty
                 // We still want users to be able to correct the amount
                 key: ValueKey(snapshot.hasData == false),
-                extraWidgetAboveNumbers: SettingsContainerSwitch(
-                  title: "negative-amount".tr(),
-                  onSwitched: (value) {
-                    setState(() {
-                      isNegative = value;
-                      if (isNegative == true)
-                        enteredAmount = enteredAmount.abs() * -1;
-                      else
-                        enteredAmount = enteredAmount.abs();
-                    });
-                  },
-                  enableBorderRadius: true,
-                  initialValue: totalWalletAmount < 0,
-                  syncWithInitialValue: false,
-                  runOnSwitchedInitially: true,
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.exposure_outlined
-                      : Icons.exposure_rounded,
+                extraWidgetAboveNumbers: Column(
+                  children: [
+                    SettingsContainerSwitch(
+                      title: "negative-amount".tr(),
+                      onSwitched: (value) {
+                        setState(() {
+                          isNegative = value;
+                          if (isNegative == true)
+                            enteredAmount = enteredAmount.abs() * -1;
+                          else
+                            enteredAmount = enteredAmount.abs();
+                        });
+                      },
+                      enableBorderRadius: true,
+                      initialValue: totalWalletAmount < 0,
+                      syncWithInitialValue: false,
+                      runOnSwitchedInitially: true,
+                      icon: appStateSettings["outlinedIcons"]
+                          ? Icons.exposure_outlined
+                          : Icons.exposure_rounded,
+                    ),
+                    SettingsContainerSwitch(
+                      title: "correction-counted-in-statistics".tr(),
+                      description:
+                          "correction-counted-in-statistics-description".tr(),
+                      onSwitched: (value) {
+                        updateSettings(
+                          "correctionTransactionsCountedInStatistics",
+                          value,
+                          updateGlobalState: true,
+                        );
+                      },
+                      enableBorderRadius: true,
+                      initialValue: appStateSettings[
+                              "correctionTransactionsCountedInStatistics"] ==
+                          true,
+                      syncWithInitialValue: true,
+                      icon: appStateSettings["outlinedIcons"]
+                          ? Icons.query_stats_outlined
+                          : Icons.query_stats_rounded,
+                    ),
+                  ],
                 ),
                 showEnteredNumber: false,
                 amountPassed: "0",
