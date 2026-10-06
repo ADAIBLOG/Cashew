@@ -537,69 +537,79 @@ class AddMoreThingsPopup extends StatelessWidget {
           openPage: AddWalletPage(
             routesToPopAfterDelete: RoutesToPopAfterDelete.None,
           ),
-          widgetAfter: SelectChips(
-            padding: EdgeInsetsDirectional.symmetric(horizontal: 13),
-            items: [
-              if (Provider.of<AllWallets>(context).list.length > 1)
-                "transfer-balance",
-              "correct-total-balance"
-            ],
-            getSelected: (_) {
-              return false;
-            },
-            onSelected: (String selection) async {
-              if (selection == "transfer-balance") {
-                popRoute(context);
-                openBottomSheet(
-                  context,
-                  fullSnap: true,
-                  TransferBalancePopup(
-                    allowEditWallet: true,
-                    wallet: Provider.of<AllWallets>(context, listen: false)
-                        .indexedByPk[appStateSettings["selectedWalletPk"]]!,
+          widgetAfter: Padding(
+            padding:
+                const EdgeInsetsDirectional.fromSTEB(13, 0, 13, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButtonStacked(
+                    filled: false,
+                    alignBeside: true,
+                    padding: const EdgeInsetsDirectional.symmetric(
+                        horizontal: 10, vertical: 12),
+                    text: "correct-total-balance".tr(),
+                    fontSize: 15,
+                    iconData: appStateSettings["outlinedIcons"]
+                        ? Icons.library_add_outlined
+                        : Icons.library_add_rounded,
+                    onTap: () async {
+                      TransactionWallet? wallet = Provider.of<AllWallets>(
+                              context,
+                              listen: false)
+                          .indexedByPk[appStateSettings["selectedWalletPk"]];
+                      if (Provider.of<AllWallets>(context, listen: false)
+                              .list
+                              .length >
+                          1) {
+                        wallet = await selectWalletPopup(
+                          context,
+                          allowEditWallet: true,
+                        );
+                      }
+                      if (wallet != null) {
+                        popRoute(context);
+                        openBottomSheet(
+                          context,
+                          fullSnap: true,
+                          CorrectBalancePopup(wallet: wallet),
+                        );
+                      }
+                    },
                   ),
-                );
-              } else if (selection == "correct-total-balance") {
-                TransactionWallet? wallet =
-                    Provider.of<AllWallets>(context, listen: false)
-                        .indexedByPk[appStateSettings["selectedWalletPk"]];
-                if (Provider.of<AllWallets>(context, listen: false)
-                        .list
-                        .length >
-                    1) {
-                  wallet = await selectWalletPopup(
-                    context,
-                    allowEditWallet: true,
-                  );
-                }
-                if (wallet != null) {
-                  popRoute(context);
-                  openBottomSheet(
-                    context,
-                    fullSnap: true,
-                    CorrectBalancePopup(wallet: wallet),
-                  );
-                }
-              }
-            },
-            getLabel: (String selection) {
-              return selection.tr();
-            },
-            getAvatar: (String selection) {
-              return LayoutBuilder(builder: (context2, constraints) {
-                return Icon(
-                  selection == "transfer-balance"
-                      ? appStateSettings["outlinedIcons"]
+                ),
+                if (Provider.of<AllWallets>(context).list.length > 1) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButtonStacked(
+                      filled: false,
+                      alignBeside: true,
+                      padding: const EdgeInsetsDirectional.symmetric(
+                          horizontal: 10, vertical: 12),
+                      text: "transfer-balance".tr(),
+                      fontSize: 15,
+                      iconData: appStateSettings["outlinedIcons"]
                           ? Icons.compare_arrows_outlined
-                          : Icons.compare_arrows_rounded
-                      : appStateSettings["outlinedIcons"]
-                          ? Icons.library_add_outlined
-                          : Icons.library_add_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: constraints.maxWidth,
-                );
-              });
-            },
+                          : Icons.compare_arrows_rounded,
+                      onTap: () {
+                        popRoute(context);
+                        openBottomSheet(
+                          context,
+                          fullSnap: true,
+                          TransferBalancePopup(
+                            allowEditWallet: true,
+                            wallet: Provider.of<AllWallets>(context,
+                                    listen: false)
+                                .indexedByPk[appStateSettings[
+                                    "selectedWalletPk"]]!,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
         StreamBuilder<Map<String, TransactionCategory>>(
