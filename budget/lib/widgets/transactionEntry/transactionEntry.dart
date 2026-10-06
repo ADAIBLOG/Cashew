@@ -407,6 +407,8 @@ class TransactionEntry extends StatelessWidget {
         transaction: transaction,
         category: category,
       );
+      bool showTagOnRight =
+          appStateSettings["transactionEntryTagPosition"] == "right";
       Widget tags = TransactionEntryTag(
         transaction: transaction,
         showObjectivePercentage: showObjectivePercentage,
@@ -415,9 +417,8 @@ class TransactionEntry extends StatelessWidget {
         objective: objective,
         objectiveLoan: objectiveLoan,
         showExcludedBudgetTag: showExcludedBudgetTag,
+        showAccountTag: !showTagOnRight,
       );
-      bool showTagOnRight =
-          appStateSettings["transactionEntryTagPosition"] == "right";
       Widget noteIcon = TransactionEntryNote(
         transaction: transaction,
         iconColor: iconColor,
@@ -565,7 +566,7 @@ class TransactionEntry extends StatelessWidget {
                           padding: const EdgeInsetsDirectional.only(start: 3),
                           child: transactionLabel,
                         ),
-                        if (!showTagOnRight) tags,
+                        tags,
                       ],
                     ),
                   ),
@@ -586,7 +587,10 @@ class TransactionEntry extends StatelessWidget {
                             amount,
                           ],
                         ),
-                        tags,
+                        if (appStateSettings[
+                                "showAccountLabelTagInTransactionEntry"] ==
+                            true)
+                          AccountLabelTag(transaction: transaction),
                       ],
                     )
                   else ...[
