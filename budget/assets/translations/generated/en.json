@@ -606,6 +606,8 @@
   "correct-total-balance": "Correct Total Balance",
   "default-category-account-amount-balancing": "Balance Correction",
   "negative-amount": "Negative Amount",
+  "correction-counted-in-statistics": "Count Corrections in Statistics",
+  "correction-counted-in-statistics-description": "When disabled, balance corrections are excluded from income/expense statistics",
   "update-total-balance": "Update Total Balance",
   "updated-total-balance": "Updated Total Balance",
   "merge-account": "Merge Account",
