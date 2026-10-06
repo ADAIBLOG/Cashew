@@ -269,6 +269,7 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
     if (willPushRoute) {
       // 直接获取类别和钱包信息并跳转
       TransactionCategory? category;
+      TransactionCategory? subCategory;
       TransactionWallet? wallet = templateFound.walletFk == "-1" 
           ? null 
           : await database.getWalletInstanceOrNull(templateFound.walletFk);
@@ -281,6 +282,15 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
       
       if (category == null) {
         category = await database.getCategoryInstanceOrNull(templateFound.defaultCategoryFk);
+        // 默认类别为子分类时，拆分为主分类+子分类
+        if (category != null && category.mainCategoryPk != null) {
+          TransactionCategory? mainCategory = await database
+              .getCategoryInstanceOrNull(category.mainCategoryPk!);
+          if (mainCategory != null) {
+            subCategory = category;
+            category = mainCategory;
+          }
+        }
       }
       
       pushRoute(
@@ -291,6 +301,7 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
           selectedAmount: amountDouble,
           selectedTitle: title,
           selectedCategory: category,
+          selectedSubCategory: subCategory,
           startInitialAddTransactionSequence: false,
           selectedWallet: wallet,
           selectedDate: dateTime,
