@@ -6042,6 +6042,11 @@ class FinanceDatabase extends _$FinanceDatabase {
   // We also want to include these transactions if isIncome is null (total net spending)
   Expression<bool> onlyShowIfNotBalanceCorrection(
       $TransactionsTable tbl, bool? isIncome) {
+    // 用户可选择校准金额是否计入收入/支出统计
+    if (appStateSettings["correctionTransactionsCountedInStatistics"] ==
+        true) {
+      return Constant(true);
+    }
     return ((tbl.categoryFk.equals("0").not()) |
         (isIncome == null ? Constant(true) : Constant(false)));
   }
