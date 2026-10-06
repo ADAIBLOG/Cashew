@@ -53,8 +53,9 @@ class TransactionEntryTag extends StatelessWidget {
         child: LayoutBuilder(builder: (context, constraints) {
           double maxWidth = constraints.maxWidth;
           List<bool> tagsToShow = [
-            appStateSettings["showAccountLabelTagInTransactionEntry"] == true &&
-                showAccountTag, //0
+            showAccountTag &&
+                appStateSettings["showAccountLabelTagInTransactionEntry"] ==
+                    true, //0
             transaction.subCategoryFk != null, //1
             transaction.sharedReferenceBudgetPk != null, //2
             transaction.objectiveLoanFk != null, //3
@@ -64,17 +65,7 @@ class TransactionEntryTag extends StatelessWidget {
           int tagCount = tagsToShow.where((element) => element == true).length;
           List<Widget> tags = [
             // 0
-            TransactionTag(
-              color: HexColor(
-                  Provider.of<AllWallets>(context)
-                      .indexedByPk[transaction.walletFk]
-                      ?.colour,
-                  defaultColor: Theme.of(context).colorScheme.primary),
-              name: getWalletStringName(
-                  Provider.of<AllWallets>(context),
-                  Provider.of<AllWallets>(context)
-                      .indexedByPk[transaction.walletFk]),
-            ),
+            AccountLabelTag(transaction: transaction),
             // 1
             Builder(builder: (context) {
               if (subCategory != null) {
@@ -195,6 +186,25 @@ class TransactionEntryTag extends StatelessWidget {
           );
         }),
       ),
+    );
+  }
+}
+
+class AccountLabelTag extends StatelessWidget {
+  const AccountLabelTag({required this.transaction, super.key});
+  final Transaction transaction;
+
+  @override
+  Widget build(BuildContext context) {
+    return TransactionTag(
+      color: HexColor(
+          Provider.of<AllWallets>(context)
+              .indexedByPk[transaction.walletFk]
+              ?.colour,
+          defaultColor: Theme.of(context).colorScheme.primary),
+      name: getWalletStringName(
+          Provider.of<AllWallets>(context),
+          Provider.of<AllWallets>(context).indexedByPk[transaction.walletFk]),
     );
   }
 }
