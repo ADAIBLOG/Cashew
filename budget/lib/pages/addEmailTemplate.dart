@@ -1,12 +1,13 @@
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
+import 'package:budget/pages/addCategoryPage.dart';
 import 'package:budget/pages/addWalletPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
+import 'package:budget/widgets/animatedExpanded.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/saveBottomButton.dart';
-import 'package:budget/widgets/selectCategory.dart';
 import 'package:budget/widgets/selectChips.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textInput.dart';
@@ -37,6 +38,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
   String? selectedName;
   String? selectedSubject;
   TransactionCategory? selectedCategory;
+  String? expandedMainCategoryFk;
 
   @override
   void initState() {
@@ -56,6 +58,10 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
           if (mounted) {
             setState(() {
               selectedCategory = getSelectedCategory;
+              // 若默认类别是子分类，则展开其所属主分类
+              if (getSelectedCategory?.mainCategoryPk != null) {
+                expandedMainCategoryFk = getSelectedCategory!.mainCategoryPk;
+              }
             });
           }
         });
@@ -271,49 +277,144 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
                   maxLines: 5,
                 ),
                 SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    Tappable(
-                      borderRadius: 15,
-                      color: selectedCategory == null
-                          ? Theme.of(context).colorScheme.primary
-                          : getColor(context, "lightDarkAccentHeavy"),
-                      onTap: () {
-                        setState(() {
-                          selectedCategory = null;
-                        });
-                        determineBottomButton();
-                      },
-                      child: Padding(
-                        padding: const EdgeInsetsDirectional.symmetric(
-                            horizontal: 12, vertical: 6),
-                        child: TextFont(
-                          text: "手动选择类别",
-                          fontSize: 13,
-                          fontWeight: selectedCategory == null
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          textColor: selectedCategory == null
-                              ? Theme.of(context).colorScheme.onPrimary
-                              : getColor(context, "black"),
+                StreamBuilder<List<TransactionCategory>>(
+                  stream: database.watchAllCategories(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData == false) return SizedBox.shrink();
+                    List<TransactionCategory> mainCategories = snapshot.data!
+                        .where((category) => category.mainCategoryPk == null)
+                        .toList();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SelectChips<TransactionCategory?>(
+                          wrapped: false,
+                          extraWidgetBeforeSticky: true,
+                          allowMultipleSelected: false,
+                          items: [null, ...mainCategories],
+                          getSelected: (TransactionCategory? category) {
+                            if (category == null)
+                              return selectedCategory == null;
+                            return selectedCategory?.categoryPk ==
+                                    category.categoryPk ||
+                                selectedCategory?.mainCategoryPk ==
+                                    category.categoryPk;
+                          },
+                          onSelected: (TransactionCategory? category) {
+                            setState(() {
+                              if (category == null) {
+                                selectedCategory = null;
+                                expandedMainCategoryFk = null;
+                              } else {
+                                // 再次点击已展开的主分类则收起
+                                if (expandedMainCategoryFk ==
+                                    category.categoryPk) {
+                                  expandedMainCategoryFk = null;
+                                } else {
+                                  expandedMainCategoryFk =
+                                      category.categoryPk;
+                                }
+                                selectedCategory = category;
+                              }
+                            });
+                            determineBottomButton();
+                          },
+                          getLabel: (TransactionCategory? category) {
+                            if (category == null) return "手动选择类别";
+                            return category.name;
+                          },
+                          getCustomBorderColor: (TransactionCategory? item) {
+                            return dynamicPastel(
+                              context,
+                              lightenPastel(
+                                HexColor(
+                                  item?.colour,
+                                  defaultColor:
+                                      Theme.of(context).colorScheme.primary,
+                                ),
+                                amount: 0.3,
+                              ),
+                              amount: 0.4,
+                            );
+                          },
+                          extraWidgetAfter: SelectChipsAddButtonExtraWidget(
+                            openPage: AddCategoryPage(
+                              routesToPopAfterDelete:
+                                  RoutesToPopAfterDelete.None,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 5),
-                SelectCategory(
-                  horizontalList: true,
-                  selectedCategory: selectedCategory,
-                  setSelectedCategory: (TransactionCategory category) {
-                    setState(() {
-                      selectedCategory = category;
-                    });
-                    determineBottomButton();
+                        // 点击主分类后，在下方展示其子分类供选择
+                        if (expandedMainCategoryFk != null)
+                          StreamBuilder<List<TransactionCategory>>(
+                            stream: database.watchAllCategories(
+                                mainCategoryPks: [expandedMainCategoryFk!]),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData == false ||
+                                  snapshot.data!.isEmpty) {
+                                return SizedBox.shrink();
+                              }
+                              return AnimatedExpanded(
+                                expand: true,
+                                child: Padding(
+                                  padding: const EdgeInsetsDirectional.only(
+                                      top: 8),
+                                  child: Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      for (TransactionCategory subCategory
+                                          in snapshot.data!)
+                                        Tappable(
+                                          borderRadius: 15,
+                                          color: selectedCategory
+                                                      ?.categoryPk ==
+                                                  subCategory.categoryPk
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                              : getColor(context,
+                                                  "lightDarkAccentHeavy"),
+                                          onTap: () {
+                                            setState(() {
+                                              selectedCategory = subCategory;
+                                            });
+                                            determineBottomButton();
+                                          },
+                                          child: Padding(
+                                            padding:
+                                                const EdgeInsetsDirectional
+                                                    .symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 6),
+                                            child: TextFont(
+                                              text: subCategory.name,
+                                              fontSize: 13,
+                                              fontWeight: selectedCategory
+                                                          ?.categoryPk ==
+                                                      subCategory.categoryPk
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                              textColor: selectedCategory
+                                                          ?.categoryPk ==
+                                                      subCategory.categoryPk
+                                                  ? Theme.of(context)
+                                                      .colorScheme
+                                                      .onPrimary
+                                                  : getColor(context,
+                                                      "black"),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                      ],
+                    );
                   },
-                  popRoute: false,
                 ),
               ],
             ),
