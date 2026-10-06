@@ -98,48 +98,83 @@ class _HomePageCategorySpendingListState
   }
 }
 
-class CategorySpendingTextList extends StatelessWidget {
+class CategorySpendingTextList extends StatefulWidget {
   const CategorySpendingTextList(
       {required this.isIncome, required this.showToday, super.key});
   final bool isIncome;
   final bool showToday;
 
   @override
+  State<CategorySpendingTextList> createState() =>
+      _CategorySpendingTextListState();
+}
+
+class _CategorySpendingTextListState extends State<CategorySpendingTextList> {
+  // 缓存 stream，避免每次 build（包括设置开关触发的全量重建）都重新订阅数据库
+  late final Stream<List<TransactionWallet>> _pinnedWalletsStream = database
+      .getAllPinnedWallets(HomePageWidgetDisplay.CategorySpendingList)
+      .$1;
+
+  Stream<List<CategoryWithTotal>>? _totalSpentStream;
+  String? _totalSpentStreamKey;
+
+  Stream<List<CategoryWithTotal>> _getTotalSpentStream(
+      BuildContext context, List<String>? walletPks) {
+    AllWallets allWallets = Provider.of<AllWallets>(context);
+    String key = [
+      walletPks?.join(",") ?? "all",
+      widget.isIncome,
+      widget.showToday,
+      appStateSettings["categorySpendingListAllWallets"],
+      appStateSettings["categorySpendingListIncomeAndExpenseOnly"],
+      allWallets.hashCode,
+    ].join("|");
+    if (_totalSpentStream == null || _totalSpentStreamKey != key) {
+      _totalSpentStreamKey = key;
+      _totalSpentStream =
+          database.watchTotalSpentInEachCategoryInTimeRangeFromCategories(
+        allWallets: allWallets,
+        start: DateTime.now(),
+        end: DateTime.now(),
+        categoryFks: null,
+        categoryFksExclude: null,
+        budgetTransactionFilters: null,
+        memberTransactionFilters: null,
+        allTime: widget.showToday ? false : true,
+        walletPks: walletPks,
+        isIncome: widget.isIncome,
+        followCustomPeriodCycle: widget.showToday ? false : true,
+        cycleSettingsExtension: "CategorySpendingList",
+        countUnassignedTransactions: true,
+        includeAllSubCategories: true,
+        searchFilters: SearchFilters(expenseIncome: [
+          if (appStateSettings["categorySpendingListIncomeAndExpenseOnly"] ==
+              true)
+            (widget.isIncome == true
+                ? ExpenseIncome.income
+                : ExpenseIncome.expense)
+        ]),
+      );
+    }
+    return _totalSpentStream!;
+  }
+
+  @override
   Widget build(BuildContext context) {
     AllWallets allWallets = Provider.of<AllWallets>(context);
     return StreamBuilder<List<TransactionWallet>>(
-      stream: database.getAllPinnedWallets(HomePageWidgetDisplay.CategorySpendingList).$1,
+      stream: _pinnedWalletsStream,
       builder: (context, snapshot) {
         if (snapshot.hasData ||
             appStateSettings["categorySpendingListAllWallets"] == true) {
           List<String>? walletPks =
               (snapshot.data ?? []).map((item) => item.walletPk).toList();
           if (walletPks.length <= 0 ||
-              appStateSettings["categorySpendingListAllWallets"] == true) walletPks = null;
+              appStateSettings["categorySpendingListAllWallets"] == true) {
+            walletPks = null;
+          }
           return StreamBuilder<List<CategoryWithTotal>>(
-            stream:
-                database.watchTotalSpentInEachCategoryInTimeRangeFromCategories(
-              allWallets: allWallets,
-              start: DateTime.now(),
-              end: DateTime.now(),
-              categoryFks: null,
-              categoryFksExclude: null,
-              budgetTransactionFilters: null,
-              memberTransactionFilters: null,
-              allTime: showToday ? false : true,
-              walletPks: walletPks,
-              isIncome: isIncome,
-              followCustomPeriodCycle: showToday ? false : true,
-              cycleSettingsExtension: "CategorySpendingList",
-              countUnassignedTransactions: true,
-              includeAllSubCategories: true,
-              searchFilters: SearchFilters(expenseIncome: [
-                if (appStateSettings["categorySpendingListIncomeAndExpenseOnly"] == true)
-                  (isIncome == true
-                      ? ExpenseIncome.income
-                      : ExpenseIncome.expense)
-              ]),
-            ),
+            stream: _getTotalSpentStream(context, walletPks),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 TotalSpentCategoriesSummary s =
@@ -156,7 +191,7 @@ class CategorySpendingTextList extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsetsDirectional.all(20),
                     child: TextFont(
-                      text: isIncome
+                      text: widget.isIncome
                           ? appStateSettings[
                                       "categorySpendingListIncomeAndExpenseOnly"] ==
                                   true
@@ -181,8 +216,8 @@ class CategorySpendingTextList extends StatelessWidget {
                         categoryWithTotal: item,
                         totalSpent: s.totalSpent,
                         allWallets: allWallets,
-                        isIncome: isIncome,
-                        showToday: showToday,
+                        isIncome: widget.isIncome,
+                        showToday: widget.showToday,
                       ),
                   ],
                 );
