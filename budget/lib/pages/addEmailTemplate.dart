@@ -6,8 +6,11 @@ import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/saveBottomButton.dart';
+import 'package:budget/widgets/selectCategory.dart';
 import 'package:budget/widgets/selectChips.dart';
+import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textInput.dart';
+import 'package:budget/widgets/textWidgets.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -33,6 +36,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
   String? selectedWalletPk;
   String? selectedName;
   String? selectedSubject;
+  TransactionCategory? selectedCategory;
 
   @override
   void initState() {
@@ -43,6 +47,19 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
           : widget.scannerTemplate!.walletFk;
       selectedName = widget.scannerTemplate!.templateName;
       selectedSubject = widget.scannerTemplate!.contains;
+      // 加载已有的默认类别（"-1" 表示未设置）
+      if (widget.scannerTemplate!.defaultCategoryFk != "-1") {
+        Future.delayed(Duration.zero, () async {
+          TransactionCategory? getSelectedCategory = await database
+              .getCategoryInstanceOrNull(
+                  widget.scannerTemplate!.defaultCategoryFk);
+          if (mounted) {
+            setState(() {
+              selectedCategory = getSelectedCategory;
+            });
+          }
+        });
+      }
     }
     determineBottomButton();
   }
@@ -95,8 +112,8 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
       amountTransactionAfter: "auto",
       amountTransactionBefore: "auto",
       contains: selectedSubject ?? "",
-      // 默认类别设置为-1，表示不使用类别
-      defaultCategoryFk: "-1",
+      // 默认类别：未选择（手动选择）时为 "-1"
+      defaultCategoryFk: selectedCategory?.categoryPk ?? "-1",
       templateName: selectedName ?? "",
       // 标题相关参数设为空字符串
       titleTransactionAfter: "",
@@ -231,6 +248,74 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
               openPage: AddWalletPage(
                 routesToPopAfterDelete: RoutesToPopAfterDelete.None,
               ),
+            ),
+          ),
+          SizedBox(height: 20),
+
+          // 默认类别选择（可选）- 识别失败时的兜底类别
+          Padding(
+            padding: const EdgeInsetsDirectional.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFont(
+                  text: "默认类别（可选）",
+                  textColor: getColor(context, "textLight"),
+                  fontSize: 16,
+                ),
+                SizedBox(height: 2),
+                TextFont(
+                  text: "识别不到类别时使用此兜底类别；选择“手动选择类别”则每次添加交易时手动选择。",
+                  textColor: getColor(context, "textLight"),
+                  fontSize: 11,
+                  maxLines: 5,
+                ),
+                SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    Tappable(
+                      borderRadius: 15,
+                      color: selectedCategory == null
+                          ? Theme.of(context).colorScheme.primary
+                          : getColor(context, "lightDarkAccentHeavy"),
+                      onTap: () {
+                        setState(() {
+                          selectedCategory = null;
+                        });
+                        determineBottomButton();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.symmetric(
+                            horizontal: 12, vertical: 6),
+                        child: TextFont(
+                          text: "手动选择类别",
+                          fontSize: 13,
+                          fontWeight: selectedCategory == null
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          textColor: selectedCategory == null
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : getColor(context, "black"),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 5),
+                SelectCategory(
+                  horizontalList: true,
+                  selectedCategory: selectedCategory,
+                  setSelectedCategory: (TransactionCategory category) {
+                    setState(() {
+                      selectedCategory = category;
+                    });
+                    determineBottomButton();
+                  },
+                  popRoute: false,
+                ),
+              ],
             ),
           ),
           SizedBox(height: 20),
