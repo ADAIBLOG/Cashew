@@ -312,6 +312,52 @@ class _PieChartHomeAndCategorySummaryState
   bool expandCategorySelection = false;
   bool showAllSubcategories = appStateSettings["showAllSubcategories"];
 
+  // 缓存 stream，避免设置开关触发的全量重建导致重复订阅数据库
+  late final Stream<List<TransactionWallet>> _pinnedWalletsStream =
+      database.getAllPinnedWallets(HomePageWidgetDisplay.PieChart).$1;
+  Stream<List<CategoryWithTotal>>? _totalSpentStream;
+  String? _totalSpentStreamKey;
+
+  Stream<List<CategoryWithTotal>> _getTotalSpentStream(
+      BuildContext context, List<String>? walletPks) {
+    AllWallets allWallets = Provider.of<AllWallets>(context);
+    String key = [
+      walletPks?.join(",") ?? "all",
+      widget.isIncome,
+      widget.showToday,
+      appStateSettings["pieChartAllWallets"],
+      appStateSettings["pieChartIncomeAndExpenseOnly"],
+      allWallets.hashCode,
+    ].join("|");
+    if (_totalSpentStream == null || _totalSpentStreamKey != key) {
+      _totalSpentStreamKey = key;
+      _totalSpentStream =
+          database.watchTotalSpentInEachCategoryInTimeRangeFromCategories(
+        allWallets: allWallets,
+        start: DateTime.now(),
+        end: DateTime.now(),
+        categoryFks: null,
+        categoryFksExclude: null,
+        budgetTransactionFilters: null,
+        memberTransactionFilters: null,
+        allTime: widget.showToday ? false : true,
+        walletPks: walletPks,
+        isIncome: widget.isIncome,
+        followCustomPeriodCycle: widget.showToday ? false : true,
+        cycleSettingsExtension: "PieChart",
+        countUnassignedTransactions: true,
+        includeAllSubCategories: true,
+        searchFilters: SearchFilters(expenseIncome: [
+          if (appStateSettings["pieChartIncomeAndExpenseOnly"] == true)
+            (widget.isIncome == true
+                ? ExpenseIncome.income
+                : ExpenseIncome.expense)
+        ]),
+      );
+    }
+    return _totalSpentStream!;
+  }
+
   @override
   void didUpdateWidget(covariant oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -355,7 +401,7 @@ class _PieChartHomeAndCategorySummaryState
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<TransactionWallet>>(
-      stream: database.getAllPinnedWallets(HomePageWidgetDisplay.PieChart).$1,
+      stream: _pinnedWalletsStream,
       builder: (context, snapshot) {
         if (snapshot.hasData ||
             appStateSettings["pieChartAllWallets"] == true) {
@@ -364,29 +410,7 @@ class _PieChartHomeAndCategorySummaryState
           if (walletPks.length <= 0 ||
               appStateSettings["pieChartAllWallets"] == true) walletPks = null;
           return StreamBuilder<List<CategoryWithTotal>>(
-            stream:
-                database.watchTotalSpentInEachCategoryInTimeRangeFromCategories(
-              allWallets: Provider.of<AllWallets>(context),
-              start: DateTime.now(),
-              end: DateTime.now(),
-              categoryFks: null,
-              categoryFksExclude: null,
-              budgetTransactionFilters: null,
-              memberTransactionFilters: null,
-              allTime: widget.showToday ? false : true,
-              walletPks: walletPks,
-              isIncome: widget.isIncome,
-              followCustomPeriodCycle: widget.showToday ? false : true,
-              cycleSettingsExtension: "PieChart",
-              countUnassignedTransactions: true,
-              includeAllSubCategories: true,
-              searchFilters: SearchFilters(expenseIncome: [
-                if (appStateSettings["pieChartIncomeAndExpenseOnly"] == true)
-                  (widget.isIncome == true
-                      ? ExpenseIncome.income
-                      : ExpenseIncome.expense)
-              ]),
-            ),
+            stream: _getTotalSpentStream(context, walletPks),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 TotalSpentCategoriesSummary s =
