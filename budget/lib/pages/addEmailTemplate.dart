@@ -344,7 +344,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
                             ),
                           ),
                         ),
-                        // 点击主分类后，在下方展示其子分类供选择
+                        // 点击主分类后，在下方以同样的 chips 形式展示其子分类供选择
                         if (expandedMainCategoryFk != null)
                           StreamBuilder<List<TransactionCategory>>(
                             stream: database.watchAllCategories(
@@ -359,54 +359,41 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
                                 child: Padding(
                                   padding: const EdgeInsetsDirectional.only(
                                       top: 8),
-                                  child: Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      for (TransactionCategory subCategory
-                                          in snapshot.data!)
-                                        Tappable(
-                                          borderRadius: 15,
-                                          color: selectedCategory
-                                                      ?.categoryPk ==
-                                                  subCategory.categoryPk
-                                              ? Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                              : getColor(context,
-                                                  "lightDarkAccentHeavy"),
-                                          onTap: () {
-                                            setState(() {
-                                              selectedCategory = subCategory;
-                                            });
-                                            determineBottomButton();
-                                          },
-                                          child: Padding(
-                                            padding:
-                                                const EdgeInsetsDirectional
-                                                    .symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 6),
-                                            child: TextFont(
-                                              text: subCategory.name,
-                                              fontSize: 13,
-                                              fontWeight: selectedCategory
-                                                          ?.categoryPk ==
-                                                      subCategory.categoryPk
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                              textColor: selectedCategory
-                                                          ?.categoryPk ==
-                                                      subCategory.categoryPk
-                                                  ? Theme.of(context)
-                                                      .colorScheme
-                                                      .onPrimary
-                                                  : getColor(context,
-                                                      "black"),
-                                            ),
+                                  child: SelectChips<TransactionCategory>(
+                                    wrapped: false,
+                                    extraWidgetBeforeSticky: true,
+                                    allowMultipleSelected: false,
+                                    items: snapshot.data!,
+                                    getSelected: (TransactionCategory category) {
+                                      return selectedCategory?.categoryPk ==
+                                          category.categoryPk;
+                                    },
+                                    onSelected:
+                                        (TransactionCategory category) {
+                                      setState(() {
+                                        selectedCategory = category;
+                                      });
+                                      determineBottomButton();
+                                    },
+                                    getLabel: (TransactionCategory category) {
+                                      return category.name;
+                                    },
+                                    getCustomBorderColor:
+                                        (TransactionCategory item) {
+                                      return dynamicPastel(
+                                        context,
+                                        lightenPastel(
+                                          HexColor(
+                                            item.colour,
+                                            defaultColor: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
                                           ),
+                                          amount: 0.3,
                                         ),
-                                    ],
+                                        amount: 0.4,
+                                      );
+                                    },
                                   ),
                                 ),
                               );
