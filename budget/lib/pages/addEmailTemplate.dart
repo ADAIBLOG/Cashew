@@ -189,7 +189,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
           Padding(
             padding: const EdgeInsetsDirectional.symmetric(horizontal: 20),
             child: TextInput(
-              labelText: "主题文本" + " (" + "用于识别交易的关键词" + ")",
+              labelText: "template-subject-label".tr(),
               bubbly: false,
               initialValue: selectedSubject,
               onChanged: (text) {
@@ -265,13 +265,13 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextFont(
-                  text: "默认类别（可选）",
+                  text: "default-category-optional".tr(),
                   textColor: getColor(context, "textLight"),
                   fontSize: 16,
                 ),
                 SizedBox(height: 2),
                 TextFont(
-                  text: "识别不到类别时使用此兜底类别；选择“手动选择类别”则每次添加交易时手动选择。",
+                  text: "default-category-optional-description".tr(),
                   textColor: getColor(context, "textLight"),
                   fontSize: 11,
                   maxLines: 5,
@@ -320,7 +320,8 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
                             determineBottomButton();
                           },
                           getLabel: (TransactionCategory? category) {
-                            if (category == null) return "手动选择类别";
+                            if (category == null)
+                              return "manual-select-category".tr();
                             return category.name;
                           },
                           getCustomBorderColor: (TransactionCategory? item) {
@@ -412,12 +413,17 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
           Padding(
             padding: const EdgeInsetsDirectional.symmetric(horizontal: 20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("使用说明:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text("1. 输入模板名称便于识别", style: TextStyle(fontSize: 14)),
-                Text("2. 输入主题文本（关键词）用于识别交易消息", style: TextStyle(fontSize: 14)),
-                Text("3. 选择交易将自动分配到的账户", style: TextStyle(fontSize: 14)),
-                Text("4. 金额将从消息中自动识别（支持¥\$€£等货币符号）", style: TextStyle(fontSize: 14)),
+                TextFont(
+                  text: "usage-instructions-title".tr(),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+                TextFont(text: "usage-instructions-1".tr(), fontSize: 14),
+                TextFont(text: "usage-instructions-2".tr(), fontSize: 14),
+                TextFont(text: "usage-instructions-3".tr(), fontSize: 14),
+                TextFont(text: "usage-instructions-4".tr(), fontSize: 14),
               ],
             ),
           ),
