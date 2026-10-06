@@ -641,6 +641,8 @@
   "correct-total-balance": "校正总余额",
   "default-category-account-amount-balancing": "余额校正",
   "negative-amount": "负数",
+  "correction-counted-in-statistics": "校准金额计入统计",
+  "correction-counted-in-statistics-description": "关闭后，余额校准产生的差额不会计入收入/支出等数据统计",
   "update-total-balance": "更新总余额",
   "updated-total-balance": "已更新总余额",
   "merge-account": "合并账户",
