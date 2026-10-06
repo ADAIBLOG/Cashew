@@ -625,8 +625,14 @@ class _ShowAccountLabelSettingToggleState
           description: "account-label-description".tr(),
           onSwitched: (value) {
             updateSettings("showAccountLabelTagInTransactionEntry", value,
-                updateGlobalState: true);
+                updateGlobalState: false);
             setState(() {});
+            // 延后刷新全局，避免全量重建导致展开动画卡顿
+            Future.delayed(const Duration(milliseconds: 450), () {
+              if (!mounted) return;
+              updateSettings("showAccountLabelTagInTransactionEntry", value,
+                  updateGlobalState: true, forceGlobalStateUpdate: true);
+            });
           },
           initialValue:
               appStateSettings["showAccountLabelTagInTransactionEntry"],
