@@ -121,6 +121,7 @@ Future<bool> runNotificationPayLoads(context) async {
         
         // 获取类别信息
         TransactionCategory? category;
+        TransactionCategory? subCategory;
         if (title != null) {
           TransactionAssociatedTitleWithCategory? foundTitle = 
               (await database.getSimilarAssociatedTitles(title: title, limit: 1)).firstOrNull;
@@ -129,6 +130,15 @@ Future<bool> runNotificationPayLoads(context) async {
         
         if (category == null && template != null) {
           category = await database.getCategoryInstanceOrNull(template.defaultCategoryFk);
+          // 默认类别为子分类时，拆分为主分类+子分类
+          if (category != null && category.mainCategoryPk != null) {
+            TransactionCategory? mainCategory = await database
+                .getCategoryInstanceOrNull(category.mainCategoryPk!);
+            if (mainCategory != null) {
+              subCategory = category;
+              category = mainCategory;
+            }
+          }
         }
         
         pushRoute(
@@ -139,6 +149,7 @@ Future<bool> runNotificationPayLoads(context) async {
             selectedAmount: amount,
             selectedTitle: title,
             selectedCategory: category,
+            selectedSubCategory: subCategory,
             startInitialAddTransactionSequence: false,
             selectedWallet: wallet,
             selectedDate: selectedDate,
