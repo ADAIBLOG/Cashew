@@ -1,6 +1,7 @@
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/pages/objectivesListPage.dart';
+import 'package:budget/struct/currencyFunctions.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/categoryIcon.dart';
@@ -21,6 +22,7 @@ class TransactionEntryTag extends StatelessWidget {
     this.objectiveLoan,
     this.showExcludedBudgetTag,
     this.showAccountTag = true,
+    this.showAccountBalance = false,
     super.key,
   });
   final Transaction transaction;
@@ -31,6 +33,7 @@ class TransactionEntryTag extends StatelessWidget {
   final Objective? objectiveLoan;
   final bool Function(Transaction transaction)? showExcludedBudgetTag;
   final bool showAccountTag;
+  final bool showAccountBalance;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +68,10 @@ class TransactionEntryTag extends StatelessWidget {
           int tagCount = tagsToShow.where((element) => element == true).length;
           List<Widget> tags = [
             // 0
-            AccountLabelTag(transaction: transaction),
+            AccountLabelTag(
+              transaction: transaction,
+              showBalance: showAccountBalance,
+            ),
             // 1
             Builder(builder: (context) {
               if (subCategory != null) {
@@ -191,8 +197,13 @@ class TransactionEntryTag extends StatelessWidget {
 }
 
 class AccountLabelTag extends StatelessWidget {
-  const AccountLabelTag({required this.transaction, super.key});
+  const AccountLabelTag({
+    required this.transaction,
+    this.showBalance = false,
+    super.key,
+  });
   final Transaction transaction;
+  final bool showBalance;
 
   @override
   Widget build(BuildContext context) {
@@ -205,6 +216,9 @@ class AccountLabelTag extends StatelessWidget {
       name: getWalletStringName(
           Provider.of<AllWallets>(context),
           Provider.of<AllWallets>(context).indexedByPk[transaction.walletFk]),
+      afterWidget: showBalance
+          ? WalletBalanceAfterTransactionText(transaction: transaction)
+          : null,
     );
   }
 }
@@ -282,6 +296,7 @@ class TransactionTag extends StatelessWidget {
   final EdgeInsetsDirectional padding;
   final Widget? leading;
   final double? progress;
+  final Widget? afterWidget;
 
   TransactionTag({
     required this.color,
@@ -291,6 +306,7 @@ class TransactionTag extends StatelessWidget {
         const EdgeInsetsDirectional.symmetric(horizontal: 4.5, vertical: 1.05),
     this.leading,
     this.progress,
+    this.afterWidget,
   });
 
   @override
@@ -324,6 +340,17 @@ class TransactionTag extends StatelessWidget {
                       : false,
             ),
           ),
+          if (afterWidget != null) ...[
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 3),
+              child: TextFont(
+                text: "·",
+                fontSize: 11.5,
+                textColor: getColor(context, "black").withOpacity(0.7),
+              ),
+            ),
+            Flexible(child: afterWidget!),
+          ],
         ],
       ),
     );
@@ -465,6 +492,92 @@ class SharedBudgetLabel extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class WalletBalanceAfterTransactionText extends StatefulWidget {
+  const WalletBalanceAfterTransactionText({
+    required this.transaction,
+    this.showPrefix = false,
+    this.fontSize = 11,
+    super.key,
+  });
+  final Transaction transaction;
+  final bool showPrefix;
+  final double fontSize;
+
+  @override
+  State<WalletBalanceAfterTransactionText> createState() =>
+      _WalletBalanceAfterTransactionTextState();
+}
+
+class _WalletBalanceAfterTransactionTextState
+    extends State<WalletBalanceAfterTransactionText> {
+  // 当前账户总余额（含余额校正）
+  late Stream<double?> _totalBalanceStream = database
+      .watchTotalOfWalletNoConversion(widget.transaction.walletFk);
+  // 该笔交易发生之后的净交易额
+  late Stream<double?> _transactionsAfterStream = database
+      .watchTotalOfWalletNoConversion(
+    widget.transaction.walletFk,
+    startDate: widget.transaction.dateCreated,
+  );
+
+  @override
+  void didUpdateWidget(covariant WalletBalanceAfterTransactionText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.transaction.transactionPk !=
+            widget.transaction.transactionPk ||
+        oldWidget.transaction.walletFk != widget.transaction.walletFk ||
+        oldWidget.transaction.dateCreated != widget.transaction.dateCreated) {
+      _totalBalanceStream = database
+          .watchTotalOfWalletNoConversion(widget.transaction.walletFk);
+      _transactionsAfterStream = database.watchTotalOfWalletNoConversion(
+        widget.transaction.walletFk,
+        startDate: widget.transaction.dateCreated,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    AllWallets allWallets = Provider.of<AllWallets>(context);
+    TransactionWallet? wallet =
+        allWallets.indexedByPk[widget.transaction.walletFk];
+    return StreamBuilder<double?>(
+      stream: _totalBalanceStream,
+      builder: (context, snapshotTotal) {
+        return StreamBuilder<double?>(
+          stream: _transactionsAfterStream,
+          builder: (context, snapshotAfter) {
+            if (snapshotTotal.hasData == false ||
+                snapshotAfter.hasData == false) {
+              return const SizedBox.shrink();
+            }
+            double totalBalance = snapshotTotal.data ?? 0;
+            double transactionsAfter = snapshotAfter.data ?? 0;
+            // 该笔交易发生后的账户剩余余额
+            double remainingBalance = totalBalance - transactionsAfter;
+            String moneyText = convertToMoney(
+              allWallets,
+              remainingBalance,
+              currencyKey: wallet?.currency,
+              decimals: wallet?.decimals,
+            );
+            return TextFont(
+              text: widget.showPrefix
+                  ? "balance-after-transaction".tr().replaceAll("{}", moneyText)
+                  : moneyText,
+              fontSize: widget.fontSize,
+              maxLines: 1,
+              overflow: TextOverflow.fade,
+              softWrap: false,
+              textColor: getColor(context, "black").withOpacity(0.7),
+            );
+          },
+        );
+      },
     );
   }
 }
