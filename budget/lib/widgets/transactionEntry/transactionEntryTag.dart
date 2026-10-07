@@ -16,24 +16,24 @@ class TransactionEntryTag extends StatelessWidget {
   const TransactionEntryTag({
     required this.transaction,
     this.showObjectivePercentage = true,
+    this.category,
     this.subCategory,
     this.budget,
     this.objective,
     this.objectiveLoan,
     this.showExcludedBudgetTag,
     this.showAccountTag = true,
-    this.showAccountBalanceSeparate = false,
     super.key,
   });
   final Transaction transaction;
   final bool showObjectivePercentage;
+  final TransactionCategory? category;
   final TransactionCategory? subCategory;
   final Budget? budget;
   final Objective? objective;
   final Objective? objectiveLoan;
   final bool Function(Transaction transaction)? showExcludedBudgetTag;
   final bool showAccountTag;
-  final bool showAccountBalanceSeparate;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +59,10 @@ class TransactionEntryTag extends StatelessWidget {
             showAccountTag &&
                 appStateSettings["showAccountLabelTagInTransactionEntry"] ==
                     true, //0
-            transaction.subCategoryFk != null, //1
+            // 有子分类时显示子分类标签；无子分类但有标题时显示主分类标签
+            transaction.subCategoryFk != null ||
+                (transaction.subCategoryFk == null &&
+                    transaction.name.toString().trim() != ""), //1
             transaction.sharedReferenceBudgetPk != null, //2
             transaction.objectiveLoanFk != null, //3
             transaction.objectiveFk != null, //4
@@ -73,6 +76,21 @@ class TransactionEntryTag extends StatelessWidget {
             Builder(builder: (context) {
               if (subCategory != null) {
                 return SubCategoryTag(category: subCategory!);
+              } else if (transaction.subCategoryFk == null) {
+                // 主分类标签
+                if (category != null) {
+                  return SubCategoryTag(category: category!);
+                }
+                return StreamBuilder<TransactionCategory?>(
+                  stream: database.getCategory(transaction.categoryFk).$1,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      TransactionCategory? category = snapshot.data!;
+                      return SubCategoryTag(category: category);
+                    }
+                    return SizedBox.shrink();
+                  },
+                );
               } else {
                 return StreamBuilder<TransactionCategory?>(
                   stream: database.getCategory(transaction.subCategoryFk!).$1,
@@ -178,14 +196,7 @@ class TransactionEntryTag extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  if (tagsToShow[0]) Flexible(child: tags[0]),
-                  // 账户标签在左侧时，余额作为独立胶囊显示在账户标签旁
-                  if (showAccountBalanceSeparate && tagsToShow[0])
-                    Flexible(
-                      child: WalletBalanceAfterTransactionTag(
-                          transaction: transaction),
-                    ),
-                  for (int i = 1; i < tags.length; i++)
+                  for (int i = 0; i < tags.length; i++)
                     if (tagsToShow[i]) Flexible(child: tags[i])
                 ],
               ),
@@ -203,11 +214,9 @@ class TransactionEntryTag extends StatelessWidget {
 class AccountLabelTag extends StatelessWidget {
   const AccountLabelTag({
     required this.transaction,
-    this.showBalance = false,
     super.key,
   });
   final Transaction transaction;
-  final bool showBalance;
 
   @override
   Widget build(BuildContext context) {
@@ -220,9 +229,6 @@ class AccountLabelTag extends StatelessWidget {
       name: getWalletStringName(
           Provider.of<AllWallets>(context),
           Provider.of<AllWallets>(context).indexedByPk[transaction.walletFk]),
-      afterWidget: showBalance
-          ? WalletBalanceAfterTransactionText(transaction: transaction)
-          : null,
     );
   }
 }
@@ -330,7 +336,6 @@ class TransactionTag extends StatelessWidget {
   final EdgeInsetsDirectional padding;
   final Widget? leading;
   final double? progress;
-  final Widget? afterWidget;
 
   TransactionTag({
     required this.color,
@@ -340,7 +345,6 @@ class TransactionTag extends StatelessWidget {
         const EdgeInsetsDirectional.symmetric(horizontal: 4.5, vertical: 1.05),
     this.leading,
     this.progress,
-    this.afterWidget,
   });
 
   @override
@@ -374,17 +378,6 @@ class TransactionTag extends StatelessWidget {
                       : false,
             ),
           ),
-          if (afterWidget != null) ...[
-            Padding(
-              padding: const EdgeInsetsDirectional.only(start: 3),
-              child: TextFont(
-                text: "·",
-                fontSize: 11.5,
-                textColor: getColor(context, "black").withOpacity(0.7),
-              ),
-            ),
-            Flexible(child: afterWidget!),
-          ],
         ],
       ),
     );
@@ -533,12 +526,10 @@ class SharedBudgetLabel extends StatelessWidget {
 class WalletBalanceAfterTransactionText extends StatefulWidget {
   const WalletBalanceAfterTransactionText({
     required this.transaction,
-    this.showPrefix = false,
     this.fontSize = 11,
     super.key,
   });
   final Transaction transaction;
-  final bool showPrefix;
   final double fontSize;
 
   @override
@@ -603,9 +594,7 @@ class _WalletBalanceAfterTransactionTextState
               decimals: wallet?.decimals,
             );
             return TextFont(
-              text: widget.showPrefix
-                  ? "balance-after-transaction".tr().replaceAll("{}", moneyText)
-                  : moneyText,
+              text: moneyText,
               fontSize: widget.fontSize,
               maxLines: 1,
               overflow: TextOverflow.fade,
