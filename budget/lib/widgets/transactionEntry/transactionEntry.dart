@@ -417,28 +417,22 @@ class TransactionEntry extends StatelessWidget {
       Widget tags = TransactionEntryTag(
         transaction: transaction,
         showObjectivePercentage: showObjectivePercentage,
+        category: category,
         subCategory: subCategory,
         budget: budget,
         objective: objective,
         objectiveLoan: objectiveLoan,
         showExcludedBudgetTag: showExcludedBudgetTag,
         showAccountTag: !showTagOnRight,
-        // 标签在左侧时，余额作为独立胶囊显示在账户标签旁；
-        // 标签在右侧时，余额融合进账户标签（见下方 AccountLabelTag.showBalance）
-        showAccountBalanceSeparate:
-            showWalletBalanceAfterTransaction && !showTagOnRight,
       );
       Widget noteIcon = TransactionEntryNote(
         transaction: transaction,
         iconColor: iconColor,
       );
-      // 开启账户标签时，余额融合显示在账户标签内；未开启时独立显示在金额下方
-      Widget walletBalanceAfterTransaction =
-          (showWalletBalanceAfterTransaction && showAccountLabel == false)
-              ? WalletBalanceAfterTransaction(
-                  transaction: transaction,
-                  fontSize: fontSize - 5,
-                )
+      // 余额胶囊：固定显示在金额下方；账户标签在右侧时与之并排
+      Widget walletBalanceAfterTransactionTag =
+          showWalletBalanceAfterTransaction
+              ? WalletBalanceAfterTransactionTag(transaction: transaction)
               : SizedBox.shrink();
       bool showNote = transaction.note.toString().trim() != "";
       Widget note = Row(
@@ -604,15 +598,16 @@ class TransactionEntry extends StatelessWidget {
                             amount,
                           ],
                         ),
-                        if (appStateSettings[
-                                "showAccountLabelTagInTransactionEntry"] ==
-                            true)
-                          AccountLabelTag(
-                            transaction: transaction,
-                            showBalance:
-                                showWalletBalanceAfterTransaction,
-                          ),
-                        walletBalanceAfterTransaction,
+                        Wrap(
+                          alignment: WrapAlignment.end,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            // 账户标签在右侧时，与余额胶囊并排
+                            if (showAccountLabel)
+                              AccountLabelTag(transaction: transaction),
+                            walletBalanceAfterTransactionTag,
+                          ],
+                        ),
                       ],
                     )
                   else ...[
@@ -623,7 +618,7 @@ class TransactionEntry extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         amount,
-                        walletBalanceAfterTransaction,
+                        walletBalanceAfterTransactionTag,
                       ],
                     ),
                   ],
@@ -1062,29 +1057,6 @@ class TransactionSelectionCheck extends StatelessWidget {
               ),
             )
           : Container(width: 7 + 8),
-    );
-  }
-}
-
-class WalletBalanceAfterTransaction extends StatelessWidget {
-  const WalletBalanceAfterTransaction({
-    required this.transaction,
-    this.fontSize = 12,
-    super.key,
-  });
-  final Transaction transaction;
-  final double fontSize;
-
-  @override
-  Widget build(BuildContext context) {
-    // 仅在不显示账户标签时独立使用（带“剩余”前缀）
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(top: 2),
-      child: WalletBalanceAfterTransactionText(
-        transaction: transaction,
-        showPrefix: true,
-        fontSize: fontSize,
-      ),
     );
   }
 }
