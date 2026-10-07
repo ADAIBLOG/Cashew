@@ -423,6 +423,14 @@ class TransactionEntry extends StatelessWidget {
         transaction: transaction,
         iconColor: iconColor,
       );
+      bool showWalletBalanceAfterTransaction =
+          appStateSettings["showWalletBalanceAfterTransaction"] == true;
+      Widget walletBalanceAfterTransaction = showWalletBalanceAfterTransaction
+          ? WalletBalanceAfterTransaction(
+              transaction: transaction,
+              fontSize: fontSize - 5,
+            )
+          : SizedBox.shrink();
       bool showNote = transaction.note.toString().trim() != "";
       Widget note = Row(
         children: [
@@ -591,11 +599,20 @@ class TransactionEntry extends StatelessWidget {
                                 "showAccountLabelTagInTransactionEntry"] ==
                             true)
                           AccountLabelTag(transaction: transaction),
+                        walletBalanceAfterTransaction,
                       ],
                     )
                   else ...[
                     noteIcon,
-                    amount,
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        amount,
+                        walletBalanceAfterTransaction,
+                      ],
+                    ),
                   ],
                 ],
               ),
@@ -1032,6 +1049,91 @@ class TransactionSelectionCheck extends StatelessWidget {
               ),
             )
           : Container(width: 7 + 8),
+    );
+  }
+}
+
+class WalletBalanceAfterTransaction extends StatefulWidget {
+  const WalletBalanceAfterTransaction({
+    required this.transaction,
+    this.fontSize = 12,
+    super.key,
+  });
+  final Transaction transaction;
+  final double fontSize;
+
+  @override
+  State<WalletBalanceAfterTransaction> createState() =>
+      _WalletBalanceAfterTransactionState();
+}
+
+class _WalletBalanceAfterTransactionState
+    extends State<WalletBalanceAfterTransaction> {
+  // 当前账户总余额（含余额校正）
+  late Stream<double?> _totalBalanceStream = database
+      .watchTotalOfWalletNoConversion(widget.transaction.walletFk);
+  // 该笔交易发生之后的净交易额
+  late Stream<double?> _transactionsAfterStream = database
+      .watchTotalOfWalletNoConversion(
+    widget.transaction.walletFk,
+    startDate: widget.transaction.dateCreated,
+  );
+
+  @override
+  void didUpdateWidget(covariant WalletBalanceAfterTransaction oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.transaction.transactionPk !=
+            widget.transaction.transactionPk ||
+        oldWidget.transaction.walletFk != widget.transaction.walletFk ||
+        oldWidget.transaction.dateCreated != widget.transaction.dateCreated) {
+      _totalBalanceStream = database
+          .watchTotalOfWalletNoConversion(widget.transaction.walletFk);
+      _transactionsAfterStream = database.watchTotalOfWalletNoConversion(
+        widget.transaction.walletFk,
+        startDate: widget.transaction.dateCreated,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    AllWallets allWallets = Provider.of<AllWallets>(context);
+    TransactionWallet? wallet =
+        allWallets.indexedByPk[widget.transaction.walletFk];
+    return StreamBuilder<double?>(
+      stream: _totalBalanceStream,
+      builder: (context, snapshotTotal) {
+        return StreamBuilder<double?>(
+          stream: _transactionsAfterStream,
+          builder: (context, snapshotAfter) {
+            if (snapshotTotal.hasData == false ||
+                snapshotAfter.hasData == false) {
+              return const SizedBox.shrink();
+            }
+            double totalBalance = snapshotTotal.data ?? 0;
+            double transactionsAfter = snapshotAfter.data ?? 0;
+            // 该笔交易发生后的账户剩余余额
+            double remainingBalance = totalBalance - transactionsAfter;
+            return Padding(
+              padding: const EdgeInsetsDirectional.only(top: 2),
+              child: TextFont(
+                text: "balance-after-transaction".tr(args: [
+                  convertToMoney(
+                    allWallets,
+                    remainingBalance,
+                    currencyKey: wallet?.currency,
+                    decimals: wallet?.decimals,
+                  )
+                ]),
+                fontSize: widget.fontSize,
+                maxLines: 1,
+                textColor: Theme.of(context).colorScheme.secondary,
+                textAlign: TextAlign.end,
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
