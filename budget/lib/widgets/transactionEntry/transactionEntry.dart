@@ -15,6 +15,7 @@ import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/transactionEntry/transactionEntryTypeButton.dart';
 import 'package:budget/widgets/transactionEntry/transactionLabel.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -1117,14 +1118,15 @@ class _WalletBalanceAfterTransactionState
             return Padding(
               padding: const EdgeInsetsDirectional.only(top: 2),
               child: TextFont(
-                text: "balance-after-transaction".tr(args: [
-                  convertToMoney(
-                    allWallets,
-                    remainingBalance,
-                    currencyKey: wallet?.currency,
-                    decimals: wallet?.decimals,
-                  )
-                ]),
+                text: "balance-after-transaction".tr().replaceAll(
+                "{}",
+                convertToMoney(
+                  allWallets,
+                  remainingBalance,
+                  currencyKey: wallet?.currency,
+                  decimals: wallet?.decimals,
+                ),
+              ),
                 fontSize: widget.fontSize,
                 maxLines: 1,
                 textColor: Theme.of(context).colorScheme.secondary,
