@@ -22,7 +22,7 @@ class TransactionEntryTag extends StatelessWidget {
     this.objectiveLoan,
     this.showExcludedBudgetTag,
     this.showAccountTag = true,
-    this.showAccountBalance = false,
+    this.showAccountBalanceSeparate = false,
     super.key,
   });
   final Transaction transaction;
@@ -33,7 +33,7 @@ class TransactionEntryTag extends StatelessWidget {
   final Objective? objectiveLoan;
   final bool Function(Transaction transaction)? showExcludedBudgetTag;
   final bool showAccountTag;
-  final bool showAccountBalance;
+  final bool showAccountBalanceSeparate;
 
   @override
   Widget build(BuildContext context) {
@@ -68,10 +68,7 @@ class TransactionEntryTag extends StatelessWidget {
           int tagCount = tagsToShow.where((element) => element == true).length;
           List<Widget> tags = [
             // 0
-            AccountLabelTag(
-              transaction: transaction,
-              showBalance: showAccountBalance,
-            ),
+            AccountLabelTag(transaction: transaction),
             // 1
             Builder(builder: (context) {
               if (subCategory != null) {
@@ -181,7 +178,14 @@ class TransactionEntryTag extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  for (int i = 0; i < tags.length; i++)
+                  if (tagsToShow[0]) Flexible(child: tags[0]),
+                  // 账户标签在左侧时，余额作为独立胶囊显示在账户标签旁
+                  if (showAccountBalanceSeparate && tagsToShow[0])
+                    Flexible(
+                      child: WalletBalanceAfterTransactionTag(
+                          transaction: transaction),
+                    ),
+                  for (int i = 1; i < tags.length; i++)
                     if (tagsToShow[i]) Flexible(child: tags[i])
                 ],
               ),
@@ -219,6 +223,36 @@ class AccountLabelTag extends StatelessWidget {
       afterWidget: showBalance
           ? WalletBalanceAfterTransactionText(transaction: transaction)
           : null,
+    );
+  }
+}
+
+class WalletBalanceAfterTransactionTag extends StatelessWidget {
+  const WalletBalanceAfterTransactionTag({
+    required this.transaction,
+    super.key,
+  });
+  final Transaction transaction;
+
+  @override
+  Widget build(BuildContext context) {
+    // 与账户标签胶囊样式一致，独立显示交易后的账户余额
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: 3),
+      child: Container(
+        decoration: BoxDecoration(
+          color: HexColor(
+                  Provider.of<AllWallets>(context)
+                      .indexedByPk[transaction.walletFk]
+                      ?.colour,
+                  defaultColor: Theme.of(context).colorScheme.primary)
+              .withOpacity(0.25),
+          borderRadius: BorderRadiusDirectional.circular(6),
+        ),
+        padding: const EdgeInsetsDirectional.symmetric(
+            horizontal: 4.5, vertical: 1.05),
+        child: WalletBalanceAfterTransactionText(transaction: transaction),
+      ),
     );
   }
 }
@@ -551,10 +585,13 @@ class _WalletBalanceAfterTransactionTextState
         return StreamBuilder<double?>(
           stream: _transactionsAfterStream,
           builder: (context, snapshotAfter) {
-            if (snapshotTotal.hasData == false ||
-                snapshotAfter.hasData == false) {
+            // 等待首个数据到达，避免初始布局跳动
+            if (snapshotTotal.connectionState == ConnectionState.waiting ||
+                snapshotAfter.connectionState == ConnectionState.waiting) {
               return const SizedBox.shrink();
             }
+            // 注意：查询无结果时流会发出 null（表示金额为 0），
+            // 不能使用 hasData 判断，否则最新一笔交易（之后无交易）将永远不显示余额
             double totalBalance = snapshotTotal.data ?? 0;
             double transactionsAfter = snapshotAfter.data ?? 0;
             // 该笔交易发生后的账户剩余余额
