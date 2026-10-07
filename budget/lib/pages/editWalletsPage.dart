@@ -669,6 +669,26 @@ class TransactionEntryTagPositionSetting extends StatelessWidget {
   }
 }
 
+class ShowWalletBalanceAfterTransactionSettingToggle extends StatelessWidget {
+  const ShowWalletBalanceAfterTransactionSettingToggle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsContainerSwitch(
+      title: "show-wallet-balance-after-transaction".tr(),
+      description: "show-wallet-balance-after-transaction-description".tr(),
+      onSwitched: (value) {
+        updateSettings("showWalletBalanceAfterTransaction", value,
+            updateGlobalState: false, pagesNeedingRefresh: [0, 1]);
+      },
+      initialValue: appStateSettings["showWalletBalanceAfterTransaction"],
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.account_balance_outlined
+          : Icons.account_balance_rounded,
+    );
+  }
+}
+
 class ShowCurrencyLabelSettingToggle extends StatelessWidget {
   const ShowCurrencyLabelSettingToggle({super.key});
 
@@ -778,6 +798,7 @@ class WalletsSettings extends StatelessWidget {
     return Column(
       children: [
         ShowAccountLabelSettingToggle(),
+        ShowWalletBalanceAfterTransactionSettingToggle(),
         ShowCurrencyLabelSettingToggle(),
         ExchangeRateSettingPage(backgroundColor: backgroundColor),
       ],
