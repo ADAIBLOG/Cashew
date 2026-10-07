@@ -423,7 +423,10 @@ class TransactionEntry extends StatelessWidget {
         objectiveLoan: objectiveLoan,
         showExcludedBudgetTag: showExcludedBudgetTag,
         showAccountTag: !showTagOnRight,
-        showAccountBalance: showWalletBalanceAfterTransaction,
+        // 标签在左侧时，余额作为独立胶囊显示在账户标签旁；
+        // 标签在右侧时，余额融合进账户标签（见下方 AccountLabelTag.showBalance）
+        showAccountBalanceSeparate:
+            showWalletBalanceAfterTransaction && !showTagOnRight,
       );
       Widget noteIcon = TransactionEntryNote(
         transaction: transaction,
