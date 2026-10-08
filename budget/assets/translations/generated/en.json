@@ -847,6 +847,8 @@
   "show-wallet-balance-after-transaction": "Show Wallet Balance After Transaction",
   "show-wallet-balance-after-transaction-description": "Show the remaining wallet balance after each transaction in the bottom-right corner",
   "balance-after-transaction": "Balance {}",
+  "balance-after-collected": "Balance after collected {}",
+  "balance-after-repaid": "Balance after repaid {}",
   "only-income-categories": "Only Income Categories",
   "only-expense-categories": "Only Expense Categories",
   "transfer-in": "Transfer In",
