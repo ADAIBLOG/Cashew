@@ -882,6 +882,8 @@
   "show-wallet-balance-after-transaction": "显示交易后账户余额",
   "show-wallet-balance-after-transaction-description": "在交易明细右下角显示该笔交易发生后的账户剩余余额",
   "balance-after-transaction": "剩余 {}",
+  "balance-after-collected": "收完后余额 {}",
+  "balance-after-repaid": "归还后余额 {}",
   "only-income-categories": "仅收入类别",
   "only-expense-categories": "仅支出类别",
   "transfer-in": "迁入",
