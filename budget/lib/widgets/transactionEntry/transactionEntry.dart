@@ -430,10 +430,24 @@ class TransactionEntry extends StatelessWidget {
         iconColor: iconColor,
       );
       // 余额胶囊：固定显示在金额下方；账户标签在右侧时与之并排
-      Widget walletBalanceAfterTransactionTag =
-          showWalletBalanceAfterTransaction
-              ? WalletBalanceAfterTransactionTag(transaction: transaction)
-              : SizedBox.shrink();
+      // 借贷（credit/debt）条目：未结清（待收/待还，paid=true）时显示
+      // 「结清后的账户余额」，已结清（paid=false）后不再显示
+      Widget walletBalanceAfterTransactionTag;
+      if (showWalletBalanceAfterTransaction == false) {
+        walletBalanceAfterTransactionTag = SizedBox.shrink();
+      } else if (transaction.type == TransactionSpecialType.credit ||
+          transaction.type == TransactionSpecialType.debt) {
+        walletBalanceAfterTransactionTag = transaction.paid
+            ? WalletBalanceAfterCreditDebtTag(
+                transaction: transaction,
+                isCredit:
+                    transaction.type == TransactionSpecialType.credit,
+              )
+            : SizedBox.shrink();
+      } else {
+        walletBalanceAfterTransactionTag =
+            WalletBalanceAfterTransactionTag(transaction: transaction);
+      }
       bool showNote = transaction.note.toString().trim() != "";
       Widget note = Row(
         children: [
