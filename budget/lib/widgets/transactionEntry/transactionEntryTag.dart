@@ -263,6 +263,92 @@ class WalletBalanceAfterTransactionTag extends StatelessWidget {
   }
 }
 
+class WalletBalanceAfterCreditDebtTag extends StatefulWidget {
+  const WalletBalanceAfterCreditDebtTag({
+    required this.transaction,
+    required this.isCredit,
+    super.key,
+  });
+  final Transaction transaction;
+  final bool isCredit;
+
+  @override
+  State<WalletBalanceAfterCreditDebtTag> createState() =>
+      _WalletBalanceAfterCreditDebtTagState();
+}
+
+class _WalletBalanceAfterCreditDebtTagState
+    extends State<WalletBalanceAfterCreditDebtTag> {
+  // 当前账户总余额（未结清借贷计入其中）
+  late Stream<double?> _totalBalanceStream = database
+      .watchTotalOfWalletNoConversion(widget.transaction.walletFk);
+
+  @override
+  void didUpdateWidget(covariant WalletBalanceAfterCreditDebtTag oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.transaction.transactionPk !=
+            widget.transaction.transactionPk ||
+        oldWidget.transaction.walletFk != widget.transaction.walletFk) {
+      _totalBalanceStream = database
+          .watchTotalOfWalletNoConversion(widget.transaction.walletFk);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    AllWallets allWallets = Provider.of<AllWallets>(context);
+    TransactionWallet? wallet =
+        allWallets.indexedByPk[widget.transaction.walletFk];
+    return StreamBuilder<double?>(
+      stream: _totalBalanceStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox.shrink();
+        }
+        double totalBalance = snapshot.data ?? 0;
+        // 借出（credit）：amount 为负，收回后余额增加 → 总额 - amount；
+        // 借入（debt）：amount 为正，归还后余额减少 → 总额 - amount。
+        // 两种情况下“结清后的账户余额”都等于 当前总额 - 该笔金额。
+        double balanceAfter = totalBalance - widget.transaction.amount;
+        String moneyText = convertToMoney(
+          allWallets,
+          balanceAfter,
+          currencyKey: wallet?.currency,
+          decimals: wallet?.decimals,
+        );
+        return Padding(
+          padding: const EdgeInsetsDirectional.only(start: 3),
+          child: Container(
+            decoration: BoxDecoration(
+              color: HexColor(
+                      Provider.of<AllWallets>(context)
+                          .indexedByPk[widget.transaction.walletFk]
+                          ?.colour,
+                      defaultColor: Theme.of(context).colorScheme.primary)
+                  .withOpacity(0.25),
+              borderRadius: BorderRadiusDirectional.circular(6),
+            ),
+            padding: const EdgeInsetsDirectional.symmetric(
+                horizontal: 4.5, vertical: 1.05),
+            child: TextFont(
+              text: (widget.isCredit
+                      ? "balance-after-collected"
+                      : "balance-after-repaid")
+                  .tr()
+                  .replaceAll("{}", moneyText),
+              fontSize: 11,
+              maxLines: 1,
+              overflow: TextOverflow.fade,
+              softWrap: false,
+              textColor: getColor(context, "black").withOpacity(0.7),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class SubCategoryTag extends StatelessWidget {
   const SubCategoryTag({required this.category, super.key});
   final TransactionCategory category;
