@@ -40,9 +40,10 @@ class TransactionScannerService : NotificationListenerService() {
 
         fun isAccessGranted(context: Context): Boolean {
             return try {
+                // Settings.Secure.ENABLED_NOTIFICATION_LISTENERS 是 @hide 常量，公开 SDK 编译不到，使用字符串字面量
                 val flat = Settings.Secure.getString(
                     context.contentResolver,
-                    Settings.Secure.ENABLED_NOTIFICATION_LISTENERS,
+                    "enabled_notification_listeners",
                 ) ?: return false
                 val component = ComponentName(context, TransactionScannerService::class.java)
                 flat.split(":").any { it == component.flattenToString() }
