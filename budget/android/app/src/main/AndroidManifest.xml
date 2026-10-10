@@ -102,6 +102,8 @@
         <service android:label="notifications" android:name="com.budget.tracker_app.TransactionScannerService"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true"
             android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="notification_listener_keepalive" />
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
