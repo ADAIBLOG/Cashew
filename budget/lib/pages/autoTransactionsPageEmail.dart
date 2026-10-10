@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:budget/database/tables.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:budget/pages/addEmailTemplate.dart';
@@ -8,6 +7,7 @@ import 'package:budget/pages/editCategoriesPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/struct/notificationsGlobal.dart';
+import 'package:budget/struct/initializeNotifications.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/navigationFramework.dart';
@@ -25,15 +25,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:budget/functions.dart';
-import 'package:notification_listener_service/notification_event.dart';
-import 'package:notification_listener_service/notification_listener_service.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'addButton.dart';
 
-StreamSubscription<ServiceNotificationEvent>? notificationListenerSubscription;
 Timer? _notificationHealthCheckTimer;
-int _notificationIdCounter = 0;
 
 final int maxCapturedNotifications = 20;
 List<String> recentCapturedNotifications = [];
@@ -51,48 +46,46 @@ Future<bool> forceRestartNotificationListenerService() async {
   }
 }
 
+Future<bool> isNotificationAccessGrantedNative() async {
+  try {
+    return await _notificationListenerNativeChannel
+            .invokeMethod<bool>('isNotificationAccessGranted') ??
+        false;
+  } catch (e) {
+    return false;
+  }
+}
+
+Future<void> openNotificationAccessSettingsNative() async {
+  try {
+    await _notificationListenerNativeChannel
+        .invokeMethod('openNotificationAccessSettings');
+  } catch (e) {}
+}
+
+Future<String?> getPendingNativeTransactionPayload() async {
+  try {
+    return await _notificationListenerNativeChannel
+        .invokeMethod<String>('getPendingTransactionPayload');
+  } catch (e) {
+    return null;
+  }
+}
+
 Future initNotificationScanning() async {
   if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return;
-  notificationListenerSubscription?.cancel();
   if (appStateSettings["notificationScanning"] != true) {
     _stopHealthCheck();
     return;
   }
 
-  bool status = await NotificationListenerService.isPermissionGranted();
+  bool status = await isNotificationAccessGrantedNative();
   if (status == true) {
-    try {
-      notificationListenerSubscription =
-          NotificationListenerService.notificationsStream.listen(
-            onNotification,
-            onError: _onNotificationStreamError,
-            cancelOnError: false,
-          );
-    } catch (e) {
-      _scheduleReconnect();
-    }
+    _startHealthCheck();
   } else {
     await updateSettings("notificationScanning", false, updateGlobalState: false);
     _stopHealthCheck();
-    return;
   }
-
-  _startHealthCheck();
-}
-
-void _onNotificationStreamError(Object error) {
-  notificationListenerSubscription?.cancel();
-  notificationListenerSubscription = null;
-  _scheduleReconnect();
-}
-
-void _scheduleReconnect() {
-  _stopHealthCheck();
-  Future.delayed(const Duration(seconds: 30), () {
-    if (appStateSettings["notificationScanning"] == true) {
-      initNotificationScanning();
-    }
-  });
 }
 
 void _startHealthCheck() {
@@ -108,15 +101,11 @@ void _startHealthCheck() {
         return;
       }
 
-      bool hasPermission = await NotificationListenerService.isPermissionGranted();
+      bool hasPermission = await isNotificationAccessGrantedNative();
       if (!hasPermission) {
         await updateSettings("notificationScanning", false, updateGlobalState: false);
         _stopHealthCheck();
         return;
-      }
-
-      if (notificationListenerSubscription == null) {
-        initNotificationScanning();
       }
     },
   );
@@ -128,34 +117,35 @@ void _stopHealthCheck() {
 }
 
 Future<bool> requestReadNotificationPermission() async {
-  bool status = await NotificationListenerService.isPermissionGranted();
+  bool status = await isNotificationAccessGrantedNative();
   if (status != true) {
-    // 请求权限，用户可能会被引导到系统设置页面
-    // 当用户从系统设置页面返回时，重新检查权限状态
-    await NotificationListenerService.requestPermission();
-    // 重新检查权限状态，因为用户可能在系统设置中手动授予或拒绝了权限
-    // 即使权限请求被取消或用户点击返回，也需要重新检查当前的权限状态
-    status = await NotificationListenerService.isPermissionGranted();
+    // 用户可能会被引导到系统设置页面；返回后由 onResume / 健康检查重新校验
+    await openNotificationAccessSettingsNative();
+    status = await isNotificationAccessGrantedNative();
   }
   return status;
 }
 
-onNotification(ServiceNotificationEvent event) async {
-  // 过滤掉自己应用的通知，避免循环监听
-  if (event.packageName == "com.budget.tracker_app") return;
-  
-  // 过滤掉已移除的通知，避免重复处理
-  if (event.hasRemoved == true) return;
-  
-  String messageString = getNotificationMessage(event);
-  // 添加新的通知到列表开头
+// 原生服务捕获到通知后，回调此方法维护「捕获的通知」列表
+void handleCapturedNativeNotification(String messageString) {
   recentCapturedNotifications.insert(0, messageString);
-  // 限制列表大小，避免内存占用过大
   if (recentCapturedNotifications.length > maxCapturedNotifications) {
-    recentCapturedNotifications = recentCapturedNotifications.sublist(0, maxCapturedNotifications);
+    recentCapturedNotifications =
+        recentCapturedNotifications.sublist(0, maxCapturedNotifications);
   }
-  // 设置willPushRoute为true，恢复跳转到添加交易页面的逻辑
-  queueTransactionFromMessage(messageString, willPushRoute: true);
+}
+
+// 注册原生 -> Dart 的方法回调：捕获通知列表、点击提醒后的 payload
+void _setupNativeChannelHandler() {
+  _notificationListenerNativeChannel.setMethodCallHandler((call) async {
+    if (call.method == "onNotificationCaptured") {
+      handleCapturedNativeNotification(call.arguments as String? ?? "");
+    } else if (call.method == "onTransactionPayload") {
+      notificationPayload = call.arguments as String? ?? "";
+      runNotificationPayLoadsNoContext();
+    }
+    return null;
+  });
 }
 
 class InitializeNotificationService extends StatefulWidget {
@@ -175,6 +165,7 @@ class _InitializeNotificationServiceState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _setupNativeChannelHandler();
     Future.delayed(Duration.zero, () async {
       initNotificationScanning();
     });
@@ -215,21 +206,16 @@ class _InitializeNotificationServiceState
   }
 }
 
-// 用于跟踪最近的通知，防止重复
-// 使用更可靠的唯一标识符，包含秒数和更详细的消息特征
-Map<String, DateTime> _recentNotifications = {};
-
+// 手动处理捕获的通知：匹配模板后直接打开添加交易页
 Future queueTransactionFromMessage(String messageString, {bool willPushRoute = true, DateTime? dateTime}) async {
   String? title;
   double? amountDouble;
   List<ScannerTemplate> scannerTemplates = await database.getAllScannerTemplates();
   ScannerTemplate? templateFound;
 
-  // 第一步：快速扫描模板并获取金额
   for (ScannerTemplate scannerTemplate in scannerTemplates) {
     if (messageString.contains(scannerTemplate.contains)) {
       templateFound = scannerTemplate;
-      
       // 如果是新模式（auto），不需要获取标题，只需要获取金额
       if (scannerTemplate.amountTransactionBefore != "auto" || scannerTemplate.amountTransactionAfter != "auto") {
         title = getTransactionTitleFromEmail(
@@ -237,7 +223,6 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
             scannerTemplate.titleTransactionBefore,
             scannerTemplate.titleTransactionAfter);
       }
-      
       amountDouble = getTransactionAmountFromEmail(
           messageString,
           scannerTemplate.amountTransactionBefore,
@@ -247,121 +232,49 @@ Future queueTransactionFromMessage(String messageString, {bool willPushRoute = t
   }
 
   if (templateFound == null || amountDouble == null) return false;
-  
-  // 提取消息的关键特征，用于生成更可靠的唯一标识符
-  // 1. 提取消息的哈希值，考虑整个消息内容
-  int messageHash = messageString.hashCode;
-  // 2. 使用完整的时间戳（包括秒），而不仅仅是分钟
-  String timestamp = DateTime.now().toString().substring(0, 19); // 格式：YYYY-MM-DD HH:mm:ss
-  
-  // 生成唯一标识符用于防止重复通知
-  // 包含：模板ID、金额、消息哈希和时间戳（精确到秒）
-  String notificationId = "${templateFound.scannerTemplatePk}_${amountDouble.toStringAsFixed(2)}_${messageHash}_${timestamp.substring(11, 19)}";
-  DateTime now = DateTime.now();
-  
-  // 清除旧的通知记录，延长到10分钟，减少重复的可能性
-  // 10分钟足够覆盖同一笔交易可能产生的所有相关通知
-  _recentNotifications.removeWhere((key, value) => now.difference(value).inMinutes > 10);
-  
-  // 检查是否在短时间内发送过相同的通知
-  if (_recentNotifications.containsKey(notificationId)) {
-    print("跳过重复通知：$notificationId");
-    if (willPushRoute) {
-      // 直接获取类别和钱包信息并跳转
-      TransactionCategory? category;
-      TransactionCategory? subCategory;
-      TransactionWallet? wallet = templateFound.walletFk == "-1" 
-          ? null 
-          : await database.getWalletInstanceOrNull(templateFound.walletFk);
-      
-      if (title != null) {
-        TransactionAssociatedTitleWithCategory? foundTitle = 
-            (await database.getSimilarAssociatedTitles(title: title, limit: 1)).firstOrNull;
-        category = foundTitle?.category;
-      }
-      
-      if (category == null) {
-        category = await database.getCategoryInstanceOrNull(templateFound.defaultCategoryFk);
-        // 默认类别为子分类时，拆分为主分类+子分类
-        if (category != null && category.mainCategoryPk != null) {
-          TransactionCategory? mainCategory = await database
-              .getCategoryInstanceOrNull(category.mainCategoryPk!);
-          if (mainCategory != null) {
-            subCategory = category;
-            category = mainCategory;
-          }
+
+  if (willPushRoute) {
+    TransactionCategory? category;
+    TransactionCategory? subCategory;
+    TransactionWallet? wallet = templateFound.walletFk == "-1"
+        ? null
+        : await database.getWalletInstanceOrNull(templateFound.walletFk);
+
+    if (title != null) {
+      TransactionAssociatedTitleWithCategory? foundTitle =
+          (await database.getSimilarAssociatedTitles(title: title, limit: 1)).firstOrNull;
+      category = foundTitle?.category;
+    }
+
+    if (category == null) {
+      category = await database.getCategoryInstanceOrNull(templateFound.defaultCategoryFk);
+      // 默认类别为子分类时，拆分为主分类+子分类
+      if (category != null && category.mainCategoryPk != null) {
+        TransactionCategory? mainCategory = await database
+            .getCategoryInstanceOrNull(category.mainCategoryPk!);
+        if (mainCategory != null) {
+          subCategory = category;
+          category = mainCategory;
         }
       }
-      
-      pushRoute(
-        null,
-        AddTransactionPage(
-          useCategorySelectedIncome: true,
-          routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-          selectedAmount: amountDouble,
-          selectedTitle: title,
-          selectedCategory: category,
-          selectedSubCategory: subCategory,
-          startInitialAddTransactionSequence: false,
-          selectedWallet: wallet,
-          selectedDate: dateTime,
-        ),
-      );
     }
-    return;
-  }
 
-  // 立即发送通知，不等待后续的数据库查询
-  if (!kIsWeb) {
-    bool notificationsEnabled = await checkNotificationsPermissionAll();
-    if (notificationsEnabled) {
-      // 发送本地通知
-      AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
-        'transaction_scan_channel',
-        'transaction_scan_channel',
-        channelDescription: '通知扫描交易',
-        importance: Importance.max,
-        priority: Priority.high,
-        ticker: 'ticker',
-      );
-      DarwinNotificationDetails darwinNotificationDetails = DarwinNotificationDetails();
-      NotificationDetails notificationDetails = NotificationDetails(
-        android: androidNotificationDetails,
-        iOS: darwinNotificationDetails,
-      );
-      
-      // 记录此通知，防止重复
-      _recentNotifications[notificationId] = now;
-      
-      // 使用notificationId的哈希值作为通知标识符，确保唯一性且长度适中
-      int notificationIdentifier = ++_notificationIdCounter;
-      
-      await flutterLocalNotificationsPlugin.show(
-        notificationIdentifier,
-        '检测到交易信息',
-        '发现一笔金额为${amountDouble.toStringAsFixed(2)}的交易，点击添加',
-        notificationDetails,
-        payload: jsonEncode({
-          "type": "addTransaction",
-          "amount": amountDouble.toString(),
-          "templatePk": templateFound.scannerTemplatePk,
-          "title": title,
-          "date": dateTime?.toString()
-        }),
-      );
-    }
+    pushRoute(
+      null,
+      AddTransactionPage(
+        useCategorySelectedIncome: true,
+        routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+        selectedAmount: amountDouble,
+        selectedTitle: title,
+        selectedCategory: category,
+        selectedSubCategory: subCategory,
+        startInitialAddTransactionSequence: false,
+        selectedWallet: wallet,
+        selectedDate: dateTime,
+      ),
+    );
   }
-}
-
-String getNotificationMessage(ServiceNotificationEvent event) {
-  String output = "";
-  output = output + "Package name: " + event.packageName.toString() + "\n";
-  output =
-      output + "Notification removed: " + event.hasRemoved.toString() + "\n";
-  output = output + "\n----\n\n";
-  output = output + "Notification Title: " + event.title.toString() + "\n\n";
-  output = output + "Notification Content: " + event.content.toString();
-  return output;
+  return true;
 }
 
 class AutoTransactionsPageEmail extends StatefulWidget {
@@ -417,7 +330,7 @@ class _AutoTransactionsPageEmailState extends State<AutoTransactionsPageEmail> {
             } else {
               await updateSettings("notificationScanning", false,
                   updateGlobalState: false);
-              notificationListenerSubscription?.cancel();
+              _stopHealthCheck();
             }
           },
           title: "notification-transactions".tr(),
