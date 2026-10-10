@@ -223,6 +223,7 @@
   "view-changelog": "Changelog",
   "view-app-intro": "Onboarding",
   "app-is-open-source": "{app} is Open Source!",
+  "app-name": "Cashew",
   "source-code": "Source Code",
   "view-source-code-description": "View the source code for this app",
   "based-on-original-project": "Based on the original project by jameskokoska/Cashew",
