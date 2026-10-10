@@ -96,9 +96,9 @@ flutter_icons:
   android: true
   ios: true
   image_path: "assets/icon/icon.png"
-  adaptive_icon_background: "#ffffff"
+  adaptive_icon_background: "#A1E387"
   adaptive_icon_foreground: "assets/icon/icon.png"
-  adaptive_icon_foreground_inset: 0.0
+  adaptive_icon_foreground_inset: 17.0
   min_sdk_android: 21
   web:
     generate: true
