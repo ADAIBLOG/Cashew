@@ -1,8 +1,6 @@
 package com.budget.tracker_app
 
-import android.content.ComponentName
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
@@ -71,12 +69,7 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private fun isNotificationAccessGranted(): Boolean {
-        val flat = Settings.Secure.getString(
-            contentResolver,
-            Settings.Secure.ENABLED_NOTIFICATION_LISTENERS,
-        ) ?: return false
-        val component = ComponentName(this, TransactionScannerService::class.java)
-        return flat.split(":").any { it == component.flattenToString() }
+        return TransactionScannerService.isAccessGranted(this)
     }
 
     private fun openNotificationAccessSettings() {
@@ -95,26 +88,7 @@ class MainActivity : FlutterFragmentActivity() {
      */
     private fun forceRestartNotificationListener(callback: (Boolean) -> Unit) {
         Thread {
-            val success = try {
-                val componentName = ComponentName(this, TransactionScannerService::class.java)
-                val pm = packageManager
-                pm.setComponentEnabledSetting(
-                    componentName,
-                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    PackageManager.DONT_KILL_APP,
-                )
-                Thread.sleep(120)
-                pm.setComponentEnabledSetting(
-                    componentName,
-                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                    PackageManager.DONT_KILL_APP,
-                )
-                Log.i("CashewNotif", "Notification listener component toggled to force rebind")
-                true
-            } catch (e: Exception) {
-                Log.e("CashewNotif", "Failed to restart notification listener", e)
-                false
-            }
+            val success = TransactionScannerService.forceRebindListener(this)
             runOnUiThread { callback(success) }
         }.start()
     }
