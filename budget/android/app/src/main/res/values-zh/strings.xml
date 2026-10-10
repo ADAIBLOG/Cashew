@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">岁计</string>
     <string name="widget_add_income">添加收入</string>
     <string name="widget_transfer">转账</string>
     <string name="widget_net_worth_plus">净资产（宽版）</string>
