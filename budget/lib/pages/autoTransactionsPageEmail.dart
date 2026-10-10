@@ -83,7 +83,8 @@ Future initNotificationScanning() async {
   if (status == true) {
     _startHealthCheck();
   } else {
-    await updateSettings("notificationScanning", false, updateGlobalState: false);
+    // 权限失效时不要自动关闭开关（用户没操作，开关却自己关掉会让人困惑）。
+    // 保持开启状态，回到前台时重新校验；权限恢复后原生服务自动继续检测。
     _stopHealthCheck();
   }
 }
@@ -103,7 +104,7 @@ void _startHealthCheck() {
 
       bool hasPermission = await isNotificationAccessGrantedNative();
       if (!hasPermission) {
-        await updateSettings("notificationScanning", false, updateGlobalState: false);
+        // 同上：不自动关闭开关，避免「自动交易」静默失效；回到前台时会重新校验
         _stopHealthCheck();
         return;
       }
@@ -194,9 +195,8 @@ class _InitializeNotificationServiceState
 
   Future<void> _onAppResumed() async {
     if (appStateSettings["notificationScanning"] != true) return;
-    // 国产 ROM（如小米 HyperOS）进入极限模式后会把通知监听服务解绑，
-    // 退出后系统不会自动重绑。这里先强制重启监听服务，再重新订阅。
-    await forceRestartNotificationListenerService();
+    // 不再强制「禁用→启用」监听组件：该操作在部分系统上会撤销通知使用权，
+    // 这正是「开关自动被关闭」的元凶之一。监听服务本身是前台常驻，无需强制重绑。
     initNotificationScanning();
   }
 
