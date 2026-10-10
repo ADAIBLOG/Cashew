@@ -1,4 +1,4 @@
-<h1 align="center" style="font-size:28px; line-height:1"><b>Cashew</b></h1>
+<h1 align="center" style="font-size:28px; line-height:1"><b>岁计</b></h1>
 
 <a href="https://cashewapp.web.app/">
   <div align="center">
