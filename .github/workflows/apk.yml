@@ -43,6 +43,11 @@ jobs:
           cd budget
           dart run build_runner build --delete-conflicting-outputs
 
+      - name: Generate app icons
+        run: |
+          cd budget
+          dart run flutter_launcher_icons
+
       - name: Create keystore file from base64
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
