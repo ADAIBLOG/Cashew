@@ -214,6 +214,7 @@
   "view-changelog": "更新日誌",
   "view-app-intro": "設定引導",
   "app-is-open-source": "{app}是開源！",
+  "app-name": "歲計",
   "source-code": "原始碼",
   "view-source-code-description": "查看本應用程式的原始碼",
   "based-on-original-project": "基於原專案 jameskokoska/Cashew 修改",
