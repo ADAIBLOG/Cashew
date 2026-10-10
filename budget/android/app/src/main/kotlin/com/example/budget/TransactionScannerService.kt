@@ -114,10 +114,18 @@ class TransactionScannerService : NotificationListenerService() {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                // 旧版本安装用户可能已存在 IMPORTANCE_MIN 渠道，Android 不允许直接修改已有渠道的重要性，
+                // 需要先删除旧渠道再以 IMPORTANCE_NONE 重建，否则升级后常驻通知依然可见
+                val existingChannel = nm.getNotificationChannel(KEEPALIVE_CHANNEL_ID)
+                if (existingChannel != null && existingChannel.importance != NotificationManager.IMPORTANCE_NONE) {
+                    nm.deleteNotificationChannel(KEEPALIVE_CHANNEL_ID)
+                }
+                // IMPORTANCE_NONE：常驻通知完全不可见（不显示状态栏图标、不出现在通知栏），
+                // 但前台服务的保活效果不变。检测提示用的是另一个高优级渠道，不受影响。
                 val channel = NotificationChannel(
                     KEEPALIVE_CHANNEL_ID,
                     "交易通知检测",
-                    NotificationManager.IMPORTANCE_MIN,
+                    NotificationManager.IMPORTANCE_NONE,
                 ).apply {
                     description = "保持交易通知检测服务常驻运行"
                     setShowBadge(false)
