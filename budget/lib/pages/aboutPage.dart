@@ -5,7 +5,6 @@ import 'package:budget/functions.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({Key? key}) : super(key: key);
@@ -23,7 +22,7 @@ class _AboutPageState extends State<AboutPage> {
     return PageFramework(
       listID: pageId,
       dragDownToDismiss: true,
-      title: "about",
+      title: "about".tr(),
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
@@ -38,7 +37,7 @@ class _AboutPageState extends State<AboutPage> {
                 ),
                 SizedBox(height: 20),
                 TextFont(
-                  text: "Cashew",
+                  text: "app-name".tr(),
                   fontWeight: FontWeight.bold,
                   fontSize: 24,
                 ),
@@ -58,20 +57,16 @@ class _AboutPageState extends State<AboutPage> {
             icon: appStateSettings["outlinedIcons"]
                 ? Icons.code_outlined
                 : Icons.code_rounded,
-            onTap: () async {
-              final url = Uri.parse('https://github.com/ADAIBLOG/Cashew');
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url);
-              }
+            onTap: () {
+              openUrl("https://github.com/ADAIBLOG/Cashew");
             },
-
           ),
         ),
 
         SliverToBoxAdapter(
           child: SettingsContainer(
-            title: "app-is-open-source".tr(namedArgs: {"app": "Cashew"}),
-            description: "https://github.com/jameskokoska/Cashew",
+            title: "app-is-open-source".tr(namedArgs: {"app": "app-name".tr()}),
+            description: "based-on-original-project".tr(),
             icon: appStateSettings["outlinedIcons"]
                 ? Icons.open_in_new_outlined
                 : Icons.open_in_new_rounded,
@@ -101,7 +96,7 @@ class _AboutPageState extends State<AboutPage> {
 void openAboutLicensesPage(BuildContext context) {
   showLicensePage(
     context: context,
-    applicationName: "Cashew",
+    applicationName: "app-name".tr(),
     applicationVersion: packageInfoGlobal?.version ?? "",
     applicationLegalese:
         "Copyright (C) 2023 James Kokoska\n\n"
