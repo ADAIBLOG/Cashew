@@ -49,6 +49,8 @@ void main() async {
     sharedPreferences = await SharedPreferences.getInstance();
     database = await constructDb('db');
     notificationPayload = await initializeNotifications();
+    String? nativePayload = await getPendingNativeTransactionPayload();
+    if (nativePayload != null) notificationPayload = nativePayload;
     entireAppLoaded = false;
     await loadCurrencyJSON();
     await loadLanguageNamesJSON();
