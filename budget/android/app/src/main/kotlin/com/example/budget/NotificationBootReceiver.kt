@@ -13,18 +13,9 @@ class NotificationBootReceiver : BroadcastReceiver() {
             intent.action != "com.htc.intent.action.QUICKBOOT_POWERON") {
             return
         }
-        // 开机/应用更新后，部分国产 ROM 不会自动重新绑定通知监听服务。
-        // 若用户已授予通知使用权，这里强制重绑，保证应用不被打开时也能检测通知。
-        Log.d("CashewBoot", "Boot or package replace detected, force rebinding notification listener")
-        val pendingResult = goAsync()
-        Thread {
-            try {
-                if (TransactionScannerService.isAccessGranted(context)) {
-                    TransactionScannerService.forceRebindListener(context)
-                }
-            } finally {
-                pendingResult.finish()
-            }
-        }.start()
+        // 不再强制「禁用→启用」监听组件重绑：该操作在部分系统上会撤销通知使用权
+        // （正是「自动交易开关自己关闭」的元凶之一）。监听服务是前台常驻服务，
+        // 系统开机后会自行恢复绑定；权限状态由应用启动时重新校验。
+        Log.d("CashewBoot", "Boot or package replace detected; listener rebind handled by system")
     }
 }
