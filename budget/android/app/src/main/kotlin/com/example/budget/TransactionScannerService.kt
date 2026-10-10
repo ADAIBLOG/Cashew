@@ -8,6 +8,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.os.Build
@@ -31,6 +32,8 @@ class TransactionScannerService : NotificationListenerService() {
     companion object {
         private const val TAG = "CashewNativeScanner"
         private const val CHANNEL_ID = "transaction_scan_channel"
+        private const val KEEPALIVE_CHANNEL_ID = "listener_keepalive_channel"
+        private const val KEEPALIVE_NOTIFICATION_ID = 911
         private const val DB_NAME = "db.sqlite"
         private const val OWN_PACKAGE = "com.budget.tracker_app"
         private const val PAYLOAD_CHANNEL = "com.budget.tracker_app/notification_listener"
@@ -80,11 +83,85 @@ class TransactionScannerService : NotificationListenerService() {
         }
     }
 
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        // 以前台服务方式常驻：避免国产 ROM 省电机制冻结/杀死监听服务，
+        // 否则后台时「第一个通知正常、随后延迟、最终完全不识别」
+        startKeepAliveForeground()
+    }
+
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        try {
+            stopForegroundCompat()
+        } catch (e: Exception) {
+            Log.e(TAG, "stopForeground error", e)
+        }
+    }
+
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         if (sbn == null) return
         // 过滤自己应用的通知，避免循环监听
         if (sbn.packageName == OWN_PACKAGE) return
+        // 监听服务被系统「禁用→启用」重连时会重放通知栏所有活动通知，
+        // 跳过发布超过 60 秒的旧通知，避免打开应用时一次性洪泛提示
+        val postedAt = sbn.notification?.`when` ?: 0L
+        if (postedAt > 0 && System.currentTimeMillis() - postedAt > 60_000L) return
         Thread { handleNotification(applicationContext, sbn) }.start()
+    }
+
+    private fun startKeepAliveForeground() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val channel = NotificationChannel(
+                    KEEPALIVE_CHANNEL_ID,
+                    "交易通知检测",
+                    NotificationManager.IMPORTANCE_MIN,
+                ).apply {
+                    description = "保持交易通知检测服务常驻运行"
+                    setShowBadge(false)
+                }
+                nm.createNotificationChannel(channel)
+            }
+            val contentIntent = PendingIntent.getActivity(
+                this,
+                0,
+                Intent(this, MainActivity::class.java),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+            val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Notification.Builder(this, KEEPALIVE_CHANNEL_ID)
+            } else {
+                @Suppress("DEPRECATION")
+                Notification.Builder(this)
+            }
+            builder.setSmallIcon(R.drawable.notification_icon_android2)
+                .setContentTitle("岁计")
+                .setContentText("正在检测交易通知")
+                .setContentIntent(contentIntent)
+                .setOngoing(true)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    KEEPALIVE_NOTIFICATION_ID,
+                    builder.build(),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+                )
+            } else {
+                startForeground(KEEPALIVE_NOTIFICATION_ID, builder.build())
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "startKeepAliveForeground error", e)
+        }
+    }
+
+    private fun stopForegroundCompat() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(true)
+        }
     }
 
     private fun handleNotification(context: Context, sbn: StatusBarNotification) {
