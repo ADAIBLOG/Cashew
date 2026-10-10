@@ -1,115 +1,75 @@
-import 'package:budget/widgets/textWidgets.dart';
-import 'package:budget/widgets/framework/pageFramework.dart';
-import 'package:budget/struct/settings.dart';
+import 'package:budget/colors.dart';
 import 'package:budget/functions.dart';
+import 'package:budget/main.dart';
+import 'package:budget/pages/addTransactionPage.dart';
+import 'package:budget/struct/settings.dart';
+import 'package:budget/widgets/accountAndBackup.dart';
+import 'package:budget/widgets/animatedExpanded.dart';
+import 'package:budget/widgets/button.dart';
+import 'package:budget/widgets/dropdownSelect.dart';
+import 'package:budget/widgets/fadeIn.dart';
+import 'package:budget/widgets/iconButtonScaled.dart';
+import 'package:budget/widgets/moreIcons.dart';
+import 'package:budget/widgets/navigationFramework.dart';
+import 'package:budget/widgets/openBottomSheet.dart';
+import 'package:budget/widgets/framework/pageFramework.dart';
+import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/settingsContainers.dart';
+import 'package:budget/widgets/tappable.dart';
+import 'package:budget/widgets/textWidgets.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:budget/widgets/extraInfoBoxes.dart';
+import 'package:budget/widgets/outlinedButtonStacked.dart';
 
-class AboutPage extends StatefulWidget {
-  const AboutPage({Key? key}) : super(key: key);
+class AccountsPage extends StatefulWidget {
+  const AccountsPage({Key? key}) : super(key: key);
 
   @override
-  State<AboutPage> createState() => _AboutPageState();
+  State<AccountsPage> createState() => AccountsPageState();
 }
 
-class _AboutPageState extends State<AboutPage> {
+class AccountsPageState extends State<AccountsPage> {
+  bool currentlyExporting = false;
+
+  void refreshState() {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    String pageId = "About";
-    String version = packageInfoGlobal?.version ?? "2.1.2";
+    Widget profileWidget = Container(
+      width: 100,
+      height: 100,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: dynamicPastel(context, Theme.of(context).colorScheme.primary,
+            amount: 0.2),
+      ),
+      child: Icon(Icons.account_circle_outlined, size: 50),
+    );
 
     return PageFramework(
-      listID: pageId,
-      dragDownToDismiss: true,
-      title: "about".tr(),
+      title: "accounts".tr(),
       slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsetsDirectional.only(
-                top: 30, start: 20, end: 20, bottom: 35),
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image(
-                  image: AssetImage("assets/icon/icon-small.png"),
-                  height: 100,
-                ),
-                SizedBox(height: 20),
-                TextFont(
-                  text: "Cashew",
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
-                ),
-                SizedBox(height: 10),
-                TextFont(
-                  text: version,
-                  fontSize: 16,
+                SizedBox(height: 35),
+                Padding(
+                  padding: EdgeInsetsDirectional.only(
+                      start: 20, end: 20, bottom: 15),
+                  child: AccountAndBackup(),
                 ),
               ],
             ),
           ),
         ),
-        SliverToBoxAdapter(
-          child: SettingsContainer(
-            title: "source-code".tr(),
-            description: "view-source-code-description".tr(),
-            icon: appStateSettings["outlinedIcons"]
-                ? Icons.code_outlined
-                : Icons.code_rounded,
-            onTap: () {
-              openUrl("https://github.com/ADAIBLOG/Cashew");
-            },
-          ),
-        ),
-
-        SliverToBoxAdapter(
-          child: SettingsContainer(
-            title: "app-is-open-source".tr(namedArgs: {"app": "Cashew"}),
-            description: "based-on-original-project".tr(),
-            icon: appStateSettings["outlinedIcons"]
-                ? Icons.open_in_new_outlined
-                : Icons.open_in_new_rounded,
-            onTap: () {
-              openUrl("https://github.com/jameskokoska/Cashew");
-            },
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: SettingsContainer(
-            title: "view-licenses-and-legalese".tr(),
-            description: "GPL-3.0",
-            icon: appStateSettings["outlinedIcons"]
-                ? Icons.account_balance_outlined
-                : Icons.account_balance_rounded,
-            onTap: () {
-              openAboutLicensesPage(context);
-            },
-          ),
-        ),
-        SliverToBoxAdapter(child: SizedBox(height: 55)),
       ],
     );
   }
-}
-
-void openAboutLicensesPage(BuildContext context) {
-  showLicensePage(
-    context: context,
-    applicationName: "Cashew",
-    applicationVersion: packageInfoGlobal?.version ?? "",
-    applicationLegalese:
-        "Copyright (C) 2023 James Kokoska\n\n"
-        "This program is free software: you can redistribute it and/or modify "
-        "it under the terms of the GNU General Public License as published by "
-        "the Free Software Foundation, either version 3 of the License, or "
-        "(at your option) any later version.\n\n"
-        "This program is distributed in the hope that it will be useful, "
-        "but WITHOUT ANY WARRANTY; without even the implied warranty of "
-        "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the "
-        "GNU General Public License for more details.\n\n"
-        "You should have received a copy of the GNU General Public License "
-        "along with this program.  If not, see <https://www.gnu.org/licenses/>.\n\n" +
-        "exchange-rate-notice-description".tr(),
-  );
 }
