@@ -4,11 +4,14 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.os.Build
+import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
@@ -34,6 +37,46 @@ class TransactionScannerService : NotificationListenerService() {
         private const val PAYLOAD_EXTRA = "transaction_payload"
         private const val DEDUP_WINDOW_MS = 10 * 60 * 1000L
         private val recentMatches = LinkedHashMap<String, Long>()
+
+        fun isAccessGranted(context: Context): Boolean {
+            return try {
+                val flat = Settings.Secure.getString(
+                    context.contentResolver,
+                    Settings.Secure.ENABLED_NOTIFICATION_LISTENERS,
+                ) ?: return false
+                val component = ComponentName(context, TransactionScannerService::class.java)
+                flat.split(":").any { it == component.flattenToString() }
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        /**
+         * 通过「禁用→启用」监听服务组件，强制系统重新绑定通知监听服务。
+         * 用于解决国产 ROM 开机/更新后不自动重绑的问题。
+         */
+        fun forceRebindListener(context: Context): Boolean {
+            return try {
+                val componentName = ComponentName(context, TransactionScannerService::class.java)
+                val pm = context.packageManager
+                pm.setComponentEnabledSetting(
+                    componentName,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP,
+                )
+                Thread.sleep(120)
+                pm.setComponentEnabledSetting(
+                    componentName,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP,
+                )
+                Log.i(TAG, "Notification listener component toggled to force rebind")
+                true
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to restart notification listener", e)
+                false
+            }
+        }
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
