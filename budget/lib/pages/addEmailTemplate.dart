@@ -21,10 +21,8 @@ import 'package:provider/provider.dart';
 class AddEmailTemplate extends StatefulWidget {
   AddEmailTemplate({
     Key? key,
-    required this.messagesList,
     this.scannerTemplate,
   }) : super(key: key);
-  final List<String> messagesList;
   //When a transaction is passed in, we are editing that transaction
   final ScannerTemplate? scannerTemplate;
 
