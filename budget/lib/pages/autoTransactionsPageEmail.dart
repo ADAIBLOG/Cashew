@@ -30,9 +30,6 @@ import 'addButton.dart';
 
 Timer? _notificationHealthCheckTimer;
 
-final int maxCapturedNotifications = 20;
-List<String> recentCapturedNotifications = [];
-
 const MethodChannel _notificationListenerNativeChannel =
     MethodChannel('com.budget.tracker_app/notification_listener');
 
@@ -127,21 +124,10 @@ Future<bool> requestReadNotificationPermission() async {
   return status;
 }
 
-// 原生服务捕获到通知后，回调此方法维护「捕获的通知」列表
-void handleCapturedNativeNotification(String messageString) {
-  recentCapturedNotifications.insert(0, messageString);
-  if (recentCapturedNotifications.length > maxCapturedNotifications) {
-    recentCapturedNotifications =
-        recentCapturedNotifications.sublist(0, maxCapturedNotifications);
-  }
-}
-
-// 注册原生 -> Dart 的方法回调：捕获通知列表、点击提醒后的 payload
+// 注册原生 -> Dart 的方法回调：点击提醒后的 payload
 void _setupNativeChannelHandler() {
   _notificationListenerNativeChannel.setMethodCallHandler((call) async {
-    if (call.method == "onNotificationCaptured") {
-      handleCapturedNativeNotification(call.arguments as String? ?? "");
-    } else if (call.method == "onTransactionPayload") {
+    if (call.method == "onTransactionPayload") {
       notificationPayload = call.arguments as String? ?? "";
       runNotificationPayLoadsNoContext();
     }
@@ -206,77 +192,6 @@ class _InitializeNotificationServiceState
   }
 }
 
-// 手动处理捕获的通知：匹配模板后直接打开添加交易页
-Future queueTransactionFromMessage(String messageString, {bool willPushRoute = true, DateTime? dateTime}) async {
-  String? title;
-  double? amountDouble;
-  List<ScannerTemplate> scannerTemplates = await database.getAllScannerTemplates();
-  ScannerTemplate? templateFound;
-
-  for (ScannerTemplate scannerTemplate in scannerTemplates) {
-    if (messageString.contains(scannerTemplate.contains)) {
-      templateFound = scannerTemplate;
-      // 如果是新模式（auto），不需要获取标题，只需要获取金额
-      if (scannerTemplate.amountTransactionBefore != "auto" || scannerTemplate.amountTransactionAfter != "auto") {
-        title = getTransactionTitleFromEmail(
-            messageString,
-            scannerTemplate.titleTransactionBefore,
-            scannerTemplate.titleTransactionAfter);
-      }
-      amountDouble = getTransactionAmountFromEmail(
-          messageString,
-          scannerTemplate.amountTransactionBefore,
-          scannerTemplate.amountTransactionAfter);
-      break;
-    }
-  }
-
-  if (templateFound == null || amountDouble == null) return false;
-
-  if (willPushRoute) {
-    TransactionCategory? category;
-    TransactionCategory? subCategory;
-    TransactionWallet? wallet = templateFound.walletFk == "-1"
-        ? null
-        : await database.getWalletInstanceOrNull(templateFound.walletFk);
-
-    if (title != null) {
-      TransactionAssociatedTitleWithCategory? foundTitle =
-          (await database.getSimilarAssociatedTitles(title: title, limit: 1)).firstOrNull;
-      category = foundTitle?.category;
-    }
-
-    if (category == null) {
-      category = await database.getCategoryInstanceOrNull(templateFound.defaultCategoryFk);
-      // 默认类别为子分类时，拆分为主分类+子分类
-      if (category != null && category.mainCategoryPk != null) {
-        TransactionCategory? mainCategory = await database
-            .getCategoryInstanceOrNull(category.mainCategoryPk!);
-        if (mainCategory != null) {
-          subCategory = category;
-          category = mainCategory;
-        }
-      }
-    }
-
-    pushRoute(
-      null,
-      AddTransactionPage(
-        useCategorySelectedIncome: true,
-        routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-        selectedAmount: amountDouble,
-        selectedTitle: title,
-        selectedCategory: category,
-        selectedSubCategory: subCategory,
-        startInitialAddTransactionSequence: false,
-        selectedWallet: wallet,
-        selectedDate: dateTime,
-      ),
-    );
-  }
-  return true;
-}
-
 class AutoTransactionsPageEmail extends StatefulWidget {
   const AutoTransactionsPageEmail({Key? key}) : super(key: key);
 
@@ -325,12 +240,16 @@ class _AutoTransactionsPageEmailState extends State<AutoTransactionsPageEmail> {
                 await updateSettings("notificationScanning", true,
                     updateGlobalState: false);
                 initNotificationScanning();
+                return true;
               }
-              // 如果权限被拒绝，不更新设置，保持为false
+              // 权限未授予：返回 false，让开关保持原始位置，
+              // 避免「视觉上已打开、实际没保存」导致之后弹回关闭
+              return false;
             } else {
               await updateSettings("notificationScanning", false,
                   updateGlobalState: false);
               _stopHealthCheck();
+              return true;
             }
           },
           title: "notification-transactions".tr(),
@@ -358,7 +277,6 @@ class _AutoTransactionsPageEmailState extends State<AutoTransactionsPageEmail> {
                 children: [
                   for (ScannerTemplate scannerTemplate in snapshot.data!)
                     ScannerTemplateEntry(
-                      messagesList: recentCapturedNotifications,
                       scannerTemplate: scannerTemplate,
                     )
                 ],
@@ -369,9 +287,7 @@ class _AutoTransactionsPageEmailState extends State<AutoTransactionsPageEmail> {
           },
         ),
         OpenContainerNavigation(
-          openPage: AddEmailTemplate(
-            messagesList: recentCapturedNotifications,
-          ),
+          openPage: AddEmailTemplate(),
           borderRadius: 15,
           button: (openContainer) {
             return Row(
@@ -391,103 +307,17 @@ class _AutoTransactionsPageEmailState extends State<AutoTransactionsPageEmail> {
             );
           },
         ),
-        SettingsContainerSwitch(
-          onSwitched: (value) async {
-            await updateSettings("notificationShowCapturedData", value,
-                updateGlobalState: false);
-          },
-          title: "显示捕获的通知数据",
-          description: "关闭此选项可以减少电量消耗，同时保持通知扫描功能",
-          initialValue: appStateSettings["notificationShowCapturedData"] ?? true,
-        ),
-        if (appStateSettings["notificationShowCapturedData"] ?? true)
-          EmailsList(
-            messagesList: recentCapturedNotifications,
-          ),
       ],
     );
   }
 }
 
-String? getTransactionTitleFromEmail(String messageString,
-    String titleTransactionBefore, String titleTransactionAfter) {
-  String? title;
-  try {
-    int startIndex = messageString.indexOf(titleTransactionBefore) +
-        titleTransactionBefore.length;
-    int endIndex = messageString.indexOf(titleTransactionAfter, startIndex);
-    title = messageString.substring(startIndex, endIndex);
-    title = title.replaceAll("\n", "");
-    title = title.toLowerCase();
-    title = title.capitalizeFirst;
-  } catch (e) {}
-  return title;
-}
-
-double? getTransactionAmountFromEmail(String messageString, String amountTransactionBefore, String amountTransactionAfter) {
-  double? amountDouble;
-  
-  try {
-    // 新的自动识别逻辑：如果模板中设置了amountTransactionBefore为"auto"，使用正则表达式匹配货币符号后的数字
-    if (amountTransactionBefore == "auto" && amountTransactionAfter == "auto") {
-      // 正则表达式：匹配常见货币符号(¥$€£)后的数字，支持小数点和千位分隔符
-      RegExp amountRegex = RegExp(r'[¥$€£]\s*([\d,]+\.?\d*)');
-      Match? match = amountRegex.firstMatch(messageString);
-      
-      if (match != null && match.groupCount >= 1) {
-        String amountString = match.group(1)!;
-        // 清理数字字符串：移除千位分隔符，只保留数字和小数点
-        String cleanAmountString = amountString.replaceAll(RegExp(r','), '');
-        amountDouble = double.tryParse(cleanAmountString);
-      }
-      
-      // 如果没找到，尝试其他可能的格式，比如数字前面没有空格
-      if (amountDouble == null) {
-        RegExp altAmountRegex = RegExp(r'[¥$€£]([\d,]+\.?\d*)');
-        Match? altMatch = altAmountRegex.firstMatch(messageString);
-        if (altMatch != null && altMatch.groupCount >= 1) {
-          String amountString = altMatch.group(1)!;
-          String cleanAmountString = amountString.replaceAll(RegExp(r','), '');
-          amountDouble = double.tryParse(cleanAmountString);
-        }
-      }
-      
-      // 如果没找到，尝试匹配数字后面带货币符号的情况（如：0.02元）
-      if (amountDouble == null) {
-        RegExp altAmountRegex2 = RegExp(r'([\d,]+\.?\d*)\s*[¥$€£元角分]');
-        Match? altMatch2 = altAmountRegex2.firstMatch(messageString);
-        if (altMatch2 != null && altMatch2.groupCount >= 1) {
-          String amountString = altMatch2.group(1)!;
-          String cleanAmountString = amountString.replaceAll(RegExp(r','), '');
-          amountDouble = double.tryParse(cleanAmountString);
-        }
-      }
-    } else {
-      // 保持原有的模板匹配逻辑作为后备
-      int startIndex = messageString.indexOf(amountTransactionBefore) + amountTransactionBefore.length;
-      int endIndex = messageString.indexOf(amountTransactionAfter, startIndex);
-      String amountString = messageString.substring(startIndex, endIndex);
-      String cleanAmountString = amountString
-          .replaceAll(RegExp(r'[\s]'), '')
-          .replaceAll(RegExp(r'[¥$€£]'), '')
-          .replaceAll(RegExp(r','), '');
-      amountDouble = double.tryParse(cleanAmountString);
-    }
-  } catch (e) {
-    print('Error parsing amount: $e');
-  }
-  
-  return amountDouble;
-}
-
 class ScannerTemplateEntry extends StatelessWidget {
   const ScannerTemplateEntry({
     required this.scannerTemplate,
-    required this.messagesList,
     super.key,
   });
   final ScannerTemplate scannerTemplate;
-  final List<String> messagesList;
 
   @override
   Widget build(BuildContext context) {
@@ -495,7 +325,6 @@ class ScannerTemplateEntry extends StatelessWidget {
       padding: const EdgeInsetsDirectional.only(start: 15, end: 15, bottom: 10),
       child: OpenContainerNavigation(
         openPage: AddEmailTemplate(
-          messagesList: messagesList,
           scannerTemplate: scannerTemplate,
         ),
         borderRadius: 15,
@@ -551,174 +380,6 @@ class ScannerTemplateEntry extends StatelessWidget {
           );
         },
       ),
-    );
-  }
-}
-
-class EmailsList extends StatelessWidget {
-  const EmailsList({
-    required this.messagesList,
-    this.onTap,
-    this.backgroundColor,
-    super.key,
-  });
-  final List<String> messagesList;
-  final Function(String)? onTap;
-  final Color? backgroundColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<List<ScannerTemplate>>(
-      stream: database.watchAllScannerTemplates(),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          List<ScannerTemplate> scannerTemplates = snapshot.data!;
-          List<Widget> messageTxt = [];
-          for (String messageString in messagesList) {
-            bool doesEmailContain = false;
-            String? title;
-            double? amountDouble;
-            String? templateFound;
-
-            for (ScannerTemplate scannerTemplate in scannerTemplates) {
-              if (messageString.contains(scannerTemplate.contains)) {
-                doesEmailContain = true;
-                templateFound = scannerTemplate.templateName;
-                title = getTransactionTitleFromEmail(
-                    messageString,
-                    scannerTemplate.titleTransactionBefore,
-                    scannerTemplate.titleTransactionAfter);
-                amountDouble = getTransactionAmountFromEmail(
-                    messageString,
-                    scannerTemplate.amountTransactionBefore,
-                    scannerTemplate.amountTransactionAfter);
-                break;
-              }
-            }
-
-            messageTxt.add(
-              Padding(
-                padding: const EdgeInsetsDirectional.symmetric(
-                    horizontal: 15, vertical: 5),
-                child: Tappable(
-                  borderRadius: 15,
-                  color: doesEmailContain &&
-                          (title == null || amountDouble == null)
-                      ? Theme.of(context)
-                          .colorScheme
-                          .errorContainer
-                          .withOpacity(0.5)
-                      : doesEmailContain
-                          ? Theme.of(context)
-                              .colorScheme
-                              .secondary
-                              .withOpacity(0.3)
-                          : backgroundColor ??
-                              Theme.of(context).colorScheme.secondaryContainer,
-                  onTap: () {
-                    if (onTap != null) onTap!(messageString);
-                    if (onTap == null)
-                      queueTransactionFromMessage(messageString);
-                  },
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsetsDirectional.symmetric(
-                              horizontal: 20, vertical: 15),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              doesEmailContain &&
-                                      (title == null || amountDouble == null)
-                                  ? Padding(
-                                      padding: const EdgeInsetsDirectional.only(
-                                          bottom: 5),
-                                      child: TextFont(
-                                        text: "parsing-failed".tr(),
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 17,
-                                      ),
-                                    )
-                                  : SizedBox(),
-                              doesEmailContain
-                                  ? templateFound == null
-                                      ? TextFont(
-                                          fontSize: 19,
-                                          text: "template-not-found".tr(),
-                                          maxLines: 10,
-                                          fontWeight: FontWeight.bold,
-                                        )
-                                      : TextFont(
-                                          fontSize: 19,
-                                          text: templateFound,
-                                          maxLines: 10,
-                                          fontWeight: FontWeight.bold,
-                                        )
-                                  : SizedBox(),
-                              doesEmailContain
-                                  ? title == null
-                                      ? TextFont(
-                                          fontSize: 15,
-                                          text: "title-not-found".tr(),
-                                          maxLines: 10,
-                                          fontWeight: FontWeight.bold,
-                                        )
-                                      : TextFont(
-                                          fontSize: 15,
-                                          text: "" + title,
-                                          maxLines: 10,
-                                          fontWeight: FontWeight.bold,
-                                        )
-                                  : SizedBox(),
-                              doesEmailContain
-                                  ? amountDouble == null
-                                      ? Padding(
-                                          padding: const EdgeInsetsDirectional.only(
-                                              bottom: 8.0),
-                                          child: TextFont(
-                                            fontSize: 15,
-                                            text: "amount-not-found".tr(),
-                                            maxLines: 10,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        )
-                                      : Padding(
-                                          padding: const EdgeInsetsDirectional.only(
-                                              bottom: 8.0),
-                                          child: TextFont(
-                                            fontSize: 15,
-                                            text: convertToMoney(
-                                                Provider.of<AllWallets>(
-                                                    context),
-                                                amountDouble),
-                                            maxLines: 10,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        )
-                                  : SizedBox(),
-                              TextFont(
-                                fontSize: 13,
-                                text: messageString,
-                                maxLines: 10,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }
-          return Column(
-            children: messageTxt,
-          );
-        } else {
-          return Container(width: 100, height: 100, color: Colors.white);
-        }
-      },
     );
   }
 }
