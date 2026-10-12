@@ -16,7 +16,6 @@ import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
-import io.flutter.plugin.common.MethodChannel
 import org.json.JSONObject
 import java.io.File
 import java.util.Locale
@@ -36,7 +35,6 @@ class TransactionScannerService : NotificationListenerService() {
         private const val KEEPALIVE_NOTIFICATION_ID = 911
         private const val DB_NAME = "db.sqlite"
         private const val OWN_PACKAGE = "com.budget.tracker_app"
-        private const val PAYLOAD_CHANNEL = "com.budget.tracker_app/notification_listener"
         private const val PAYLOAD_EXTRA = "transaction_payload"
         private const val DEDUP_WINDOW_MS = 10 * 60 * 1000L
         private val recentMatches = LinkedHashMap<String, Long>()
@@ -48,8 +46,13 @@ class TransactionScannerService : NotificationListenerService() {
                     context.contentResolver,
                     "enabled_notification_listeners",
                 ) ?: return false
-                val component = ComponentName(context, TransactionScannerService::class.java)
-                flat.split(":").any { it == component.flattenToString() }
+                if (flat.isEmpty()) return false
+                // 不同 ROM 的记录格式有差异（完整类名/短类名/仅包名），
+                // 应用内只有一个监听服务组件，按包名匹配即可，避免误判导致开关无法保存
+                val packageName = context.packageName
+                flat.split(":").any {
+                    it == packageName || it.startsWith("$packageName/")
+                }
             } catch (e: Exception) {
                 false
             }
@@ -175,7 +178,6 @@ class TransactionScannerService : NotificationListenerService() {
     private fun handleNotification(context: Context, sbn: StatusBarNotification) {
         try {
             val message = buildMessage(sbn)
-            forwardToDart(message)
             val templates = loadTemplates(context)
             for (template in templates) {
                 if (template.ignore) continue
@@ -383,15 +385,6 @@ class TransactionScannerService : NotificationListenerService() {
             )
             channel.description = "通知扫描交易"
             nm.createNotificationChannel(channel)
-        }
-    }
-
-    private fun forwardToDart(message: String) {
-        try {
-            val messenger = MainActivity.binaryMessenger ?: return
-            MethodChannel(messenger, PAYLOAD_CHANNEL).invokeMethod("onNotificationCaptured", message)
-        } catch (e: Exception) {
-            Log.e(TAG, "forwardToDart error", e)
         }
     }
 }
