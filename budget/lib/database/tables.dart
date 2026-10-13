@@ -6042,11 +6042,6 @@ class FinanceDatabase extends _$FinanceDatabase {
   // We also want to include these transactions if isIncome is null (total net spending)
   Expression<bool> onlyShowIfNotBalanceCorrection(
       $TransactionsTable tbl, bool? isIncome) {
-    // 用户可选择校准金额是否计入收入/支出统计
-    if (appStateSettings["correctionTransactionsCountedInStatistics"] ==
-        true) {
-      return Constant(true);
-    }
     return ((tbl.categoryFk.equals("0").not()) |
         (isIncome == null ? Constant(true) : Constant(false)));
   }
@@ -6488,14 +6483,11 @@ class FinanceDatabase extends _$FinanceDatabase {
   // remove loans transactions here - we don't want loans to contribute to our other totals, only net
   Expression<bool> onlyShowIfOnlyExpenseAndIncome(
       $TransactionsTable tbl, bool enabled) {
-    if (enabled == false) return Constant(true);
-    return (tbl.objectiveLoanFk.isNull() &
-        tbl.type.isNotInValues(
-            [TransactionSpecialType.credit, TransactionSpecialType.debt]) &
-        // 余额校正：默认从收支统计排除；「校准金额计入统计」开关开启时计入
-        (appStateSettings["correctionTransactionsCountedInStatistics"] == true
-            ? Constant(true)
-            : tbl.categoryFk.equals("0").not()));
+    return (enabled == false ? Constant(true) : Constant(false)) |
+        ((tbl.objectiveLoanFk.isNull() &
+            tbl.type.isNotInValues(
+                [TransactionSpecialType.credit, TransactionSpecialType.debt]) &
+            tbl.categoryFk.equals("0").not()));
   }
 
   Stream<TotalWithCount?> watchTotalWithCountOfWallet({
