@@ -885,26 +885,6 @@ class _CorrectBalancePopupState extends State<CorrectBalancePopup> {
                           ? Icons.exposure_outlined
                           : Icons.exposure_rounded,
                     ),
-                    SettingsContainerSwitch(
-                      title: "correction-counted-in-statistics".tr(),
-                      description:
-                          "correction-counted-in-statistics-description".tr(),
-                      onSwitched: (value) {
-                        updateSettings(
-                          "correctionTransactionsCountedInStatistics",
-                          value,
-                          updateGlobalState: true,
-                        );
-                      },
-                      enableBorderRadius: true,
-                      initialValue: appStateSettings[
-                              "correctionTransactionsCountedInStatistics"] ==
-                          true,
-                      syncWithInitialValue: true,
-                      icon: appStateSettings["outlinedIcons"]
-                          ? Icons.query_stats_outlined
-                          : Icons.query_stats_rounded,
-                    ),
                   ],
                 ),
                 showEnteredNumber: false,
