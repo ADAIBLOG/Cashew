@@ -6488,11 +6488,14 @@ class FinanceDatabase extends _$FinanceDatabase {
   // remove loans transactions here - we don't want loans to contribute to our other totals, only net
   Expression<bool> onlyShowIfOnlyExpenseAndIncome(
       $TransactionsTable tbl, bool enabled) {
-    return (enabled == false ? Constant(true) : Constant(false)) |
-        ((tbl.objectiveLoanFk.isNull() &
-            tbl.type.isNotInValues(
-                [TransactionSpecialType.credit, TransactionSpecialType.debt]) &
-            tbl.categoryFk.equals("0").not()));
+    if (enabled == false) return Constant(true);
+    return (tbl.objectiveLoanFk.isNull() &
+        tbl.type.isNotInValues(
+            [TransactionSpecialType.credit, TransactionSpecialType.debt]) &
+        // 余额校正：默认从收支统计排除；「校准金额计入统计」开关开启时计入
+        (appStateSettings["correctionTransactionsCountedInStatistics"] == true
+            ? Constant(true)
+            : tbl.categoryFk.equals("0").not()));
   }
 
   Stream<TotalWithCount?> watchTotalWithCountOfWallet({
