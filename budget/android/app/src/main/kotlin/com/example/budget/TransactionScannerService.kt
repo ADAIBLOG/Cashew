@@ -7,11 +7,13 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -39,6 +41,29 @@ class TransactionScannerService : NotificationListenerService() {
         private const val DEDUP_WINDOW_MS = 10 * 60 * 1000L
         private val recentMatches = LinkedHashMap<String, Long>()
 
+        /**
+         * 系统是否真的把监听服务绑上了。
+         *
+         * 不能只看 enabled_notification_listeners：国产 ROM 的省电/后台清理会把服务解绑
+         * （甚至强停进程），但「通知使用权」仍然是开启状态，权限检查全部通过、功能却已失效。
+         * 这个标记在 onListenerConnected/onListenerDisconnected 里维护；进程被杀后随进程归零，
+         * 因此「进程活着但标记为 false」等价于「服务没绑上」。
+         */
+        @Volatile
+        private var listenerConnected = false
+
+        private var rebindHandler: Handler? = null
+        private var rebindAttempt = 0
+        private var lastRebindRequestAt = 0L
+        private var lastForceRebindAt = 0L
+
+        // 解绑后的重试间隔。系统会限制过于频繁的 rebind 请求，所以逐次拉长。
+        private val REBIND_DELAYS_MS = longArrayOf(2_000L, 10_000L, 30_000L, 90_000L)
+        private const val MIN_REBIND_INTERVAL_MS = 3_000L
+        private const val MIN_FORCE_REBIND_INTERVAL_MS = 30_000L
+
+        fun isConnected(): Boolean = listenerConnected
+
         fun isAccessGranted(context: Context): Boolean {
             return try {
                 // Settings.Secure.ENABLED_NOTIFICATION_LISTENERS 是 @hide 常量，公开 SDK 编译不到，使用字符串字面量
@@ -59,35 +84,92 @@ class TransactionScannerService : NotificationListenerService() {
         }
 
         /**
-         * 通过「禁用→启用」监听服务组件，强制系统重新绑定通知监听服务。
-         * 用于解决国产 ROM 开机/更新后不自动重绑的问题。
+         * 请求系统重新绑定通知监听服务（API 24+）。
+         *
+         * NotificationListenerService.requestRebind() 是系统文档指定的解绑恢复手段，也是
+         * onListenerDisconnected() 之后唯一允许调用的方法。它只触发重新绑定，不会改动
+         * 「通知使用权」，因此不像 setComponentEnabledSetting() 那样在部分 ROM 上丢权限。
          */
-        fun forceRebindListener(context: Context): Boolean {
+        fun requestRebindNow(context: Context): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return false
+            val now = SystemClock.elapsedRealtime()
+            if (now - lastRebindRequestAt < MIN_REBIND_INTERVAL_MS) return false
+            lastRebindRequestAt = now
             return try {
-                val componentName = ComponentName(context, TransactionScannerService::class.java)
-                val pm = context.packageManager
-                pm.setComponentEnabledSetting(
-                    componentName,
-                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    PackageManager.DONT_KILL_APP,
+                NotificationListenerService.requestRebind(
+                    ComponentName(context, TransactionScannerService::class.java),
                 )
-                Thread.sleep(120)
-                pm.setComponentEnabledSetting(
-                    componentName,
-                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                    PackageManager.DONT_KILL_APP,
-                )
-                Log.i(TAG, "Notification listener component toggled to force rebind")
+                Log.i(TAG, "Requested system to rebind notification listener")
                 true
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to restart notification listener", e)
+            } catch (t: Throwable) {
+                Log.e(TAG, "requestRebind failed", t)
                 false
             }
+        }
+
+        private fun cancelRebindAttempts() {
+            rebindHandler?.removeCallbacksAndMessages(null)
+            rebindAttempt = 0
+        }
+
+        /**
+         * 比 requestRebind 更彻底的一次恢复：先请求系统解绑本应用的服务，再立刻请求重绑。
+         * 相当于在 NMS 内部走一遍「解绑 / 重绑」流程（接近用户手动关掉再打开通知使用权），
+         * 但不会改动通知使用权本身，因此不会出现「权限被重置、应用内开关却还开着」的情况。
+         *
+         * 仅在普通 requestRebind 确实没把服务拉回来时作为最后手段调用。
+         * requestUnbind(ComponentName) 是 API 34 才有的静态方法。
+         */
+        fun forceRebindNow(context: Context): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return false
+            val now = SystemClock.elapsedRealtime()
+            if (now - lastForceRebindAt < MIN_FORCE_REBIND_INTERVAL_MS) return false
+            lastForceRebindAt = now
+            lastRebindRequestAt = now
+            val component = ComponentName(context, TransactionScannerService::class.java)
+            return try {
+                NotificationListenerService.requestUnbind(component)
+                Thread.sleep(500)
+                NotificationListenerService.requestRebind(component)
+                Log.i(TAG, "Performed unbind/rebind cycle")
+                true
+            } catch (t: Throwable) {
+                Log.e(TAG, "Unbind/rebind cycle failed", t)
+                false
+            }
+        }
+
+        /**
+         * 服务被系统解绑后，按退避间隔重试 requestRebind。
+         * 只在「权限仍在」时重试；用户主动撤销权限时不应反复重绑。
+         */
+        private fun scheduleRebind(context: Context) {
+            if (!isAccessGranted(context)) return
+            val handler = rebindHandler
+                ?: Handler(Looper.getMainLooper()).also { rebindHandler = it }
+            handler.removeCallbacksAndMessages(null)
+            rebindAttempt = 0
+            val appContext = context.applicationContext
+            val retry = object : Runnable {
+                override fun run() {
+                    if (listenerConnected) return
+                    if (!isAccessGranted(appContext)) return
+                    requestRebindNow(appContext)
+                    rebindAttempt += 1
+                    if (rebindAttempt < REBIND_DELAYS_MS.size) {
+                        handler.postDelayed(this, REBIND_DELAYS_MS[rebindAttempt])
+                    }
+                }
+            }
+            handler.postDelayed(retry, REBIND_DELAYS_MS[0])
         }
     }
 
     override fun onListenerConnected() {
         super.onListenerConnected()
+        listenerConnected = true
+        cancelRebindAttempts()
+        Log.i(TAG, "Notification listener connected")
         // 以前台服务方式常驻：避免国产 ROM 省电机制冻结/杀死监听服务，
         // 否则后台时「第一个通知正常、随后延迟、最终完全不识别」
         startKeepAliveForeground()
@@ -95,19 +177,30 @@ class TransactionScannerService : NotificationListenerService() {
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
+        listenerConnected = false
+        Log.w(TAG, "Notification listener disconnected; scheduling rebind")
         try {
             stopForegroundCompat()
         } catch (e: Exception) {
             Log.e(TAG, "stopForeground error", e)
         }
+        // 权限仍在、服务被系统解绑（省电模式/后台清理/强停）时主动拉回来
+        scheduleRebind(applicationContext)
+    }
+
+    override fun onDestroy() {
+        listenerConnected = false
+        // 不要在这里取消 rebind 重试：系统解绑后通常紧接着销毁服务，
+        // 取消掉就再没人把服务拉回来了。Handler 只持有 applicationContext，不会泄漏 Service。
+        super.onDestroy()
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         if (sbn == null) return
         // 过滤自己应用的通知，避免循环监听
         if (sbn.packageName == OWN_PACKAGE) return
-        // 监听服务被系统「禁用→启用」重连时会重放通知栏所有活动通知，
-        // 跳过发布超过 60 秒的旧通知，避免打开应用时一次性洪泛提示
+        // 监听服务重新绑定后，系统可能重放通知栏里的活动通知，
+        // 跳过发布超过 60 秒的旧通知，避免恢复监听时一次性洪泛提示
         val postedAt = sbn.notification?.`when` ?: 0L
         if (postedAt > 0 && System.currentTimeMillis() - postedAt > 60_000L) return
         Thread { handleNotification(applicationContext, sbn) }.start()
