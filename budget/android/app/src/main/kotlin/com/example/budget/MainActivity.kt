@@ -1,6 +1,8 @@
 package com.budget.tracker_app
 
+import android.content.ComponentName
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
@@ -48,11 +50,24 @@ class MainActivity : FlutterFragmentActivity() {
             notificationChannel,
         ).setMethodCallHandler { call, result ->
             when (call.method) {
+                // 旧方法名保留兼容；行为改为安全的 requestRebind，
+                // 不再通过「禁用→启用组件」重绑（部分 ROM 会因此丢掉通知使用权）
                 "forceRestartNotificationListener" -> {
-                    forceRestartNotificationListener { success -> result.success(success) }
+                    forceRebindNotificationListener(result)
+                }
+                "requestNotificationListenerRebind" -> {
+                    requestNotificationListenerRebind(result)
                 }
                 "isNotificationAccessGranted" -> {
                     result.success(isNotificationAccessGranted())
+                }
+                "getNotificationListenerStatus" -> {
+                    result.success(
+                        mapOf(
+                            "granted" to TransactionScannerService.isAccessGranted(this),
+                            "connected" to TransactionScannerService.isConnected(),
+                        ),
+                    )
                 }
                 "openNotificationAccessSettings" -> {
                     openNotificationAccessSettings()
@@ -73,6 +88,26 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private fun openNotificationAccessSettings() {
+        // API 30+ 直接打开本应用的「通知使用权」详情页，用户只需拨一下开关；
+        // 部分国产 ROM 没有实现该页面，回落到通知使用权列表。
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                startActivity(
+                    Intent(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS).apply {
+                        putExtra(
+                            Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME,
+                            ComponentName(
+                                this@MainActivity,
+                                TransactionScannerService::class.java,
+                            ).flattenToString(),
+                        )
+                    },
+                )
+                return
+            } catch (e: Exception) {
+                Log.w("CashewNotif", "Listener detail settings unavailable, falling back", e)
+            }
+        }
         try {
             startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
         } catch (e: Exception) {
@@ -81,15 +116,27 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     /**
-     * Xiaomi HyperOS 等国产 ROM 进入“极限模式/省电模式”后，系统会把
-     * NotificationListenerService 解绑，且退出后不会自动重新绑定。
-     * 通过先禁用再启用该组件，可强制系统重新绑定通知监听服务，
-     * 从而避免用户必须“结束运行后重新打开应用”才能恢复监听。
+     * 请求系统重新绑定通知监听服务。
+     *
+     * HyperOS/MIUI 的极限省电、后台清理会在不撤销「通知使用权」的情况下解绑监听服务，
+     * 之后重启应用也不会自动绑回来。requestRebind() 是系统提供的官方恢复入口，
+     * 比旧实现的「禁用→启用组件」安全（后者在部分 ROM 上会把使用权一起弄丢）。
      */
-    private fun forceRestartNotificationListener(callback: (Boolean) -> Unit) {
+    private fun requestNotificationListenerRebind(result: MethodChannel.Result) {
         Thread {
-            val success = TransactionScannerService.forceRebindListener(this)
-            runOnUiThread { callback(success) }
+            val success = TransactionScannerService.requestRebindNow(this)
+            runOnUiThread { result.success(success) }
+        }.start()
+    }
+
+    /**
+     * 普通 requestRebind 没恢复时，走「请求解绑 → 立刻重绑」的完整重连。
+     * 不会改动通知使用权；API 34 以下不可用，返回 false 交给上层提示用户。
+     */
+    private fun forceRebindNotificationListener(result: MethodChannel.Result) {
+        Thread {
+            val success = TransactionScannerService.forceRebindNow(this)
+            runOnUiThread { result.success(success) }
         }.start()
     }
 }
