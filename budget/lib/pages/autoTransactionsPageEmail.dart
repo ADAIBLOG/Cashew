@@ -29,6 +29,8 @@ import 'package:budget/functions.dart';
 import 'addButton.dart';
 
 Timer? _notificationHealthCheckTimer;
+bool _listenerRepairInProgress = false;
+DateTime? _lastListenerRepairPrompt;
 
 const MethodChannel _notificationListenerNativeChannel =
     MethodChannel('com.budget.tracker_app/notification_listener');
@@ -37,6 +39,40 @@ Future<bool> forceRestartNotificationListenerService() async {
   try {
     return await _notificationListenerNativeChannel
             .invokeMethod<bool>('forceRestartNotificationListener') ??
+        false;
+  } catch (e) {
+    return false;
+  }
+}
+
+/// 读取原生侧的「真实」状态：
+/// - granted: 系统设置里是否授予了通知使用权
+/// - connected: NotificationListenerService 当前是否真的被系统绑定
+///
+/// 两者必须分开看。国产 ROM 的极限省电/后台清理会只解绑服务、不撤销权限，
+/// 只看 granted 会得出「一切正常」的错误结论。
+Future<Map<String, dynamic>> getNotificationListenerStatusNative() async {
+  try {
+    final Map<dynamic, dynamic>? status = await _notificationListenerNativeChannel
+        .invokeMethod<Map<dynamic, dynamic>>('getNotificationListenerStatus');
+    if (status == null) return <String, dynamic>{};
+    return status.map<String, dynamic>(
+      (dynamic key, dynamic value) => MapEntry(key.toString(), value),
+    );
+  } catch (e) {
+    return <String, dynamic>{};
+  }
+}
+
+Future<bool> isNotificationListenerConnectedNative() async {
+  final Map<String, dynamic> status = await getNotificationListenerStatusNative();
+  return status["connected"] == true;
+}
+
+Future<bool> requestNotificationListenerRebindNative() async {
+  try {
+    return await _notificationListenerNativeChannel
+            .invokeMethod<bool>('requestNotificationListenerRebind') ??
         false;
   } catch (e) {
     return false;
@@ -76,14 +112,89 @@ Future initNotificationScanning() async {
     return;
   }
 
-  bool status = await isNotificationAccessGrantedNative();
-  if (status == true) {
-    _startHealthCheck();
-  } else {
-    // 权限失效时不要自动关闭开关（用户没操作，开关却自己关掉会让人困惑）。
-    // 保持开启状态，回到前台时重新校验；权限恢复后原生服务自动继续检测。
-    _stopHealthCheck();
+  await ensureNotificationListenerConnected();
+  _startHealthCheck();
+}
+
+/// 确保通知监听服务真的处于「已连接」状态，必要时请求系统重新绑定。
+///
+/// 修复的核心场景：HyperOS/MIUI 的极限省电或后台清理会把监听服务解绑，
+/// 但「通知使用权」仍是开启状态。此时 `isNotificationAccessGrantedNative()`
+/// 依然返回 true，旧代码因此什么都不做——重启应用也没用，只有在系统设置里
+/// 关掉再打开通知使用权（触发系统重新绑定）才能恢复。
+/// 这里改为检查原生侧的真实连接状态，并调用系统官方的 `requestRebind()` 恢复。
+Future<bool> ensureNotificationListenerConnected({bool prompt = true}) async {
+  if (_listenerRepairInProgress) {
+    return isNotificationListenerConnectedNative();
   }
+  if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return false;
+  if (appStateSettings["notificationScanning"] != true) return false;
+
+  _listenerRepairInProgress = true;
+  try {
+    final Map<String, dynamic> status =
+        await getNotificationListenerStatusNative();
+
+    // 原生通道暂时不可用时不要误判成「权限丢失」去打扰用户
+    if (status.isEmpty) return false;
+
+    if (status["granted"] != true) {
+      // 权限被系统收回时重绑没有意义，只能引导用户重新授予。
+      // 健康检查继续保留，这样用户在系统设置里重新授予后无需重启应用。
+      if (prompt) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        _showListenerRepairHint();
+      }
+      return false;
+    }
+
+    if (status["connected"] == true) return true;
+
+    // 冷启动或刚从后台回来时，系统绑定服务有延迟，先给一点时间再判定
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (await isNotificationListenerConnectedNative()) return true;
+
+    // 服务确实掉线：请求系统重新绑定。间隔要大于原生的请求冷却时间，
+    // 避免第二次请求被本地限流直接丢掉。
+    for (int attempt = 0; attempt < 2; attempt++) {
+      if (attempt == 0) {
+        await requestNotificationListenerRebindNative();
+      } else {
+        // 普通重绑没成功时，再走一次「解绑 → 重绑」的完整重连（API 34+）
+        await forceRestartNotificationListenerService();
+      }
+      await Future.delayed(const Duration(seconds: 4));
+      if (await isNotificationListenerConnectedNative()) return true;
+    }
+
+    // 极少数 ROM 会拒绝重绑（例如组件被系统禁用），退回到让用户手动修复。
+    if (prompt) _showListenerRepairHint();
+    return false;
+  } finally {
+    _listenerRepairInProgress = false;
+  }
+}
+
+/// 重绑失败后的兜底提示：点击直达本应用的「通知使用权」详情页。
+/// 文案复用已有翻译键，避免为一个提示新增几十种语言的翻译。
+void _showListenerRepairHint() {
+  final DateTime now = DateTime.now();
+  if (_lastListenerRepairPrompt != null &&
+      now.difference(_lastListenerRepairPrompt!) < const Duration(minutes: 10)) {
+    return;
+  }
+  // 应用刚启动时 GlobalSnackbar 可能还没挂载，等下一次检查/回到前台再提示
+  if (snackbarKey.currentState == null) return;
+  _lastListenerRepairPrompt = now;
+  openSnackbar(
+    SnackbarMessage(
+      title: "notification-transactions".tr(),
+      description: "please-check-your-system-settings".tr(),
+      icon: Icons.notifications_off_outlined,
+      timeout: const Duration(seconds: 8),
+      onTap: () => openNotificationAccessSettingsNative(),
+    ),
+  );
 }
 
 void _startHealthCheck() {
@@ -99,12 +210,9 @@ void _startHealthCheck() {
         return;
       }
 
-      bool hasPermission = await isNotificationAccessGrantedNative();
-      if (!hasPermission) {
-        // 同上：不自动关闭开关，避免「自动交易」静默失效；回到前台时会重新校验
-        _stopHealthCheck();
-        return;
-      }
+      // 权限被收回时不自动关开关（避免「自动交易」静默失效），
+      // 但仍尝试恢复连接；提示留给启动/回前台时做，避免后台反复弹提示。
+      await ensureNotificationListenerConnected(prompt: false);
     },
   );
 }
@@ -181,9 +289,9 @@ class _InitializeNotificationServiceState
 
   Future<void> _onAppResumed() async {
     if (appStateSettings["notificationScanning"] != true) return;
-    // 不再强制「禁用→启用」监听组件：该操作在部分系统上会撤销通知使用权，
-    // 这正是「开关自动被关闭」的元凶之一。监听服务本身是前台常驻，无需强制重绑。
-    initNotificationScanning();
+    // 回到前台时系统可能刚把服务解绑（省电模式、后台清理），也可能刚授予权限。
+    // initNotificationScanning 会检查真实连接状态并在需要时 requestRebind。
+    await initNotificationScanning();
   }
 
   @override
@@ -216,8 +324,11 @@ class _AutoTransactionsPageEmailState extends State<AutoTransactionsPageEmail> {
           timeout: Duration.zero,
           onTap: () async {
             loadingIndeterminateKey.currentState?.setVisibility(true);
-            setState(() {});
+            // 手动重新检查监听服务是否还连着；掉线时尝试 requestRebind
+            final bool connected =
+                await ensureNotificationListenerConnected(prompt: false);
             loadingIndeterminateKey.currentState?.setVisibility(false);
+            if (!connected) _showListenerRepairHint();
           },
         ),
       ],
